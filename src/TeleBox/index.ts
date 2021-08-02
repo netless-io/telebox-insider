@@ -2,7 +2,7 @@ import "./style.scss";
 
 import EventEmitter from "eventemitter3";
 import { DefaultTitleBar, TeleTitleBar } from "../TeleTitleBar";
-import { clamp, flattenEvent, preventEvent } from "../utils";
+import { clamp, flattenEvent, genUniqueKey, preventEvent } from "../utils";
 import {
     TeleBoxEventType,
     TeleBoxState,
@@ -20,6 +20,7 @@ export * from "./typings";
 
 export class TeleBox {
     public constructor({
+        id = genUniqueKey(),
         title = "",
         width = 0.5,
         height = 0.5,
@@ -31,6 +32,7 @@ export class TeleBox {
         namespace = "telebox",
         titleBar,
     }: TeleBoxConfig = {}) {
+        this.id = id;
         this._title = title;
         this._minWidth = clamp(minWidth, 0, 1);
         this._minHeight = clamp(minHeight, 0, 1);
@@ -43,6 +45,8 @@ export class TeleBox {
 
         this.namespace = namespace;
     }
+
+    public readonly id: string;
 
     public readonly events = new EventEmitter() as TeleBoxEvents;
 
@@ -470,7 +474,6 @@ export class TeleBox {
         if (pageY < 0) {
             return;
         }
-        console.log(pageY);
 
         const offsetX =
             (pageX - this.trackStartPageX) / this.trackStartParentWidth;

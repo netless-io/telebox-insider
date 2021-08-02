@@ -8,11 +8,13 @@ import {
 } from "./constants";
 
 export interface TeleBoxConfig {
-    /** Window title. Default empty. */
+    /** Board ID. */
+    readonly id?: string;
+    /** Board title. Default empty. */
     readonly title?: string;
-    /** Window width relative to root element. 0~1. Default 0.5. */
+    /** Board width relative to root element. 0~1. Default 0.5. */
     readonly width?: number;
-    /** Window height relative to root element. 0~1. Default 0.5. */
+    /** Board height relative to root element. 0~1. Default 0.5. */
     readonly height?: number;
     /** Minimum window width relative to root element. 0~1. Default 0. */
     readonly minWidth?: number;
