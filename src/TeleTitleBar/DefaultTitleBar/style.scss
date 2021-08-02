@@ -1,0 +1,50 @@
+@import "../../scss/variables.scss";
+
+.#{$namespace}-titlebar {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: #fff;
+    cursor: move;
+    user-select: none;
+}
+
+.#{$namespace}-title {
+    overflow: hidden;
+    margin: 0 24px 0 0;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: PingFangSC-Regular, PingFang SC;
+    white-space: nowrap;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    color: #191919;
+}
+
+.#{$namespace}-titlebar-btns {
+    white-space: nowrap;
+    word-break: keep-all;
+    margin-left: auto;
+    font-size: 0;
+}
+
+.#{$namespace}-titlebar-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    outline: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    & ~ & {
+        margin-left: 8px;
+    }
+}
+
+.#{$namespace}-titlebar-btn-icon {
+    width: 28px;
+    height: 28px;
+}
