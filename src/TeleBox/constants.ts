@@ -2,7 +2,6 @@ export enum TeleBoxState {
     Normal = "normal",
     Minimized = "minimized",
     Maximized = "maximized",
-    Fullscreen = "fullscreen",
 }
 
 export enum TeleBoxEventType {
