@@ -44,9 +44,9 @@ export class TeleBox {
         this._x = clamp(x, 0, 1);
         this._y = clamp(y, 0, 1);
         this._state = state;
-        this._resizable = Boolean(resizable);
-        this._draggable = Boolean(draggable);
-        this._fixRatio = Boolean(fixRatio);
+        this._resizable = resizable;
+        this._draggable = draggable;
+        this._fixRatio = fixRatio;
         this._titleBar = titleBar;
 
         this.namespace = namespace;
