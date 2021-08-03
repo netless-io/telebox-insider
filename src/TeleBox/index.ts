@@ -29,9 +29,9 @@ export class TeleBox {
         x = 0.1,
         y = 0.1,
         state = TeleBoxState.Normal,
-        resizable,
-        draggable,
-        fixRatio,
+        resizable = true,
+        draggable = true,
+        fixRatio = false,
         namespace = "telebox",
         titleBar,
     }: TeleBoxConfig = {}) {

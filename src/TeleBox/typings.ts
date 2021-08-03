@@ -26,11 +26,11 @@ export interface TeleBoxConfig {
     readonly y?: number;
     /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
-    /** Able to resize box window */
+    /** Able to resize box window. Default true. */
     readonly resizable?: boolean;
-    /** Able to drag box window */
+    /** Able to drag box window Default true. */
     readonly draggable?: boolean;
-    /** Fixed width/height ratio for box window. */
+    /** Fixed width/height ratio for box window. Default false. */
     readonly fixRatio?: boolean;
     /** Classname Prefix. For CSS styling. Default "telebox" */
     readonly namespace?: string;
