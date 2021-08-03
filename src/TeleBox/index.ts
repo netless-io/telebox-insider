@@ -46,15 +46,14 @@ export class TeleBox {
         this._state = state;
         this._resizable = Boolean(resizable);
         this._draggable = Boolean(draggable);
-        this._fixRatio =
-            typeof fixRatio === "number"
-                ? fixRatio
-                : fixRatio === true
-                ? this._width / this._height
-                : false;
+        this._fixRatio = Boolean(fixRatio);
         this._titleBar = titleBar;
 
         this.namespace = namespace;
+
+        if (this._fixRatio) {
+            this.transform(this._x, this._y, this._width, this._height, true);
+        }
     }
 
     public readonly id: string;
@@ -123,8 +122,8 @@ export class TeleBox {
     }
 
     /** Fixed width/height ratio for box window. */
-    public get fixRatio(): number | false {
-        return this.fixRatio;
+    public get fixRatio(): boolean {
+        return Boolean(this._fixRatio);
     }
 
     public get titleBar(): TeleTitleBar {
@@ -251,6 +250,14 @@ export class TeleBox {
             return this;
         }
 
+        if (this._fixRatio) {
+            const newHeight = (this._height / this._width) * width;
+            if (y !== this._y) {
+                y -= newHeight - height;
+            }
+            height = newHeight;
+        }
+
         this.move(x, y, skipUpdate);
         this.resize(width, height, skipUpdate);
 
@@ -311,6 +318,16 @@ export class TeleBox {
         return this;
     }
 
+    public setFixRatio(fixRatio: boolean): this {
+        if (this._fixRatio !== fixRatio) {
+            this._fixRatio = fixRatio;
+            if (fixRatio) {
+                this.transform(this._x, this._y, this._width, this._height);
+            }
+        }
+        return this;
+    }
+
     /**
      * Clean up.
      */
@@ -336,7 +353,7 @@ export class TeleBox {
     protected _state: TeleBoxState;
     protected _resizable: boolean;
     protected _draggable: boolean;
-    protected _fixRatio: number | false;
+    protected _fixRatio: boolean;
     protected _titleBar: TeleTitleBar | undefined;
 
     /** Classname Prefix. For CSS styling. Default "telebox" */
@@ -551,7 +568,12 @@ export class TeleBox {
                 break;
             }
             case TeleBoxResizeHandle.South: {
-                this.resize(this._width, this.trackStartHeight + offsetY);
+                this.transform(
+                    this._x,
+                    this._y,
+                    this._width,
+                    this.trackStartHeight + offsetY
+                );
                 break;
             }
             case TeleBoxResizeHandle.West: {
@@ -564,7 +586,12 @@ export class TeleBox {
                 break;
             }
             case TeleBoxResizeHandle.East: {
-                this.resize(this.trackStartWidth + offsetX, this._height);
+                this.transform(
+                    this._x,
+                    this._y,
+                    this.trackStartWidth + offsetX,
+                    this._height
+                );
                 break;
             }
             case TeleBoxResizeHandle.NorthWest: {

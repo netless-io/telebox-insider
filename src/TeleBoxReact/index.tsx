@@ -64,6 +64,12 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
         }
     }, [teleBox, props.resizable]);
 
+    useUpdateEffect(() => {
+        if (props.fixRatio != null) {
+            teleBox.setFixRatio(props.fixRatio);
+        }
+    }, [teleBox, props.fixRatio]);
+
     useEffect(() => {
         if (props.onResize) {
             teleBox.events.on(TeleBoxEventType.Resize, props.onResize);

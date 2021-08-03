@@ -30,8 +30,8 @@ export interface TeleBoxConfig {
     readonly resizable?: boolean;
     /** Able to drag box window */
     readonly draggable?: boolean;
-    /** Fixed width/height ratio for box window. Use initial width/height from config if `true`. */
-    readonly fixRatio?: number | boolean;
+    /** Fixed width/height ratio for box window. */
+    readonly fixRatio?: boolean;
     /** Classname Prefix. For CSS styling. Default "telebox" */
     readonly namespace?: string;
     /** TeleTitleBar Instance */

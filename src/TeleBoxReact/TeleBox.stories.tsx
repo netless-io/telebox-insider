@@ -1,10 +1,10 @@
 import React from "react";
 import { Meta, Story } from "@storybook/react";
 import faker from "faker";
-import { TeleBoxReact } from ".";
+import { TeleBoxReact, TeleBoxReactProps } from ".";
 import { TeleBoxState } from "../TeleBox/constants";
 
-const storyMeta: Meta = {
+const storyMeta: Meta<TeleBoxReactProps> = {
     title: "TeleBox",
     component: TeleBoxReact,
     args: {
@@ -26,16 +26,17 @@ const storyMeta: Meta = {
         minHeight: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
         x: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
         y: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
+        fixRatio: { control: { type: "number" } },
     },
 };
 
 export default storyMeta;
 
-export const Overview: Story = (args) => {
+export const Overview: Story<TeleBoxReactProps> = (args) => {
     return <TeleBoxReact {...args} />;
 };
 
-export const Resizable: Story = (args) => {
+export const Resizable: Story<TeleBoxReactProps> = (args) => {
     return <TeleBoxReact {...args} />;
 };
 
@@ -44,11 +45,20 @@ Resizable.args = {
     resizable: false,
 };
 
-export const Draggable: Story = (args) => {
+export const Draggable: Story<TeleBoxReactProps> = (args) => {
     return <TeleBoxReact {...args} />;
 };
 
 Draggable.args = {
     title: "No Drag",
     draggable: false,
+};
+
+export const FixRatio: Story<TeleBoxReactProps> = (args) => {
+    return <TeleBoxReact {...args} />;
+};
+
+FixRatio.args = {
+    title: "Fix Ratio",
+    fixRatio: true,
 };
