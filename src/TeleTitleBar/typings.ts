@@ -1,15 +1,20 @@
-import type { TeleBox, TeleBoxEventType } from "../TeleBox";
+import type { TeleBoxEventArgs } from "../TeleBox";
+
+export interface TeleTitleBarConfig {
+    title?: string;
+    namespace?: string;
+    onEvent?: <U extends keyof TeleBoxEventArgs>(
+        event: U,
+        ...args: TeleBoxEventArgs[U]
+    ) => void;
+}
 
 export interface TeleTitleBar {
     updateTitle(title: string): void;
 
-    render(teleBox: TeleBox): HTMLElement;
+    render(): HTMLElement;
 
     dragHandle(): HTMLElement | undefined;
 
     destroy(): void;
 }
-
-export type TeleTitleBarEventType =
-    | TeleBoxEventType.State
-    | TeleBoxEventType.Close;

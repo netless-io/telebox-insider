@@ -128,7 +128,11 @@ export class TeleBox {
 
     public get titleBar(): TeleTitleBar {
         if (!this._titleBar) {
-            this._titleBar = new DefaultTitleBar();
+            this._titleBar = new DefaultTitleBar({
+                title: this.title,
+                namespace: this.namespace,
+                onEvent: this.events.emit.bind(this.events),
+            });
         }
         return this._titleBar;
     }
@@ -402,7 +406,7 @@ export class TeleBox {
             this.$box.style.width = this._width * 100 + "%";
             this.$box.style.height = this._height * 100 + "%";
 
-            const $titleBar = this.titleBar.render(this);
+            const $titleBar = this.titleBar.render();
             this.$dragHandle = this.titleBar.dragHandle();
             if (this.$dragHandle) {
                 this.$dragHandle.dataset.teleBoxHandle = TeleBoxDragHandleType;
