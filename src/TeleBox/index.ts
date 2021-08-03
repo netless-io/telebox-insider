@@ -492,6 +492,14 @@ export class TeleBox {
 
     protected handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
         if (
+            (ev as MouseEvent).button != null &&
+            (ev as MouseEvent).button !== 0
+        ) {
+            // Not left mouse
+            return;
+        }
+
+        if (
             !this.draggable ||
             this.trackingHandle ||
             !this.$box ||
