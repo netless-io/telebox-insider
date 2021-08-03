@@ -52,6 +52,18 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
         }
     }, [teleBox, props.state]);
 
+    useUpdateEffect(() => {
+        if (props.draggable != null) {
+            teleBox.setDraggable(props.draggable);
+        }
+    }, [teleBox, props.draggable]);
+
+    useUpdateEffect(() => {
+        if (props.resizable != null) {
+            teleBox.setResizable(props.resizable);
+        }
+    }, [teleBox, props.resizable]);
+
     useEffect(() => {
         if (props.onResize) {
             teleBox.events.on(TeleBoxEventType.Resize, props.onResize);

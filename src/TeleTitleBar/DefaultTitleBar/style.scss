@@ -1,13 +1,14 @@
 @import "../../scss/variables.scss";
 
 .#{$namespace}-titlebar {
-    height: 40px;
+    height: 39px;
     display: flex;
     align-items: center;
     padding: 0 16px;
     background: #fff;
     cursor: move;
     user-select: none;
+    border-bottom: 1px solid #eeeef7;
 }
 
 .#{$namespace}-title {
@@ -47,4 +48,10 @@
 .#{$namespace}-titlebar-btn-icon {
     width: 28px;
     height: 28px;
+}
+
+.#{$namespace}-no-drag {
+    .#{$namespace}-titlebar {
+        cursor: auto;
+    }
 }

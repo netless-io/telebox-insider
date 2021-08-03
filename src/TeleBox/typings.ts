@@ -8,24 +8,30 @@ import {
 } from "./constants";
 
 export interface TeleBoxConfig {
-    /** Board ID. */
+    /** Box ID. */
     readonly id?: string;
-    /** Board title. Default empty. */
+    /** Box title. Default empty. */
     readonly title?: string;
-    /** Board width relative to root element. 0~1. Default 0.5. */
+    /** Box width relative to root element. 0~1. Default 0.5. */
     readonly width?: number;
-    /** Board height relative to root element. 0~1. Default 0.5. */
+    /** Box height relative to root element. 0~1. Default 0.5. */
     readonly height?: number;
-    /** Minimum window width relative to root element. 0~1. Default 0. */
+    /** Minimum box width relative to root element. 0~1. Default 0. */
     readonly minWidth?: number;
-    /** Minimum window height relative to root element. 0~1. Default 0. */
+    /** Minimum box height relative to root element. 0~1. Default 0. */
     readonly minHeight?: number;
     /** x position relative to root element. 0~1. Default 0.1. */
     readonly x?: number;
     /** y position relative to root element. 0~1. Default 0.1. */
     readonly y?: number;
-    /** The initial state of the window. Default normal. */
+    /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
+    /** Able to resize box window */
+    readonly resizable?: boolean;
+    /** Able to drag box window */
+    readonly draggable?: boolean;
+    /** Fixed width/height ratio for box window. Use initial width/height from config if `true`. */
+    readonly fixRatio?: number | boolean;
     /** Classname Prefix. For CSS styling. Default "telebox" */
     readonly namespace?: string;
     /** TeleTitleBar Instance */

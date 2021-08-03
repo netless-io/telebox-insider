@@ -29,6 +29,9 @@ export class TeleBox {
         x = 0.1,
         y = 0.1,
         state = TeleBoxState.Normal,
+        resizable,
+        draggable,
+        fixRatio,
         namespace = "telebox",
         titleBar,
     }: TeleBoxConfig = {}) {
@@ -41,6 +44,14 @@ export class TeleBox {
         this._x = clamp(x, 0, 1);
         this._y = clamp(y, 0, 1);
         this._state = state;
+        this._resizable = Boolean(resizable);
+        this._draggable = Boolean(draggable);
+        this._fixRatio =
+            typeof fixRatio === "number"
+                ? fixRatio
+                : fixRatio === true
+                ? this._width / this._height
+                : false;
         this._titleBar = titleBar;
 
         this.namespace = namespace;
@@ -99,6 +110,21 @@ export class TeleBox {
     /** Is box maximized. Default false. */
     public get state(): TeleBoxState {
         return this._state;
+    }
+
+    /** Able to resize box window */
+    public get resizable(): boolean {
+        return this._resizable;
+    }
+
+    /** Able to drag box window */
+    public get draggable(): boolean {
+        return this._draggable;
+    }
+
+    /** Fixed width/height ratio for box window. */
+    public get fixRatio(): number | false {
+        return this.fixRatio;
     }
 
     public get titleBar(): TeleTitleBar {
@@ -265,6 +291,26 @@ export class TeleBox {
         return this;
     }
 
+    public setDraggable(draggable: boolean): this {
+        if (this._draggable !== draggable) {
+            this._draggable = draggable;
+            if (this.$box) {
+                this.$box.classList.toggle("no-drag", !draggable);
+            }
+        }
+        return this;
+    }
+
+    public setResizable(resizable: boolean): this {
+        if (this._resizable !== resizable) {
+            this._resizable = resizable;
+            if (this.$box) {
+                this.$box.classList.toggle("no-resize", !resizable);
+            }
+        }
+        return this;
+    }
+
     /**
      * Clean up.
      */
@@ -288,6 +334,9 @@ export class TeleBox {
     protected _x: number;
     protected _y: number;
     protected _state: TeleBoxState;
+    protected _resizable: boolean;
+    protected _draggable: boolean;
+    protected _fixRatio: number | false;
     protected _titleBar: TeleTitleBar | undefined;
 
     /** Classname Prefix. For CSS styling. Default "telebox" */
@@ -322,6 +371,15 @@ export class TeleBox {
                 this.$box = document.createElement("div");
                 this.$box.className = this.wrapClassName("box");
             }
+
+            if (!this._draggable) {
+                this.$box.classList.add(this.wrapClassName("no-drag"));
+            }
+
+            if (!this._resizable) {
+                this.$box.classList.add(this.wrapClassName("no-resize"));
+            }
+
             this.$box.style.left = this._x * 100 + "%";
             this.$box.style.top = this._y * 100 + "%";
             this.$box.style.width = this._width * 100 + "%";
@@ -345,6 +403,7 @@ export class TeleBox {
             this.$content.className = this.wrapClassName("content");
 
             const $resizeHandles = document.createElement("div");
+            $resizeHandles.className = this.wrapClassName("resize-handles");
             $resizeHandles.addEventListener("mousedown", this.handleTrackStart);
             $resizeHandles.addEventListener(
                 "touchstart",
@@ -412,6 +471,7 @@ export class TeleBox {
 
     protected handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
         if (
+            !this.draggable ||
             this.trackingHandle ||
             !this.$box ||
             this.state !== TeleBoxState.Normal
