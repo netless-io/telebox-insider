@@ -1,9 +1,8 @@
 {
-    "name": "telebox",
+    "name": "telebox-insider",
     "version": "0.1.0",
     "private": false,
     "description": "Window widget for Whiteboard",
-    "homepage": "https://github.com/netless-io/telebox",
     "license": "MIT",
     "author": "CRIMX <straybugs@gmail.com> (https://github.com/crimx/)",
     "sideEffects": [
