@@ -16,6 +16,8 @@ const storyMeta: Meta = {
         x: 0.1,
         y: 0.1,
         state: TeleBoxState.Normal,
+        draggable: true,
+        resizable: true,
     },
     argTypes: {
         width: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
@@ -31,4 +33,22 @@ export default storyMeta;
 
 export const Overview: Story = (args) => {
     return <TeleBoxReact {...args} />;
+};
+
+export const Resizable: Story = (args) => {
+    return <TeleBoxReact {...args} />;
+};
+
+Resizable.args = {
+    title: "No Resize",
+    resizable: false,
+};
+
+export const Draggable: Story = (args) => {
+    return <TeleBoxReact {...args} />;
+};
+
+Draggable.args = {
+    title: "No Drag",
+    draggable: false,
 };
