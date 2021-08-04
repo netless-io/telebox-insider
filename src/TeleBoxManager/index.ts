@@ -1,7 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
 import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
-import { TeleBoxConfig } from "../TeleBox/typings";
+import { TeleBoxConfig, TeleBoxContainerRect } from "../TeleBox/typings";
 import { getRandomInt } from "../utils";
 import { TeleBoxManagerEventType } from "./constants";
 import {
@@ -12,15 +12,38 @@ import {
 } from "./typings";
 
 export class TeleBoxManager {
-    public constructor({ container }: TeleBoxManagerConfig) {
-        this.container = container;
+    public constructor({
+        root = document.body,
+        state = TeleBoxState.Normal,
+        fence = true,
+        containerRect = {
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+        },
+    }: TeleBoxManagerConfig = {}) {
+        this.root = root;
+        this._state = state;
+        this._fence = fence;
+        this.containerRect = containerRect;
     }
 
     public readonly events = new EventEmitter() as TeleBoxManagerEvents;
 
+    public readonly containerRect: TeleBoxContainerRect;
+
+    public get state(): TeleBoxState {
+        return this._state;
+    }
+
+    public get fence(): boolean {
+        return this._fence;
+    }
+
     public create(config?: TeleBoxConfig): ReadonlyTeleBox {
         const box = new TeleBox(this.wrapCreateConfig(config));
-        box.mount(this.container);
+        box.mount(this.root);
         this.boxes.push(box);
 
         if (box.focus) {
@@ -102,15 +125,57 @@ export class TeleBoxManager {
     public destroy(): void {
         this.events.removeAllListeners();
         this._focusedBox = void 0;
-        this.state = TeleBoxState.Normal;
+        this._state = TeleBoxState.Normal;
         this.removeAll();
     }
 
-    protected state: TeleBoxState = TeleBoxState.Normal;
+    public setContainerRect(rect: TeleBoxContainerRect): this {
+        Object.assign(this.containerRect, rect);
+
+        this.boxes.forEach((box) => {
+            box.setContainerRect(rect);
+        });
+
+        return this;
+    }
+
+    public setState(state: TeleBoxState): void {
+        if (this._state !== state) {
+            this._state = state;
+            this.boxes.forEach((box) => box.setState(state));
+
+            switch (state) {
+                case TeleBoxState.Maximized: {
+                    break;
+                }
+
+                case TeleBoxState.Minimized: {
+                    break;
+                }
+
+                default: {
+                    break;
+                }
+            }
+
+            this.events.emit(TeleBoxManagerEventType.State, state);
+        }
+    }
+
+    public setFence(fence: boolean): void {
+        if (this._fence !== fence) {
+            this._fence = fence;
+            this.boxes.forEach((box) => box.setFence(fence));
+        }
+    }
+
+    protected _state: TeleBoxState;
+
+    protected _fence: boolean;
 
     protected _focusedBox: TeleBox | undefined;
 
-    protected container: HTMLElement;
+    protected root: HTMLElement;
 
     protected boxes: TeleBox[] = [];
 
@@ -164,9 +229,6 @@ export class TeleBoxManager {
         if (config.focus != null) {
             this.focusBox(config.focus, box);
         }
-        if (config.state != null) {
-            this.setState(config.state);
-        }
     }
 
     protected focusBox(focus: boolean, box: TeleBox): void {
@@ -196,45 +258,9 @@ export class TeleBoxManager {
         }
     }
 
-    protected setState(state: TeleBoxState): void {
-        if (this.state !== state) {
-            this.state = state;
-            this.boxes.forEach((box) => box.setState(state));
-
-            switch (state) {
-                case TeleBoxState.Maximized: {
-                    break;
-                }
-
-                case TeleBoxState.Minimized: {
-                    break;
-                }
-
-                default: {
-                    break;
-                }
-            }
-
-            this.events.emit(TeleBoxManagerEventType.State, state);
-        }
-    }
-
     protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
-        let containerWidth: number;
-        let containerHeight: number;
-        if (
-            this.container === document.body &&
-            window.getComputedStyle(document.body).position === "static"
-        ) {
-            containerWidth = window.innerWidth;
-            containerHeight = window.innerHeight;
-        } else {
-            ({ width: containerWidth, height: containerHeight } =
-                this.container.getBoundingClientRect());
-        }
-
-        const offsetX = getRandomInt(5, 10) / containerWidth;
-        const offsetY = getRandomInt(5, 10) / containerHeight;
+        const offsetX = getRandomInt(5, 10) / this.containerRect.width;
+        const offsetY = getRandomInt(5, 10) / this.containerRect.height;
 
         let { x, y } = config;
 
@@ -242,18 +268,27 @@ export class TeleBoxManager {
 
         if (x == null) {
             x = (refBox?.x ?? 0) + offsetX;
-            if (x * containerWidth >= containerWidth - 20) {
+            if (x * this.containerRect.width >= this.containerRect.width - 20) {
                 x = offsetX;
             }
         }
 
         if (y == null) {
             y = (refBox?.y ?? 0) + offsetY;
-            if (y * containerHeight >= containerHeight - 20) {
+            if (
+                y * this.containerRect.height >=
+                this.containerRect.height - 20
+            ) {
                 y = offsetY;
             }
         }
 
-        return { ...config, x, y };
+        return {
+            ...config,
+            x,
+            y,
+            state: this._state,
+            containerRect: this.containerRect,
+        };
     }
 }

@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import type {
     TeleBoxConfig,
+    TeleBoxContainerRect,
     TeleBoxEvents,
     TeleBoxHandleType,
 } from "./typings";
@@ -44,6 +45,12 @@ export class TeleBox {
         namespace = "telebox",
         titleBar,
         content,
+        containerRect = {
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+        },
     }: TeleBoxConfig = {}) {
         this.id = id;
         this._title = title;
@@ -63,6 +70,7 @@ export class TeleBox {
         this._zIndex = zIndex;
         this._titleBar = titleBar;
         this.content = content;
+        this.containerRect = containerRect;
 
         this.namespace = namespace;
 
@@ -72,6 +80,8 @@ export class TeleBox {
     }
 
     public content: HTMLElement | undefined;
+
+    public readonly containerRect: TeleBoxContainerRect;
 
     public readonly id: string;
 
@@ -275,8 +285,15 @@ export class TeleBox {
             this._y = y;
 
             if (this.$box) {
-                this.$box.style.left = this._x * 100 + "%";
-                this.$box.style.top = this._y * 100 + "%";
+                const x =
+                    this._x * this.containerRect.width +
+                    this.containerRect.x +
+                    "px";
+                const y =
+                    this._y * this.containerRect.height +
+                    this.containerRect.y +
+                    "px";
+                this.$box.style.transform = `translate(${x},${y})`;
             }
 
             if (!skipUpdate) {
@@ -309,8 +326,10 @@ export class TeleBox {
             this._height = height;
 
             if (this.$box) {
-                this.$box.style.width = this._width * 100 + "%";
-                this.$box.style.height = this._height * 100 + "%";
+                this.$box.style.width =
+                    this._width * this.containerRect.width + "px";
+                this.$box.style.height =
+                    this._height * this.containerRect.height + "px";
             }
 
             if (!skipUpdate) {
@@ -476,6 +495,20 @@ export class TeleBox {
         return this;
     }
 
+    public setContainerRect(rect: TeleBoxContainerRect): this {
+        const x = (this._x * this.containerRect.width) / rect.width;
+        const y = (this._y * this.containerRect.height) / rect.height;
+        const width = (this._width * this.containerRect.width) / rect.width;
+        const height = (this._height * this.containerRect.height) / rect.height;
+
+        Object.assign(this.containerRect, rect);
+
+        this.move(x, y);
+        this.resize(width, height);
+
+        return this;
+    }
+
     /**
      * Clean up.
      */
@@ -565,11 +598,21 @@ export class TeleBox {
                 this.$box.classList.add(this.wrapClassName("maximized"));
             }
 
+            const x =
+                this._x * this.containerRect.width +
+                this.containerRect.x +
+                "px";
+            const y =
+                this._y * this.containerRect.height +
+                this.containerRect.y +
+                "px";
+
+            this.$box.style.transform = `translate(${x},${y})`;
             this.$box.style.zIndex = String(this.zIndex);
-            this.$box.style.left = this._x * 100 + "%";
-            this.$box.style.top = this._y * 100 + "%";
-            this.$box.style.width = this._width * 100 + "%";
-            this.$box.style.height = this._height * 100 + "%";
+            this.$box.style.width =
+                this._width * this.containerRect.width + "px";
+            this.$box.style.height =
+                this._height * this.containerRect.height + "px";
 
             const $titleBar = this.titleBar.render();
 
@@ -627,9 +670,6 @@ export class TeleBox {
     protected trackStartWidth: number = 0;
     protected trackStartHeight: number = 0;
 
-    protected trackStartParentWidth: number = 0;
-    protected trackStartParentHeight: number = 0;
-
     protected trackStartPageX: number = 0;
     protected trackStartPageY: number = 0;
 
@@ -663,10 +703,6 @@ export class TeleBox {
             this.trackStartY = this._y;
             this.trackStartWidth = this._width;
             this.trackStartHeight = this._height;
-
-            const boxRect = this.$box.getBoundingClientRect();
-            this.trackStartParentWidth = boxRect.width / this._width;
-            this.trackStartParentHeight = boxRect.height / this._height;
 
             ({ pageX: this.trackStartPageX, pageY: this.trackStartPageY } =
                 flattenEvent(ev));
@@ -710,9 +746,9 @@ export class TeleBox {
         }
 
         const offsetX =
-            (pageX - this.trackStartPageX) / this.trackStartParentWidth;
+            (pageX - this.trackStartPageX) / this.containerRect.width;
         const offsetY =
-            (pageY - this.trackStartPageY) / this.trackStartParentHeight;
+            (pageY - this.trackStartPageY) / this.containerRect.height;
 
         switch (this.trackingHandle) {
             case TeleBoxResizeHandle.North: {

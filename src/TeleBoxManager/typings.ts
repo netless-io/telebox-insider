@@ -1,10 +1,11 @@
 import type EventEmitter from "eventemitter3";
-import { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
+import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
 import type { TeleBoxConfig } from "../TeleBox/typings";
-import { TeleBoxManagerEventType } from "./constants";
+import type { TeleBoxManagerEventType } from "./constants";
 
-export interface TeleBoxManagerConfig {
-    container: HTMLElement;
+export interface TeleBoxManagerConfig
+    extends Pick<TeleBoxConfig, "fence" | "containerRect" | "state"> {
+    root?: HTMLElement;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
@@ -16,7 +17,6 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "minHeight"
     | "x"
     | "y"
-    | "state"
     | "resizable"
     | "draggable"
     | "fixRatio"

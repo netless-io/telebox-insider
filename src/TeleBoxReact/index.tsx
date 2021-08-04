@@ -5,8 +5,8 @@ import { TeleBoxState, TeleBoxEventType } from "../TeleBox/constants";
 import { useUpdateEffect } from "./utils";
 
 export type TeleBoxReactProps = TeleBoxConfig & {
-    onResize?: (width: number, height: number) => void;
-    onMove?: (x: number, y: number) => void;
+    onResize?: (event: { width: number; height: number }) => void;
+    onMove?: (event: { x: number; y: number }) => void;
     onClose?: () => void;
     onFocus?: () => void;
     onBlur?: () => void;
@@ -47,6 +47,12 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
     }, [teleBox, props.title]);
 
     useUpdateEffect(() => {
+        if (props.visible != null) {
+            teleBox.setVisible(props.visible);
+        }
+    }, [teleBox, props.visible]);
+
+    useUpdateEffect(() => {
         if (props.state != null) {
             teleBox.setState(props.state, true);
         }
@@ -63,6 +69,18 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
             teleBox.setResizable(props.resizable);
         }
     }, [teleBox, props.resizable]);
+
+    useUpdateEffect(() => {
+        if (props.fence != null) {
+            teleBox.setFence(props.fence);
+        }
+    }, [teleBox, props.fence]);
+
+    useUpdateEffect(() => {
+        if (props.containerRect != null) {
+            teleBox.setContainerRect(props.containerRect);
+        }
+    }, [teleBox, props.containerRect]);
 
     useUpdateEffect(() => {
         if (props.fixRatio != null) {
