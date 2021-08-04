@@ -34,12 +34,16 @@ export interface TeleBoxConfig {
     readonly draggable?: boolean;
     /** Fixed width/height ratio for box window. Default false. */
     readonly fixRatio?: boolean;
-    /** Box focused */
+    /** Box focused. */
     readonly focus?: boolean;
-    /** Classname Prefix. For CSS styling. Default "telebox" */
+    /** Base z-index for box. */
+    readonly zIndex?: number;
+    /** Classname Prefix. For CSS styling. Default "telebox". */
     readonly namespace?: string;
-    /** TeleTitleBar Instance */
+    /** TeleTitleBar Instance. */
     readonly titleBar?: TeleTitleBar;
+    /** Box content. */
+    readonly content?: HTMLElement;
 }
 
 export type TeleBoxEventArgs = {

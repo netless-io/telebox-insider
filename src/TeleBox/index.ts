@@ -2,7 +2,13 @@ import "./style.scss";
 
 import EventEmitter from "eventemitter3";
 import { DefaultTitleBar, TeleTitleBar } from "../TeleTitleBar";
-import { clamp, flattenEvent, genUniqueKey, preventEvent } from "../utils";
+import {
+    clamp,
+    flattenEvent,
+    genUniqueKey,
+    getBoxDefaultName,
+    preventEvent,
+} from "../utils";
 import {
     TeleBoxEventType,
     TeleBoxState,
@@ -20,7 +26,7 @@ export * from "./typings";
 export class TeleBox {
     public constructor({
         id = genUniqueKey(),
-        title = "",
+        title = getBoxDefaultName(),
         visible = true,
         width = 0.5,
         height = 0.5,
@@ -33,8 +39,10 @@ export class TeleBox {
         draggable = true,
         fixRatio = false,
         focus = false,
+        zIndex = 100,
         namespace = "telebox",
         titleBar,
+        content,
     }: TeleBoxConfig = {}) {
         this.id = id;
         this._title = title;
@@ -50,7 +58,9 @@ export class TeleBox {
         this._draggable = draggable;
         this._fixRatio = fixRatio;
         this._focus = focus;
+        this._zIndex = zIndex;
         this._titleBar = titleBar;
+        this.content = content;
 
         this.namespace = namespace;
 
@@ -58,6 +68,8 @@ export class TeleBox {
             this.transform(this._x, this._y, this._width, this._height, true);
         }
     }
+
+    public content: HTMLElement | undefined;
 
     public readonly id: string;
 
@@ -68,15 +80,8 @@ export class TeleBox {
         return this._title;
     }
 
-    /** Element to mount. Default empty. */
-    public get container(): HTMLElement | undefined {
-        if (this._container) {
-            return this._container;
-        }
-        if (this.$box?.parentElement) {
-            return this.$box.parentElement;
-        }
-        return void 0;
+    public get visible(): boolean {
+        return this._visible;
     }
 
     /** Box width relative to container element. 0~1. Default 0.5. */
@@ -145,6 +150,13 @@ export class TeleBox {
         return this._focus;
     }
 
+    public get zIndex(): number {
+        if (this._focus) {
+            return this._zIndex + 1;
+        }
+        return this._zIndex;
+    }
+
     public get titleBar(): TeleTitleBar {
         if (!this._titleBar) {
             this._titleBar = new DefaultTitleBar({
@@ -166,7 +178,7 @@ export class TeleBox {
                             break;
                         }
                         case TeleBoxEventType.Close: {
-                            this.setVisible(false);
+                            this.events.emit(TeleBoxEventType.Close);
                             break;
                         }
                         default: {
@@ -183,7 +195,6 @@ export class TeleBox {
      * Mount box to a container element.
      */
     public mount(container: HTMLElement): this {
-        this._container = container;
         container.appendChild(this.render());
         return this;
     }
@@ -194,6 +205,34 @@ export class TeleBox {
     public unmount(): this {
         if (this.$box) {
             this.$box.remove();
+        }
+        return this;
+    }
+
+    /**
+     * Mount dom to box content.
+     */
+    public mountContent(content: HTMLElement): this {
+        if (this.content !== content) {
+            this.content = content;
+            if (this.$content) {
+                if (this.$content.firstChild) {
+                    this.$content.removeChild(this.$content.firstChild);
+                }
+                this.$content.appendChild(content);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Unmount content from the box.
+     */
+    public unmountContent(): this {
+        if (this.$content) {
+            if (this.$content.firstChild) {
+                this.$content.removeChild(this.$content.firstChild);
+            }
         }
         return this;
     }
@@ -389,7 +428,8 @@ export class TeleBox {
         if (this._focus !== focus) {
             this._focus = focus;
             if (this.$box) {
-                this.$box.classList.toggle(this.wrapClassName("focus"), focus);
+                this.$box.classList.toggle(this.wrapClassName("blur"), !focus);
+                this.$box.style.zIndex = String(this.zIndex);
             }
             if (!skipUpdate) {
                 this.events.emit(
@@ -417,6 +457,9 @@ export class TeleBox {
      * Clean up.
      */
     public destroy(): void {
+        if (this.$box) {
+            this.$box.remove();
+        }
         if (this._titleBar) {
             this._titleBar.destroy();
         }
@@ -432,7 +475,6 @@ export class TeleBox {
     }
 
     protected _title: string;
-    protected _container?: HTMLElement;
     protected _visible: boolean;
     protected _width: number;
     protected _height: number;
@@ -445,6 +487,7 @@ export class TeleBox {
     protected _draggable: boolean;
     protected _fixRatio: boolean;
     protected _focus: boolean;
+    protected _zIndex: number;
     protected _titleBar: TeleTitleBar | undefined;
 
     /** Classname Prefix. For CSS styling. Default "telebox" */
@@ -486,8 +529,8 @@ export class TeleBox {
                 this.$box.classList.add(this.wrapClassName("no-resize"));
             }
 
-            if (this._focus) {
-                this.$box.classList.add(this.wrapClassName("focus"));
+            if (!this._focus) {
+                this.$box.classList.add(this.wrapClassName("blur"));
             }
 
             if (!this._visible) {
@@ -498,6 +541,7 @@ export class TeleBox {
                 this.$box.classList.add(this.wrapClassName("maximized"));
             }
 
+            this.$box.style.zIndex = String(this.zIndex);
             this.$box.style.left = this._x * 100 + "%";
             this.$box.style.top = this._y * 100 + "%";
             this.$box.style.width = this._width * 100 + "%";
@@ -507,6 +551,9 @@ export class TeleBox {
 
             this.$content = document.createElement("div");
             this.$content.className = this.wrapClassName("content");
+            if (this.content) {
+                this.$content.appendChild(this.content);
+            }
 
             const $resizeHandles = document.createElement("div");
             $resizeHandles.className = this.wrapClassName("resize-handles");
@@ -564,7 +611,7 @@ export class TeleBox {
 
     protected trackingHandle: TeleBoxHandleType | undefined;
 
-    protected handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
+    public handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
         if (
             (ev as MouseEvent).button != null &&
             (ev as MouseEvent).button !== 0
@@ -742,3 +789,11 @@ export class TeleBox {
         this.$trackMask.remove();
     };
 }
+
+type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox
+    ? TeleBox[K] extends Function
+        ? never
+        : K
+    : never;
+
+export type ReadonlyTeleBox = Pick<TeleBox, PropKeys>;
