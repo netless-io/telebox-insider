@@ -132,8 +132,16 @@
     cursor: sw-resize;
 }
 
+.#{$namespace}-maximized,
 .#{$namespace}-no-resize {
     .#{$namespace}-resize-handles {
         display: none;
     }
+}
+
+.#{$namespace}-maximized {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
 }

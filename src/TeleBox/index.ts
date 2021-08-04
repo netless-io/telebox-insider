@@ -7,7 +7,6 @@ import {
     TeleBoxEventType,
     TeleBoxState,
     TeleBoxResizeHandle,
-    TeleBoxDragHandleType,
 } from "./constants";
 import type {
     TeleBoxConfig,
@@ -22,6 +21,7 @@ export class TeleBox {
     public constructor({
         id = genUniqueKey(),
         title = "",
+        visible = true,
         width = 0.5,
         height = 0.5,
         minWidth = 0,
@@ -32,11 +32,13 @@ export class TeleBox {
         resizable = true,
         draggable = true,
         fixRatio = false,
+        focus = false,
         namespace = "telebox",
         titleBar,
     }: TeleBoxConfig = {}) {
         this.id = id;
         this._title = title;
+        this._visible = visible;
         this._minWidth = clamp(minWidth, 0, 1);
         this._minHeight = clamp(minHeight, 0, 1);
         this._width = clamp(width, this._minWidth, 1);
@@ -47,6 +49,7 @@ export class TeleBox {
         this._resizable = resizable;
         this._draggable = draggable;
         this._fixRatio = fixRatio;
+        this._focus = focus;
         this._titleBar = titleBar;
 
         this.namespace = namespace;
@@ -78,11 +81,17 @@ export class TeleBox {
 
     /** Box width relative to container element. 0~1. Default 0.5. */
     public get width(): number {
+        if (this._state === TeleBoxState.Maximized) {
+            return 1;
+        }
         return this._width;
     }
 
     /** Box height relative to container element. 0~1. Default 0.5. */
     public get height(): number {
+        if (this._state === TeleBoxState.Maximized) {
+            return 1;
+        }
         return this._height;
     }
 
@@ -98,11 +107,17 @@ export class TeleBox {
 
     /** x position relative to container element. 0~1. Default 0.1. */
     public get x(): number {
+        if (this._state === TeleBoxState.Maximized) {
+            return 0;
+        }
         return this._x;
     }
 
     /** y position relative to container element. 0~1. Default 0.1. */
     public get y(): number {
+        if (this._state === TeleBoxState.Maximized) {
+            return 0;
+        }
         return this._y;
     }
 
@@ -126,12 +141,39 @@ export class TeleBox {
         return Boolean(this._fixRatio);
     }
 
+    public get focus(): boolean {
+        return this._focus;
+    }
+
     public get titleBar(): TeleTitleBar {
         if (!this._titleBar) {
             this._titleBar = new DefaultTitleBar({
                 title: this.title,
                 namespace: this.namespace,
-                onEvent: this.events.emit.bind(this.events),
+                onDragStart: this.handleTrackStart,
+                onEvent: (event): void => {
+                    switch (event.type) {
+                        case TeleBoxEventType.State: {
+                            if (event.value === TeleBoxState.Maximized) {
+                                this.setState(
+                                    this._state === TeleBoxState.Maximized
+                                        ? TeleBoxState.Normal
+                                        : TeleBoxState.Maximized
+                                );
+                            } else {
+                                this.setState(event.value);
+                            }
+                            break;
+                        }
+                        case TeleBoxEventType.Close: {
+                            this.setVisible(false);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
+                },
             });
         }
         return this._titleBar;
@@ -187,7 +229,7 @@ export class TeleBox {
             }
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxEventType.Move, x, y);
+                this.events.emit(TeleBoxEventType.Move, { x, y });
             }
         }
 
@@ -221,7 +263,7 @@ export class TeleBox {
             }
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxEventType.Resize, width, height);
+                this.events.emit(TeleBoxEventType.Resize, { width, height });
             }
         }
 
@@ -292,7 +334,12 @@ export class TeleBox {
         if (this._state !== state) {
             this._state = state;
 
-            // @TODO
+            if (this.$box) {
+                this.$box.classList.toggle(
+                    this.wrapClassName("maximized"),
+                    state === TeleBoxState.Maximized
+                );
+            }
 
             if (!skipUpdate) {
                 this.events.emit(TeleBoxEventType.State, state);
@@ -306,7 +353,10 @@ export class TeleBox {
         if (this._draggable !== draggable) {
             this._draggable = draggable;
             if (this.$box) {
-                this.$box.classList.toggle("no-drag", !draggable);
+                this.$box.classList.toggle(
+                    this.wrapClassName("no-drag"),
+                    !draggable
+                );
             }
         }
         return this;
@@ -316,7 +366,10 @@ export class TeleBox {
         if (this._resizable !== resizable) {
             this._resizable = resizable;
             if (this.$box) {
-                this.$box.classList.toggle("no-resize", !resizable);
+                this.$box.classList.toggle(
+                    this.wrapClassName("no-resize"),
+                    !resizable
+                );
             }
         }
         return this;
@@ -332,11 +385,43 @@ export class TeleBox {
         return this;
     }
 
+    public setFocus(focus: boolean, skipUpdate = false): this {
+        if (this._focus !== focus) {
+            this._focus = focus;
+            if (this.$box) {
+                this.$box.classList.toggle(this.wrapClassName("focus"), focus);
+            }
+            if (!skipUpdate) {
+                this.events.emit(
+                    focus ? TeleBoxEventType.Focus : TeleBoxEventType.Blur
+                );
+            }
+        }
+        return this;
+    }
+
+    public setVisible(visible: boolean): this {
+        if (this._visible !== visible) {
+            this._visible = visible;
+            if (this.$box) {
+                this.$box.style.display = visible ? "block" : "none";
+            }
+            if (!visible) {
+                this.events.emit(TeleBoxEventType.Close);
+            }
+        }
+        return this;
+    }
+
     /**
      * Clean up.
      */
     public destroy(): void {
+        if (this._titleBar) {
+            this._titleBar.destroy();
+        }
         this.unRender();
+        this.events.removeAllListeners();
     }
 
     /**
@@ -348,6 +433,7 @@ export class TeleBox {
 
     protected _title: string;
     protected _container?: HTMLElement;
+    protected _visible: boolean;
     protected _width: number;
     protected _height: number;
     protected _minWidth: number;
@@ -358,6 +444,7 @@ export class TeleBox {
     protected _resizable: boolean;
     protected _draggable: boolean;
     protected _fixRatio: boolean;
+    protected _focus: boolean;
     protected _titleBar: TeleTitleBar | undefined;
 
     /** Classname Prefix. For CSS styling. Default "telebox" */
@@ -368,8 +455,6 @@ export class TeleBox {
 
     /** DOM of the box content */
     protected $content: HTMLElement | undefined;
-
-    protected $dragHandle: HTMLElement | undefined;
 
     protected $resizeHandles: HTMLElement | undefined;
 
@@ -401,24 +486,24 @@ export class TeleBox {
                 this.$box.classList.add(this.wrapClassName("no-resize"));
             }
 
+            if (this._focus) {
+                this.$box.classList.add(this.wrapClassName("focus"));
+            }
+
+            if (!this._visible) {
+                this.$box.style.display = "none";
+            }
+
+            if (this._state === TeleBoxState.Maximized) {
+                this.$box.classList.add(this.wrapClassName("maximized"));
+            }
+
             this.$box.style.left = this._x * 100 + "%";
             this.$box.style.top = this._y * 100 + "%";
             this.$box.style.width = this._width * 100 + "%";
             this.$box.style.height = this._height * 100 + "%";
 
             const $titleBar = this.titleBar.render();
-            this.$dragHandle = this.titleBar.dragHandle();
-            if (this.$dragHandle) {
-                this.$dragHandle.dataset.teleBoxHandle = TeleBoxDragHandleType;
-                this.$dragHandle.addEventListener(
-                    "mousedown",
-                    this.handleTrackStart
-                );
-                this.$dragHandle.addEventListener(
-                    "touchstart",
-                    this.handleTrackStart
-                );
-            }
 
             this.$content = document.createElement("div");
             this.$content.className = this.wrapClassName("content");
@@ -449,17 +534,6 @@ export class TeleBox {
     }
 
     protected unRender(): void {
-        if (this.$dragHandle) {
-            this.$dragHandle.removeEventListener(
-                "mousedown",
-                this.handleTrackStart
-            );
-            this.$dragHandle.removeEventListener(
-                "touchstart",
-                this.handleTrackStart
-            );
-            this.$dragHandle = void 0;
-        }
         if (this.$resizeHandles) {
             this.$resizeHandles.removeEventListener(
                 "mousedown",

@@ -12,6 +12,8 @@ export interface TeleBoxConfig {
     readonly id?: string;
     /** Box title. Default empty. */
     readonly title?: string;
+    /** Box visible. Default true. */
+    readonly visible?: boolean;
     /** Box width relative to root element. 0~1. Default 0.5. */
     readonly width?: number;
     /** Box height relative to root element. 0~1. Default 0.5. */
@@ -32,6 +34,8 @@ export interface TeleBoxConfig {
     readonly draggable?: boolean;
     /** Fixed width/height ratio for box window. Default false. */
     readonly fixRatio?: boolean;
+    /** Box focused */
+    readonly focus?: boolean;
     /** Classname Prefix. For CSS styling. Default "telebox" */
     readonly namespace?: string;
     /** TeleTitleBar Instance */
@@ -39,30 +43,30 @@ export interface TeleBoxConfig {
 }
 
 export type TeleBoxEventArgs = {
-    [TeleBoxEventType.Close]: [];
-    [TeleBoxEventType.Focus]: [];
-    [TeleBoxEventType.Blur]: [];
-    [TeleBoxEventType.Move]: [number, number];
-    [TeleBoxEventType.Resize]: [number, number];
-    [TeleBoxEventType.State]: [TeleBoxState];
+    [TeleBoxEventType.Close]: void;
+    [TeleBoxEventType.Focus]: void;
+    [TeleBoxEventType.Blur]: void;
+    [TeleBoxEventType.Move]: { x: number; y: number };
+    [TeleBoxEventType.Resize]: { width: number; height: number };
+    [TeleBoxEventType.State]: TeleBoxState;
 };
 
 export interface TeleBoxEvents extends EventEmitter<keyof TeleBoxEventArgs> {
     on<U extends keyof TeleBoxEventArgs>(
         event: U,
-        listener: (...args: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventArgs[U]) => void
     ): this;
     once<U extends keyof TeleBoxEventArgs>(
         event: U,
-        listener: (...args: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventArgs[U]) => void
     ): this;
     addListener<U extends keyof TeleBoxEventArgs>(
         event: U,
-        listener: (...args: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventArgs[U]) => void
     ): this;
     emit<U extends keyof TeleBoxEventArgs>(
         event: U,
-        ...args: TeleBoxEventArgs[U]
+        ...value: TeleBoxEventArgs[U] extends void ? [] : [TeleBoxEventArgs[U]]
     ): boolean;
 }
 

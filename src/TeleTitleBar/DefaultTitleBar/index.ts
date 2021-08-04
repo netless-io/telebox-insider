@@ -4,22 +4,21 @@ import minimizeSVG from "./icons/minimize.svg";
 import maximizeSVG from "./icons/maximize.svg";
 import closeSVG from "./icons/close.svg";
 
-import { TeleBoxEventArgs } from "../../TeleBox";
 import {
     TeleBoxDragHandleType,
     TeleBoxEventType,
     TeleBoxState,
 } from "../../TeleBox/constants";
-import type { TeleTitleBar, TeleTitleBarConfig } from "../typings";
+import type {
+    TeleTitleBar,
+    TeleTitleBarConfig,
+    TeleTitleBarEvent,
+} from "../typings";
 import { preventEvent } from "../../utils";
 
-export interface DefaultTitleBarButton<
-    T extends TeleBoxEventType = TeleBoxEventType
-> {
-    readonly type: T;
-    readonly value: TeleBoxEventArgs[T];
+export type DefaultTitleBarButton = TeleTitleBarEvent & {
     readonly icon: string;
-}
+};
 
 export interface DefaultTitleBarConfig extends TeleTitleBarConfig {
     buttons?: ReadonlyArray<DefaultTitleBarButton>;
@@ -30,10 +29,12 @@ export class DefaultTitleBar implements TeleTitleBar {
         title,
         buttons,
         onEvent,
+        onDragStart,
         namespace = "telebox",
     }: DefaultTitleBarConfig = {}) {
         this.buttons = buttons || DefaultTitleBar.defaultButtons;
         this.onEvent = onEvent;
+        this.onDragStart = onDragStart;
         this.namespace = namespace;
         this.title = title;
     }
@@ -43,6 +44,8 @@ export class DefaultTitleBar implements TeleTitleBar {
     public $titleBar: HTMLElement | undefined;
 
     public $title: HTMLElement | undefined;
+
+    public $buttons: HTMLElement | undefined;
 
     public updateTitle(title: string): void {
         this.title = title;
@@ -57,9 +60,12 @@ export class DefaultTitleBar implements TeleTitleBar {
             this.$titleBar = document.createElement("div");
             this.$titleBar.className = this.wrapClassName("titlebar");
             this.$titleBar.dataset.teleBoxHandle = TeleBoxDragHandleType;
-
             this.$titleBar.addEventListener(
                 "mousedown",
+                this.handleTitleBarClick
+            );
+            this.$titleBar.addEventListener(
+                "touchstart",
                 this.handleTitleBarClick
             );
 
@@ -73,22 +79,25 @@ export class DefaultTitleBar implements TeleTitleBar {
 
             const $buttons = document.createElement("div");
             $buttons.className = this.wrapClassName("titlebar-btns");
+            this.$buttons = $buttons;
 
-            this.buttons.forEach(({ type, icon }) => {
+            this.buttons.forEach(({ icon }, i) => {
+                const teleTitleBarBtnIndex = String(i);
+
                 const $btn = document.createElement("button");
                 $btn.className = this.wrapClassName("titlebar-btn");
-                $btn.dataset.teleBoxEventType = type;
+                $btn.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
 
                 const $img = document.createElement("img");
                 $img.className = this.wrapClassName("titlebar-btn-icon");
                 $img.src = icon;
-                $btn.dataset.teleBoxEventType = type;
+                $img.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
 
                 $btn.appendChild($img);
                 $buttons.appendChild($btn);
             });
 
-            this.$titleBar.addEventListener("click", this.handleBtnClick);
+            this.$buttons.addEventListener("click", this.handleBtnClick);
 
             this.$titleBar.appendChild(this.$title);
             this.$titleBar.appendChild($buttons);
@@ -111,7 +120,14 @@ export class DefaultTitleBar implements TeleTitleBar {
                 "mousedown",
                 this.handleTitleBarClick
             );
-            this.$titleBar.removeEventListener("click", this.handleBtnClick);
+            this.$titleBar.removeEventListener(
+                "touchstart",
+                this.handleTitleBarClick
+            );
+            if (this.$buttons) {
+                this.$buttons.removeEventListener("click", this.handleBtnClick);
+                this.$buttons = void 0;
+            }
             this.$titleBar = void 0;
             this.$title = void 0;
         }
@@ -119,18 +135,28 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public onEvent?: TeleTitleBarConfig["onEvent"];
 
+    public onDragStart?: TeleTitleBarConfig["onDragStart"];
+
     protected title?: string;
 
     protected buttons: ReadonlyArray<DefaultTitleBarButton>;
 
     protected handleBtnClick = (ev: MouseEvent): void => {
         const target = ev.target as HTMLElement;
-        const teleBoxEventType = target.dataset?.teleBoxEventType;
-        const btn = this.buttons.find((btn) => btn.type === teleBoxEventType);
-        if (btn) {
+        const teleTitleBarBtnIndex = Number(
+            target.dataset?.teleTitleBarBtnIndex
+        );
+        if (
+            !Number.isNaN(teleTitleBarBtnIndex) &&
+            teleTitleBarBtnIndex < this.buttons.length
+        ) {
             preventEvent(ev);
+            const btn = this.buttons[teleTitleBarBtnIndex];
             if (this.onEvent) {
-                this.onEvent(btn.type, ...btn.value);
+                this.onEvent({
+                    type: btn.type,
+                    value: btn.value,
+                } as TeleTitleBarEvent);
             }
         }
     };
@@ -144,12 +170,24 @@ export class DefaultTitleBar implements TeleTitleBar {
         ) {
             return; // Not left mouse
         }
+
+        if ((ev.target as HTMLElement).dataset?.teleTitleBarBtnIndex) {
+            return; // btns
+        }
+
+        preventEvent(ev);
+
         const now = Date.now();
         if (now - this.lastTitleBarClick <= 500) {
             // double click
             if (this.onEvent) {
-                this.onEvent(TeleBoxEventType.State, TeleBoxState.Maximized);
+                this.onEvent({
+                    type: TeleBoxEventType.State,
+                    value: TeleBoxState.Maximized,
+                });
             }
+        } else if (this.onDragStart) {
+            this.onDragStart(ev);
         }
         this.lastTitleBarClick = now;
     };
@@ -158,17 +196,16 @@ export class DefaultTitleBar implements TeleTitleBar {
         [
             {
                 type: TeleBoxEventType.State,
-                value: [TeleBoxState.Minimized],
+                value: TeleBoxState.Minimized,
                 icon: minimizeSVG,
             },
             {
                 type: TeleBoxEventType.State,
-                value: [TeleBoxState.Maximized],
+                value: TeleBoxState.Maximized,
                 icon: maximizeSVG,
             },
             {
                 type: TeleBoxEventType.Close,
-                value: [],
                 icon: closeSVG,
             },
         ];
