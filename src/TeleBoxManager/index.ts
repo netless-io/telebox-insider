@@ -2,7 +2,6 @@ import EventEmitter from "eventemitter3";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
 import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
 import { TeleBoxConfig, TeleBoxContainerRect } from "../TeleBox/typings";
-import { getRandomInt } from "../utils";
 import { TeleBoxManagerEventType } from "./constants";
 import {
     TeleBoxManagerConfig,
@@ -259,8 +258,8 @@ export class TeleBoxManager {
     }
 
     protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
-        const offsetX = getRandomInt(5, 10) / this.containerRect.width;
-        const offsetY = getRandomInt(5, 10) / this.containerRect.height;
+        const offsetX = 10 / this.containerRect.width;
+        const offsetY = 10 / this.containerRect.height;
 
         let { x, y } = config;
 
