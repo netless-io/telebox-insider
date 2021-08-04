@@ -37,6 +37,7 @@ export class TeleBox {
         state = TeleBoxState.Normal,
         resizable = true,
         draggable = true,
+        fence = true,
         fixRatio = false,
         focus = false,
         zIndex = 100,
@@ -56,6 +57,7 @@ export class TeleBox {
         this._state = state;
         this._resizable = resizable;
         this._draggable = draggable;
+        this._fence = fence;
         this._fixRatio = fixRatio;
         this._focus = focus;
         this._zIndex = zIndex;
@@ -139,6 +141,11 @@ export class TeleBox {
     /** Able to drag box window */
     public get draggable(): boolean {
         return this._draggable;
+    }
+
+    /** Restrict box to always be within the containing area. */
+    public get fence(): boolean {
+        return this._fence;
     }
 
     /** Fixed width/height ratio for box window. */
@@ -258,6 +265,11 @@ export class TeleBox {
      * @returns this
      */
     public move(x: number, y: number, skipUpdate = false): this {
+        if (this._fence) {
+            x = clamp(x, 0, 1 - this._width);
+            y = clamp(y, 0, 1 - this._height);
+        }
+
         if (this._x !== x || this._y !== y) {
             this._x = x;
             this._y = y;
@@ -325,22 +337,25 @@ export class TeleBox {
         height: number,
         skipUpdate = false
     ): this {
-        if (
-            y < 0 ||
-            width < this._minWidth ||
-            width > 1 ||
-            height < this._minHeight ||
-            height > 1
-        ) {
-            return this;
-        }
-
         if (this._fixRatio) {
             const newHeight = (this._height / this._width) * width;
             if (y !== this._y) {
                 y -= newHeight - height;
             }
             height = newHeight;
+        }
+
+        if (
+            x < 0 ||
+            y < 0 ||
+            x > 1 - width ||
+            y > 1 - height ||
+            width < this._minWidth ||
+            width > 1 ||
+            height < this._minHeight ||
+            height > 1
+        ) {
+            return this;
         }
 
         this.move(x, y, skipUpdate);
@@ -410,6 +425,14 @@ export class TeleBox {
                     !resizable
                 );
             }
+        }
+        return this;
+    }
+
+    public setFence(fence: boolean): this {
+        if (this._fence !== fence) {
+            this._fence = fence;
+            this.transform(this._x, this._y, this._width, this._height);
         }
         return this;
     }
@@ -485,6 +508,7 @@ export class TeleBox {
     protected _state: TeleBoxState;
     protected _resizable: boolean;
     protected _draggable: boolean;
+    protected _fence: boolean;
     protected _fixRatio: boolean;
     protected _focus: boolean;
     protected _zIndex: number;

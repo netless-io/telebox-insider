@@ -32,6 +32,8 @@ export interface TeleBoxConfig {
     readonly resizable?: boolean;
     /** Able to drag box window Default true. */
     readonly draggable?: boolean;
+    /** Restrict box to always be within the containing area. Default true. */
+    readonly fence?: boolean;
     /** Fixed width/height ratio for box window. Default false. */
     readonly fixRatio?: boolean;
     /** Box focused. */
