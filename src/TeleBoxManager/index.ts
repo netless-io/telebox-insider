@@ -31,14 +31,22 @@ export class TeleBoxManager {
             this.setState(box.state);
         }
 
-        box.events.on(TeleBoxEventType.State, (state) => this.setState(state));
-        box.events.on(TeleBoxEventType.Close, () => this.remove(box.id));
-        box.events.on(TeleBoxEventType.Move, () =>
-            this.events.emit(TeleBoxManagerEventType.Move, box)
-        );
-        box.events.on(TeleBoxEventType.Resize, () =>
-            this.events.emit(TeleBoxManagerEventType.Resize, box)
-        );
+        box.events.on(TeleBoxEventType.State, (state) => {
+            this.setState(state);
+            this.focusBox(true, box);
+        });
+        box.events.on(TeleBoxEventType.Close, () => {
+            this.focusBox(false, box);
+            this.remove(box.id);
+        });
+        box.events.on(TeleBoxEventType.Move, () => {
+            this.events.emit(TeleBoxManagerEventType.Move, box);
+            this.focusBox(true, box);
+        });
+        box.events.on(TeleBoxEventType.Resize, () => {
+            this.events.emit(TeleBoxManagerEventType.Resize, box);
+            this.focusBox(true, box);
+        });
 
         this.events.emit(TeleBoxManagerEventType.Created, box);
 
@@ -164,16 +172,18 @@ export class TeleBoxManager {
     protected focusBox(focus: boolean, box: TeleBox): void {
         box.setFocus(focus);
         if (box.focus) {
-            const lastFocusedBox = this._focusedBox;
-            if (this._focusedBox) {
-                this._focusedBox.setFocus(false);
+            if (this._focusedBox !== box) {
+                const lastFocusedBox = this._focusedBox;
+                if (this._focusedBox) {
+                    this._focusedBox.setFocus(false);
+                }
+                this._focusedBox = box;
+                this.events.emit(
+                    TeleBoxManagerEventType.Focused,
+                    box,
+                    lastFocusedBox
+                );
             }
-            this._focusedBox = box;
-            this.events.emit(
-                TeleBoxManagerEventType.Focused,
-                box,
-                lastFocusedBox
-            );
         } else {
             if (this._focusedBox === box) {
                 this._focusedBox = void 0;
