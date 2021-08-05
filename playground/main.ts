@@ -9,7 +9,13 @@ setBoardRect();
 const manager = new TeleBoxManager({
     root: document.body,
     containerRect: board.getBoundingClientRect(),
-    collector: new TeleBoxCollector().mount(document.body),
+    collector: new TeleBoxCollector({
+        styles: {
+            position: "absolute",
+            bottom: "10px",
+            right: "50px",
+        },
+    }).mount(document.body),
 });
 
 btnCreate.addEventListener("click", () => {

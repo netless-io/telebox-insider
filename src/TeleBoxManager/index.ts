@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
 import type { TeleBoxConfig, TeleBoxRect } from "../TeleBox/typings";
-import type { TeleBoxCollector } from "../TeleBoxCollector";
+import { TeleBoxCollector } from "../TeleBoxCollector";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
 import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
 import { TeleBoxManagerEventType } from "./constants";
@@ -31,11 +31,12 @@ export class TeleBoxManager {
         this._state = state;
         this._fence = fence;
         this.containerRect = containerRect;
-        this.collector = collector;
         this.namespace = namespace;
         this.zIndex = zIndex;
+        this.collector = collector;
 
         if (collector) {
+            collector.setVisible(this._state === TeleBoxState.Minimized);
             collector.onClick = () => {
                 if (this._state === TeleBoxState.Minimized) {
                     this.setState(this.lastState ?? TeleBoxState.Normal);
@@ -197,6 +198,10 @@ export class TeleBoxManager {
         if (this._state !== state) {
             this.lastState = this._state;
             this._state = state;
+
+            if (this.collector) {
+                this.collector.setVisible(state === TeleBoxState.Minimized);
+            }
 
             if (state === TeleBoxState.Minimized) {
                 if (this.collector?.$collector) {
