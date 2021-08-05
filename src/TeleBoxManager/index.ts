@@ -189,6 +189,22 @@ export class TeleBoxManager {
         }
     }
 
+    public setCollector(collector: TeleBoxCollector): void {
+        if (this.collector) {
+            this.collector.destroy();
+        }
+
+        (this.collector as TeleBoxCollector) = collector;
+
+        collector.onClick = () => {
+            if (this._state === TeleBoxState.Minimized) {
+                this.setState(this.lastState ?? TeleBoxState.Normal);
+            } else {
+                this.setState(TeleBoxState.Minimized);
+            }
+        };
+    }
+
     protected _state: TeleBoxState;
 
     protected _fence: boolean;
