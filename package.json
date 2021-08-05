@@ -8,8 +8,8 @@
     "sideEffects": [
         "*.css"
     ],
-    "main": "./dist/telebox.cjs.js",
-    "module": "./dist/telebox.es.js",
+    "main": "./dist/telebox-insider.cjs.js",
+    "module": "./dist/telebox-insider.es.js",
     "types": "./dist/index.d.ts",
     "files": [
         "src",
