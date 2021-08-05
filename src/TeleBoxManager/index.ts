@@ -107,6 +107,7 @@ export class TeleBoxManager {
         if (index >= 0) {
             const boxes = this.boxes.splice(index, 1);
             const box = boxes[0];
+            this.focusBox(false, box);
             box.destroy();
             this.events.emit(TeleBoxManagerEventType.Removed, boxes);
             return box;
@@ -115,6 +116,11 @@ export class TeleBoxManager {
     }
 
     public removeAll(): ReadonlyTeleBox[] {
+        if (this._focusedBox) {
+            const box = this._focusedBox;
+            this._focusedBox = void 0;
+            this.events.emit(TeleBoxManagerEventType.Focused, undefined, box);
+        }
         const boxes = this.boxes.splice(0, this.boxes.length);
         boxes.forEach((box) => box.destroy());
         this.events.emit(TeleBoxManagerEventType.Removed, boxes);
@@ -129,10 +135,10 @@ export class TeleBoxManager {
     }
 
     public setContainerRect(rect: TeleBoxContainerRect): this {
-        Object.assign(this.containerRect, rect);
+        (this.containerRect as TeleBoxContainerRect) = rect;
 
         this.boxes.forEach((box) => {
-            box.setContainerRect(rect);
+            box.setContainerRect(this.containerRect);
         });
 
         return this;
@@ -287,6 +293,7 @@ export class TeleBoxManager {
             x,
             y,
             state: this._state,
+            fence: this._fence,
             containerRect: this.containerRect,
         };
     }

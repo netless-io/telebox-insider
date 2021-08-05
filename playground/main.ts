@@ -6,20 +6,6 @@ const board = document.querySelector<HTMLDivElement>(".board")!;
 
 setBoardRect();
 
-window.addEventListener("resize", setBoardRect);
-
-function setBoardRect(): void {
-    const { innerWidth, innerHeight } = window;
-    let width = innerWidth;
-    let height = (innerWidth * 9) / 16;
-    if (height > innerHeight) {
-        width = (innerHeight * 16) / 9;
-        height = innerHeight;
-    }
-    board.style.width = width + "px";
-    board.style.height = height + "px";
-}
-
 const manager = new TeleBoxManager({
     root: document.body,
     containerRect: board.getBoundingClientRect(),
@@ -35,3 +21,20 @@ btnRemove.addEventListener("click", () => {
         manager.remove(boxes[boxes.length - 1].id);
     }
 });
+
+window.addEventListener("resize", () => {
+    setBoardRect();
+    manager.setContainerRect(board.getBoundingClientRect());
+});
+
+function setBoardRect(): void {
+    const { innerWidth, innerHeight } = window;
+    let width = innerWidth;
+    let height = (innerWidth * 9) / 16;
+    if (height > innerHeight) {
+        width = (innerHeight * 16) / 9;
+        height = innerHeight;
+    }
+    board.style.width = width + "px";
+    board.style.height = height + "px";
+}
