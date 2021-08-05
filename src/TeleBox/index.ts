@@ -16,7 +16,7 @@ import {
 } from "./constants";
 import type {
     TeleBoxConfig,
-    TeleBoxContainerRect,
+    TeleBoxRect,
     TeleBoxEvents,
     TeleBoxHandleType,
 } from "./typings";
@@ -51,6 +51,7 @@ export class TeleBox {
             width: window.innerWidth,
             height: window.innerHeight,
         },
+        collectorRect,
     }: TeleBoxConfig = {}) {
         this.id = id;
         this._title = title;
@@ -71,6 +72,7 @@ export class TeleBox {
         this._titleBar = titleBar;
         this.content = content;
         this.containerRect = containerRect;
+        this.collectorRect = collectorRect;
 
         this.namespace = namespace;
 
@@ -81,7 +83,9 @@ export class TeleBox {
 
     public content: HTMLElement | undefined;
 
-    public readonly containerRect: TeleBoxContainerRect;
+    public readonly containerRect: TeleBoxRect;
+
+    public readonly collectorRect: TeleBoxRect | undefined;
 
     public readonly id: string;
 
@@ -181,26 +185,18 @@ export class TeleBox {
                 namespace: this.namespace,
                 onDragStart: this.handleTrackStart,
                 onEvent: (event): void => {
-                    switch (event.type) {
-                        case TeleBoxEventType.State: {
-                            if (event.value === TeleBoxState.Maximized) {
-                                this.setState(
-                                    this._state === TeleBoxState.Maximized
-                                        ? TeleBoxState.Normal
-                                        : TeleBoxState.Maximized
-                                );
-                            } else {
-                                this.setState(event.value);
-                            }
-                            break;
-                        }
-                        case TeleBoxEventType.Close: {
-                            this.events.emit(TeleBoxEventType.Close);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
+                    if (
+                        event.type === TeleBoxEventType.State &&
+                        event.value === TeleBoxState.Maximized
+                    ) {
+                        this.events.emit(
+                            TeleBoxEventType.State,
+                            this._state === TeleBoxState.Maximized
+                                ? TeleBoxState.Normal
+                                : TeleBoxState.Maximized
+                        );
+                    } else {
+                        this.events.emit(event.type, event.value);
                     }
                 },
             });
@@ -402,12 +398,7 @@ export class TeleBox {
         if (this._state !== state) {
             this._state = state;
 
-            if (this.$box) {
-                this.$box.classList.toggle(
-                    this.wrapClassName("maximized"),
-                    state === TeleBoxState.Maximized
-                );
-            }
+            this.syncTeleStateDOM();
 
             if (!skipUpdate) {
                 this.events.emit(TeleBoxEventType.State, state);
@@ -490,17 +481,23 @@ export class TeleBox {
         return this;
     }
 
-    public setContainerRect(rect: TeleBoxContainerRect): this {
+    public setContainerRect(rect: TeleBoxRect): this {
         const x = (this._x * this.containerRect.width) / rect.width;
         const y = (this._y * this.containerRect.height) / rect.height;
         const width = (this._width * this.containerRect.width) / rect.width;
         const height = (this._height * this.containerRect.height) / rect.height;
 
-        Object.assign(this.containerRect, rect);
+        (this.containerRect as TeleBoxRect) = rect;
 
         this.move(x, y);
         this.resize(width, height);
 
+        return this;
+    }
+
+    public setCollectorRect(rect: TeleBoxRect): this {
+        (this.collectorRect as TeleBoxRect) = rect;
+        this.syncTeleStateDOM();
         return this;
     }
 
@@ -589,10 +586,6 @@ export class TeleBox {
                 this.$box.style.display = "none";
             }
 
-            if (this._state === TeleBoxState.Maximized) {
-                this.$box.classList.add(this.wrapClassName("maximized"));
-            }
-
             const x =
                 this._x * this.containerRect.width +
                 this.containerRect.x +
@@ -633,6 +626,8 @@ export class TeleBox {
 
                 $resizeHandles.appendChild($handle);
             });
+
+            this.syncTeleStateDOM();
 
             this.$box.appendChild($titleBar);
             this.$box.appendChild(this.$content);
@@ -850,6 +845,62 @@ export class TeleBox {
         window.removeEventListener("touchend", this.handleTrackEnd);
         this.$trackMask.remove();
     };
+
+    protected syncTeleStateDOM(): this {
+        if (this.$box) {
+            this.$box.classList.toggle(
+                this.wrapClassName("minimized"),
+                this._state === TeleBoxState.Minimized
+            );
+            this.$box.classList.toggle(
+                this.wrapClassName("maximized"),
+                this._state === TeleBoxState.Maximized
+            );
+
+            if (this._state === TeleBoxState.Minimized && this.collectorRect) {
+                const translateX = this.collectorRect.x;
+                const translateY = this.collectorRect.y;
+                const scaleX =
+                    this.collectorRect.width /
+                    (this._width * this.containerRect.width);
+                const scaleY =
+                    this.collectorRect.height /
+                    (this._height * this.containerRect.height);
+                const width = this._width * this.containerRect.width;
+                const height = this._height * this.containerRect.height;
+
+                this.$box.style.transition = "opacity 0.4s, transform 0.4s";
+                this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
+                this.$box.style.width = width + "px";
+                this.$box.style.height = height + "px";
+                this.$box.style.opacity = "0";
+            } else if (this._state === TeleBoxState.Maximized) {
+                this.$box.style.transition = "";
+                this.$box.style.transform = `translate(${this.containerRect.x}px,${this.containerRect.y}px)`;
+                this.$box.style.width = this.containerRect.width + "px";
+                this.$box.style.height = this.containerRect.height + "px";
+                this.$box.style.opacity = "1";
+            } else {
+                const translateX =
+                    this._x * this.containerRect.width +
+                    this.containerRect.x +
+                    "px";
+                const translateY =
+                    this._y * this.containerRect.height +
+                    this.containerRect.y +
+                    "px";
+                const width = this._width * this.containerRect.width;
+                const height = this._height * this.containerRect.height;
+
+                this.$box.style.transition = "";
+                this.$box.style.transform = `translate(${translateX},${translateY})`;
+                this.$box.style.width = width + "px";
+                this.$box.style.height = height + "px";
+                this.$box.style.opacity = "1";
+            }
+        }
+        return this;
+    }
 }
 
 type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox

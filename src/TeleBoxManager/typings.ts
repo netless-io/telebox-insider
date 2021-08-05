@@ -1,11 +1,15 @@
 import type EventEmitter from "eventemitter3";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
 import type { TeleBoxConfig } from "../TeleBox/typings";
+import type { TeleBoxCollector } from "../TeleBoxCollector";
 import type { TeleBoxManagerEventType } from "./constants";
 
 export interface TeleBoxManagerConfig
     extends Pick<TeleBoxConfig, "fence" | "containerRect" | "state"> {
+    /** Element to mount boxes. */
     root?: HTMLElement;
+    /** Where the minimized boxes go. */
+    collector?: TeleBoxCollector;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =

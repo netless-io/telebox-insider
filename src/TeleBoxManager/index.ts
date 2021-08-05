@@ -1,9 +1,10 @@
 import EventEmitter from "eventemitter3";
+import type { TeleBoxConfig, TeleBoxRect } from "../TeleBox/typings";
+import type { TeleBoxCollector } from "../TeleBoxCollector";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
 import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
-import { TeleBoxConfig, TeleBoxContainerRect } from "../TeleBox/typings";
 import { TeleBoxManagerEventType } from "./constants";
-import {
+import type {
     TeleBoxManagerConfig,
     TeleBoxManagerEvents,
     TeleBoxManagerQueryConfig,
@@ -21,16 +22,30 @@ export class TeleBoxManager {
             width: window.innerWidth,
             height: window.innerHeight,
         },
+        collector,
     }: TeleBoxManagerConfig = {}) {
         this.root = root;
         this._state = state;
         this._fence = fence;
         this.containerRect = containerRect;
+        this.collector = collector;
+
+        if (collector) {
+            collector.onClick = () => {
+                if (this._state === TeleBoxState.Minimized) {
+                    this.setState(this.lastState ?? TeleBoxState.Normal);
+                } else {
+                    this.setState(TeleBoxState.Minimized);
+                }
+            };
+        }
     }
 
     public readonly events = new EventEmitter() as TeleBoxManagerEvents;
 
-    public readonly containerRect: TeleBoxContainerRect;
+    public readonly containerRect: TeleBoxRect;
+
+    public readonly collector: TeleBoxCollector | undefined;
 
     public get state(): TeleBoxState {
         return this._state;
@@ -134,8 +149,8 @@ export class TeleBoxManager {
         this.removeAll();
     }
 
-    public setContainerRect(rect: TeleBoxContainerRect): this {
-        (this.containerRect as TeleBoxContainerRect) = rect;
+    public setContainerRect(rect: TeleBoxRect): this {
+        (this.containerRect as TeleBoxRect) = rect;
 
         this.boxes.forEach((box) => {
             box.setContainerRect(this.containerRect);
@@ -146,22 +161,22 @@ export class TeleBoxManager {
 
     public setState(state: TeleBoxState): void {
         if (this._state !== state) {
+            this.lastState = this._state;
             this._state = state;
-            this.boxes.forEach((box) => box.setState(state));
 
-            switch (state) {
-                case TeleBoxState.Maximized: {
-                    break;
-                }
-
-                case TeleBoxState.Minimized: {
-                    break;
-                }
-
-                default: {
-                    break;
+            if (state === TeleBoxState.Minimized) {
+                if (this.collector?.$collector) {
+                    const rect =
+                        this.collector.$collector.getBoundingClientRect();
+                    this.boxes.forEach((box) => {
+                        box.setCollectorRect(rect);
+                    });
+                } else if (import.meta.env.DEV) {
+                    console.warn("No collector for minimized boxes.");
                 }
             }
+
+            this.boxes.forEach((box) => box.setState(state));
 
             this.events.emit(TeleBoxManagerEventType.State, state);
         }
@@ -183,6 +198,8 @@ export class TeleBoxManager {
     protected root: HTMLElement;
 
     protected boxes: TeleBox[] = [];
+
+    protected lastState: TeleBoxState | undefined;
 
     protected teleBoxMatcher(
         config: TeleBoxManagerQueryConfig
@@ -233,6 +250,9 @@ export class TeleBoxManager {
         }
         if (config.focus != null) {
             this.focusBox(config.focus, box);
+        }
+        if (config.content != null) {
+            box.mountContent(config.content);
         }
     }
 

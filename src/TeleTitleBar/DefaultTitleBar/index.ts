@@ -130,6 +130,8 @@ export class DefaultTitleBar implements TeleTitleBar {
             }
             this.$titleBar = void 0;
             this.$title = void 0;
+            this.onDragStart = void 0;
+            this.onEvent = void 0;
         }
     }
 

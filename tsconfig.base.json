@@ -26,7 +26,8 @@
         "experimentalDecorators": true,
         "strictBindCallApply": true,
         "skipDefaultLibCheck": true,
-        "declaration": true
+        "declaration": true,
+        "types": ["vite/client"]
     },
     "exclude": ["node_modules"]
 }

@@ -7,7 +7,7 @@ import {
     TeleBoxState,
 } from "./constants";
 
-export interface TeleBoxContainerRect {
+export interface TeleBoxRect {
     readonly x: number;
     readonly y: number;
     readonly width: number;
@@ -54,7 +54,9 @@ export interface TeleBoxConfig {
     /** Box content. */
     readonly content?: HTMLElement;
     /** Position and dimension of container */
-    readonly containerRect?: TeleBoxContainerRect;
+    readonly containerRect?: TeleBoxRect;
+    /** Position and dimension of collector */
+    readonly collectorRect?: TeleBoxRect;
 }
 
 export type TeleBoxEventArgs = {

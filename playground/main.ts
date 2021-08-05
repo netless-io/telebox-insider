@@ -1,4 +1,4 @@
-import { TeleBoxManager } from "../src";
+import { TeleBoxCollector, TeleBoxManager } from "../src";
 
 const btnCreate = document.querySelector(".btn-create")!;
 const btnRemove = document.querySelector(".btn-remove")!;
@@ -9,6 +9,7 @@ setBoardRect();
 const manager = new TeleBoxManager({
     root: document.body,
     containerRect: board.getBoundingClientRect(),
+    collector: new TeleBoxCollector().mount(document.body),
 });
 
 btnCreate.addEventListener("click", () => {

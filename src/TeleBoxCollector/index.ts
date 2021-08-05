@@ -11,7 +11,7 @@ export interface TeleBoxCollectorConfig {
 
 export class TeleBoxCollector {
     public constructor({
-        visible,
+        visible = true,
         namespace = "telebox",
         styles = {},
         onClick,
@@ -33,6 +33,24 @@ export class TeleBoxCollector {
     public onClick: (() => void) | undefined;
 
     public $collector: HTMLElement | undefined;
+
+    /**
+     * Mount collector to a root element.
+     */
+    public mount(root: HTMLElement): this {
+        root.appendChild(this.render());
+        return this;
+    }
+
+    /**
+     * Unmount collector from the root element.
+     */
+    public unmount(): this {
+        if (this.$collector) {
+            this.$collector.remove();
+        }
+        return this;
+    }
 
     public setVisible(visible: boolean): this {
         if (this._visible !== visible) {
@@ -81,6 +99,18 @@ export class TeleBoxCollector {
         }
 
         return this.$collector;
+    }
+
+    public destroy(): void {
+        if (this.$collector) {
+            this.$collector.removeEventListener(
+                "click",
+                this.handleCollectorClick
+            );
+            this.$collector.remove();
+            this.$collector = void 0;
+        }
+        this.onClick = void 0;
     }
 
     public wrapClassName(className: string): string {
