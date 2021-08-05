@@ -1,6 +1,8 @@
 @import "../scss/variables.scss";
 
 .#{$namespace}-box {
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     position: absolute;
     top: 0;
@@ -20,6 +22,7 @@
 }
 
 .#{$namespace}-content {
+    flex: 1;
     overflow: hidden;
 }
 
