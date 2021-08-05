@@ -275,11 +275,6 @@ export class TeleBox {
      * @returns this
      */
     public move(x: number, y: number, skipUpdate = false): this {
-        if (this._fence) {
-            x = clamp(x, 0, 1 - this._width);
-            y = clamp(y, 0, 1 - this._height);
-        }
-
         if (this._x !== x || this._y !== y) {
             this._x = x;
             this._y = y;
@@ -725,11 +720,11 @@ export class TeleBox {
             this.$trackMask.className = this.wrapClassName(
                 `track-mask${cursor ? ` ${cursor}` : ""}`
             );
+            this.$box.appendChild(this.$trackMask);
             window.addEventListener("mousemove", this.handleTracking);
             window.addEventListener("touchmove", this.handleTracking);
             window.addEventListener("mouseup", this.handleTrackEnd);
             window.addEventListener("touchend", this.handleTrackEnd);
-            this.$box.appendChild(this.$trackMask);
         }
     }
 
@@ -740,9 +735,9 @@ export class TeleBox {
 
         preventEvent(ev);
 
-        const { pageX, pageY } = flattenEvent(ev);
+        let { pageX, pageY } = flattenEvent(ev);
         if (pageY < 0) {
-            return;
+            pageY = 0;
         }
 
         const offsetX =
@@ -824,10 +819,17 @@ export class TeleBox {
                 break;
             }
             default: {
-                this.move(
-                    this.trackStartX + offsetX,
-                    this.trackStartY + offsetY
-                );
+                if (this._fence) {
+                    this.move(
+                        clamp(this.trackStartX + offsetX, 0, 1 - this._width),
+                        clamp(this.trackStartY + offsetY, 0, 1 - this._height)
+                    );
+                } else {
+                    this.move(
+                        this.trackStartX + offsetX,
+                        this.trackStartY + offsetY
+                    );
+                }
                 break;
             }
         }
