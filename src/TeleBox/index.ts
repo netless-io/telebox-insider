@@ -258,7 +258,7 @@ export class TeleBox {
     public setTitle(title: string): this {
         this._title = title;
         if (this._titleBar) {
-            this._titleBar.updateTitle(title);
+            this._titleBar.setTitle(title);
         }
         return this;
     }
@@ -378,9 +378,13 @@ export class TeleBox {
      * @param minWidth Minimum box width relative to container element. 0~1.
      * @returns this
      */
-    public setMinWidth(minWidth: number): this {
+    public setMinWidth(minWidth: number, skipUpdate = false): this {
         this._minWidth = minWidth;
-        this.resize(clamp(this._width, this._minWidth, 1), this._height);
+        this.resize(
+            clamp(this._width, this._minWidth, 1),
+            this._height,
+            skipUpdate
+        );
         return this;
     }
 
@@ -388,9 +392,13 @@ export class TeleBox {
      * @param minHeight Minimum box height relative to container element. 0~1.
      * @returns this
      */
-    public setMinHeight(minHeight: number): this {
+    public setMinHeight(minHeight: number, skipUpdate = false): this {
         this._minHeight = minHeight;
-        this.resize(this._width, clamp(this._height, this._minHeight, 1));
+        this.resize(
+            this._width,
+            clamp(this._height, this._minHeight, 1),
+            skipUpdate
+        );
         return this;
     }
 
@@ -434,19 +442,31 @@ export class TeleBox {
         return this;
     }
 
-    public setFence(fence: boolean): this {
+    public setFence(fence: boolean, skipUpdate = false): this {
         if (this._fence !== fence) {
             this._fence = fence;
-            this.transform(this._x, this._y, this._width, this._height);
+            this.transform(
+                this._x,
+                this._y,
+                this._width,
+                this._height,
+                skipUpdate
+            );
         }
         return this;
     }
 
-    public setFixRatio(fixRatio: boolean): this {
+    public setFixRatio(fixRatio: boolean, skipUpdate = false): this {
         if (this._fixRatio !== fixRatio) {
             this._fixRatio = fixRatio;
             if (fixRatio) {
-                this.transform(this._x, this._y, this._width, this._height);
+                this.transform(
+                    this._x,
+                    this._y,
+                    this._width,
+                    this._height,
+                    skipUpdate
+                );
             }
         }
         return this;
@@ -468,14 +488,16 @@ export class TeleBox {
         return this;
     }
 
-    public setVisible(visible: boolean): this {
+    public setVisible(visible: boolean, skipUpdate = false): this {
         if (this._visible !== visible) {
             this._visible = visible;
             if (this.$box) {
                 this.$box.style.display = visible ? "block" : "none";
             }
-            if (!visible) {
-                this.events.emit(TeleBoxEventType.Close);
+            if (!skipUpdate) {
+                if (!visible) {
+                    this.events.emit(TeleBoxEventType.Close);
+                }
             }
         }
         return this;

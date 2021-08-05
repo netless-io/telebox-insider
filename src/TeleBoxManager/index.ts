@@ -116,49 +116,69 @@ export class TeleBoxManager {
             : this.boxes[0];
     }
 
-    public update(boxID: string, config: TeleBoxManagerUpdateConfig): void {
+    public update(
+        boxID: string,
+        config: TeleBoxManagerUpdateConfig,
+        skipUpdate = false
+    ): void {
         const box = this.boxes.find((box) => box.id === boxID);
         if (box) {
-            return this.updateBox(box, config);
+            return this.updateBox(box, config, skipUpdate);
         }
     }
 
-    public updateAll(config: TeleBoxManagerUpdateConfig): void {
+    public updateAll(
+        config: TeleBoxManagerUpdateConfig,
+        skipUpdate = false
+    ): void {
         this.boxes.forEach((box) => {
-            this.updateBox(box, config);
+            this.updateBox(box, config, skipUpdate);
         });
     }
 
-    public remove(boxID: string): ReadonlyTeleBox | undefined {
+    public remove(
+        boxID: string,
+        skipUpdate = false
+    ): ReadonlyTeleBox | undefined {
         const index = this.boxes.findIndex((box) => box.id === boxID);
         if (index >= 0) {
             const boxes = this.boxes.splice(index, 1);
             const box = boxes[0];
             this.focusBox(false, box);
             box.destroy();
-            this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+            if (!skipUpdate) {
+                this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+            }
             return box;
         }
         return;
     }
 
-    public removeAll(): ReadonlyTeleBox[] {
+    public removeAll(skipUpdate = false): ReadonlyTeleBox[] {
         if (this._focusedBox) {
             const box = this._focusedBox;
             this._focusedBox = void 0;
-            this.events.emit(TeleBoxManagerEventType.Focused, undefined, box);
+            if (!skipUpdate) {
+                this.events.emit(
+                    TeleBoxManagerEventType.Focused,
+                    undefined,
+                    box
+                );
+            }
         }
         const boxes = this.boxes.splice(0, this.boxes.length);
         boxes.forEach((box) => box.destroy());
-        this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+        if (!skipUpdate) {
+            this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+        }
         return boxes;
     }
 
-    public destroy(): void {
+    public destroy(skipUpdate = false): void {
         this.events.removeAllListeners();
         this._focusedBox = void 0;
         this._state = TeleBoxState.Normal;
-        this.removeAll();
+        this.removeAll(skipUpdate);
         window.removeEventListener("mousedown", this.checkFocusBox, true);
         window.removeEventListener("touchstart", this.checkFocusBox, true);
     }
@@ -173,7 +193,7 @@ export class TeleBoxManager {
         return this;
     }
 
-    public setState(state: TeleBoxState): void {
+    public setState(state: TeleBoxState, skipUpdate = false): void {
         if (this._state !== state) {
             this.lastState = this._state;
             this._state = state;
@@ -190,16 +210,18 @@ export class TeleBoxManager {
                 }
             }
 
-            this.boxes.forEach((box) => box.setState(state));
+            this.boxes.forEach((box) => box.setState(state, skipUpdate));
 
-            this.events.emit(TeleBoxManagerEventType.State, state);
+            if (!skipUpdate) {
+                this.events.emit(TeleBoxManagerEventType.State, state);
+            }
         }
     }
 
-    public setFence(fence: boolean): void {
+    public setFence(fence: boolean, skipUpdate = false): void {
         if (this._fence !== fence) {
             this._fence = fence;
-            this.boxes.forEach((box) => box.setFence(fence));
+            this.boxes.forEach((box) => box.setFence(fence, skipUpdate));
         }
     }
 
@@ -247,31 +269,34 @@ export class TeleBoxManager {
 
     protected updateBox(
         box: TeleBox,
-        config: TeleBoxManagerUpdateConfig
+        config: TeleBoxManagerUpdateConfig,
+        skipUpdate = false
     ): void {
         if (config.x != null || config.y != null) {
             box.move(
                 config.x == null ? box.x : config.x,
-                config.y == null ? box.y : config.y
+                config.y == null ? box.y : config.y,
+                skipUpdate
             );
         }
         if (config.width != null || config.height != null) {
             box.resize(
                 config.width == null ? box.width : config.width,
-                config.height == null ? box.height : config.height
+                config.height == null ? box.height : config.height,
+                skipUpdate
             );
         }
         if (config.title != null) {
             box.setTitle(config.title);
         }
         if (config.visible != null) {
-            box.setVisible(config.visible);
+            box.setVisible(config.visible, skipUpdate);
         }
         if (config.minHeight != null) {
-            box.setMinHeight(config.minHeight);
+            box.setMinHeight(config.minHeight, skipUpdate);
         }
         if (config.minWidth != null) {
-            box.setMinWidth(config.minWidth);
+            box.setMinWidth(config.minWidth, skipUpdate);
         }
         if (config.resizable != null) {
             box.setResizable(config.resizable);
@@ -280,39 +305,44 @@ export class TeleBoxManager {
             box.setDraggable(config.draggable);
         }
         if (config.fixRatio != null) {
-            box.setFixRatio(config.fixRatio);
+            box.setFixRatio(config.fixRatio, skipUpdate);
         }
         if (config.focus != null) {
-            this.focusBox(config.focus, box);
+            this.focusBox(config.focus, box, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);
         }
     }
 
-    protected focusBox(focus: boolean, box: TeleBox): void {
-        box.setFocus(focus);
+    protected focusBox(focus: boolean, box: TeleBox, skipUpdate = false): void {
+        box.setFocus(focus, skipUpdate);
         if (box.focus) {
             if (this._focusedBox !== box) {
                 const lastFocusedBox = this._focusedBox;
                 if (this._focusedBox) {
-                    this._focusedBox.setFocus(false);
+                    this._focusedBox.setFocus(false, skipUpdate);
                 }
                 this._focusedBox = box;
-                this.events.emit(
-                    TeleBoxManagerEventType.Focused,
-                    box,
-                    lastFocusedBox
-                );
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TeleBoxManagerEventType.Focused,
+                        box,
+                        lastFocusedBox
+                    );
+                }
             }
         } else {
             if (this._focusedBox === box) {
                 this._focusedBox = void 0;
-                this.events.emit(
-                    TeleBoxManagerEventType.Focused,
-                    undefined,
-                    box
-                );
+
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TeleBoxManagerEventType.Focused,
+                        undefined,
+                        box
+                    );
+                }
             }
         }
     }
