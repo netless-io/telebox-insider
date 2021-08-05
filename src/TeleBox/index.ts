@@ -495,9 +495,11 @@ export class TeleBox {
         return this;
     }
 
-    public setCollectorRect(rect: TeleBoxRect): this {
+    public setCollectorRect(rect: TeleBoxRect, skipUpdate = false): this {
         (this.collectorRect as TeleBoxRect) = rect;
-        this.syncTeleStateDOM();
+        if (!skipUpdate) {
+            this.syncTeleStateDOM();
+        }
         return this;
     }
 
@@ -683,8 +685,6 @@ export class TeleBox {
             return;
         }
 
-        preventEvent(ev);
-
         const target = ev.target as HTMLElement;
         if (target.dataset?.teleBoxHandle) {
             preventEvent(ev);
@@ -716,6 +716,10 @@ export class TeleBox {
                 `track-mask${cursor ? ` ${cursor}` : ""}`
             );
             this.$box.appendChild(this.$trackMask);
+            this.$box.classList.toggle(
+                this.wrapClassName("transforming"),
+                true
+            );
             window.addEventListener("mousemove", this.handleTracking);
             window.addEventListener("touchmove", this.handleTracking);
             window.addEventListener("mouseup", this.handleTrackEnd);
@@ -839,6 +843,13 @@ export class TeleBox {
 
         preventEvent(ev);
 
+        if (this.$box) {
+            this.$box.classList.toggle(
+                this.wrapClassName("transforming"),
+                false
+            );
+        }
+
         window.removeEventListener("mousemove", this.handleTracking);
         window.removeEventListener("touchmove", this.handleTracking);
         window.removeEventListener("mouseup", this.handleTrackEnd);
@@ -858,28 +869,30 @@ export class TeleBox {
             );
 
             if (this._state === TeleBoxState.Minimized && this.collectorRect) {
-                const translateX = this.collectorRect.x;
-                const translateY = this.collectorRect.y;
+                const width = this._width * this.containerRect.width;
+                const height = this._height * this.containerRect.height;
+                const translateX =
+                    this.collectorRect.x -
+                    width / 2 +
+                    this.collectorRect.width / 2;
+                const translateY =
+                    this.collectorRect.y -
+                    height / 2 +
+                    this.collectorRect.height / 2;
                 const scaleX =
                     this.collectorRect.width /
                     (this._width * this.containerRect.width);
                 const scaleY =
                     this.collectorRect.height /
                     (this._height * this.containerRect.height);
-                const width = this._width * this.containerRect.width;
-                const height = this._height * this.containerRect.height;
 
-                this.$box.style.transition = "opacity 0.4s, transform 0.4s";
                 this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
                 this.$box.style.width = width + "px";
                 this.$box.style.height = height + "px";
-                this.$box.style.opacity = "0";
             } else if (this._state === TeleBoxState.Maximized) {
-                this.$box.style.transition = "";
                 this.$box.style.transform = `translate(${this.containerRect.x}px,${this.containerRect.y}px)`;
                 this.$box.style.width = this.containerRect.width + "px";
                 this.$box.style.height = this.containerRect.height + "px";
-                this.$box.style.opacity = "1";
             } else {
                 const translateX =
                     this._x * this.containerRect.width +
@@ -892,11 +905,9 @@ export class TeleBox {
                 const width = this._width * this.containerRect.width;
                 const height = this._height * this.containerRect.height;
 
-                this.$box.style.transition = "";
                 this.$box.style.transform = `translate(${translateX},${translateY})`;
                 this.$box.style.width = width + "px";
                 this.$box.style.height = height + "px";
-                this.$box.style.opacity = "1";
             }
         }
         return this;

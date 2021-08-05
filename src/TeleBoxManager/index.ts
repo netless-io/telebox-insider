@@ -169,7 +169,7 @@ export class TeleBoxManager {
                     const rect =
                         this.collector.$collector.getBoundingClientRect();
                     this.boxes.forEach((box) => {
-                        box.setCollectorRect(rect);
+                        box.setCollectorRect(rect, true);
                     });
                 } else if (import.meta.env.DEV) {
                     console.warn("No collector for minimized boxes.");
