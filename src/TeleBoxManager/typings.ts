@@ -5,7 +5,10 @@ import type { TeleBoxCollector } from "../TeleBoxCollector";
 import type { TeleBoxManagerEventType } from "./constants";
 
 export interface TeleBoxManagerConfig
-    extends Pick<TeleBoxConfig, "fence" | "containerRect" | "state"> {
+    extends Pick<
+        TeleBoxConfig,
+        "fence" | "containerRect" | "state" | "namespace" | "zIndex"
+    > {
     /** Element to mount boxes. */
     root?: HTMLElement;
     /** Where the minimized boxes go. */
@@ -25,6 +28,11 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "draggable"
     | "fixRatio"
     | "focus";
+
+export type TeleBoxManagerCreateConfig = Pick<
+    TeleBoxConfig,
+    TeleBoxManagerBoxConfigBaseProps | "content"
+>;
 
 export type TeleBoxManagerQueryConfig = Pick<
     TeleBoxConfig,

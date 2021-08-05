@@ -597,6 +597,7 @@ export class TeleBox {
                 this.containerRect.y +
                 "px";
 
+            this.$box.dataset.teleBoxID = this.id;
             this.$box.style.transform = `translate(${x},${y})`;
             this.$box.style.zIndex = String(this.zIndex);
             this.$box.style.width =

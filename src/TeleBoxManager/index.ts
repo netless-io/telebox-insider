@@ -6,6 +6,7 @@ import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
 import { TeleBoxManagerEventType } from "./constants";
 import type {
     TeleBoxManagerConfig,
+    TeleBoxManagerCreateConfig,
     TeleBoxManagerEvents,
     TeleBoxManagerQueryConfig,
     TeleBoxManagerUpdateConfig,
@@ -23,12 +24,16 @@ export class TeleBoxManager {
             height: window.innerHeight,
         },
         collector,
+        namespace = "telebox",
+        zIndex = 100,
     }: TeleBoxManagerConfig = {}) {
         this.root = root;
         this._state = state;
         this._fence = fence;
         this.containerRect = containerRect;
         this.collector = collector;
+        this.namespace = namespace;
+        this.zIndex = zIndex;
 
         if (collector) {
             collector.onClick = () => {
@@ -39,6 +44,9 @@ export class TeleBoxManager {
                 }
             };
         }
+
+        window.addEventListener("mousedown", this.checkFocusBox, true);
+        window.addEventListener("touchstart", this.checkFocusBox, true);
     }
 
     public readonly events = new EventEmitter() as TeleBoxManagerEvents;
@@ -46,6 +54,10 @@ export class TeleBoxManager {
     public readonly containerRect: TeleBoxRect;
 
     public readonly collector: TeleBoxCollector | undefined;
+
+    public readonly namespace: string;
+
+    public readonly zIndex: number;
 
     public get state(): TeleBoxState {
         return this._state;
@@ -55,7 +67,7 @@ export class TeleBoxManager {
         return this._fence;
     }
 
-    public create(config?: TeleBoxConfig): ReadonlyTeleBox {
+    public create(config?: TeleBoxManagerCreateConfig): ReadonlyTeleBox {
         const box = new TeleBox(this.wrapCreateConfig(config));
         box.mount(this.root);
         this.boxes.push(box);
@@ -147,6 +159,8 @@ export class TeleBoxManager {
         this._focusedBox = void 0;
         this._state = TeleBoxState.Normal;
         this.removeAll();
+        window.removeEventListener("mousedown", this.checkFocusBox, true);
+        window.removeEventListener("touchstart", this.checkFocusBox, true);
     }
 
     public setContainerRect(rect: TeleBoxRect): this {
@@ -203,6 +217,10 @@ export class TeleBoxManager {
                 this.setState(TeleBoxState.Minimized);
             }
         };
+    }
+
+    public wrapClassName(className: string): string {
+        return `${this.namespace}-${className}`;
     }
 
     protected _state: TeleBoxState;
@@ -299,6 +317,28 @@ export class TeleBoxManager {
         }
     }
 
+    protected checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
+        const target = ev.target as HTMLElement;
+        if (!target.tagName) {
+            return;
+        }
+
+        const boxClassName = this.wrapClassName("box");
+
+        for (let el: HTMLElement | null = target; el; el = el.parentElement) {
+            if (el.classList?.contains(boxClassName)) {
+                const id = el.dataset?.teleBoxID;
+                if (id) {
+                    const box = this.boxes.find((box) => box.id === id);
+                    if (box) {
+                        this.focusBox(true, box);
+                        return;
+                    }
+                }
+            }
+        }
+    };
+
     protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
         const offsetX = 10 / this.containerRect.width;
         const offsetY = 10 / this.containerRect.height;
@@ -330,6 +370,8 @@ export class TeleBoxManager {
             y,
             state: this._state,
             fence: this._fence,
+            zIndex: this.zIndex,
+            namespace: this.namespace,
             containerRect: this.containerRect,
         };
     }
