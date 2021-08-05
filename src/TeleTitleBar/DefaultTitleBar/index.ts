@@ -1,6 +1,7 @@
 import "./style.scss";
 
 import minimizeSVG from "./icons/minimize.svg";
+import maximizeActiveSVG from "./icons/maximize-active.svg";
 import maximizeSVG from "./icons/maximize.svg";
 import closeSVG from "./icons/close.svg";
 
@@ -17,7 +18,7 @@ import type {
 import { preventEvent } from "../../utils";
 
 export type DefaultTitleBarButton = TeleTitleBarEvent & {
-    readonly icon: string;
+    readonly icon: string | ((state: TeleBoxState) => string);
 };
 
 export interface DefaultTitleBarConfig extends TeleTitleBarConfig {
@@ -31,12 +32,14 @@ export class DefaultTitleBar implements TeleTitleBar {
         onEvent,
         onDragStart,
         namespace = "telebox",
+        state = TeleBoxState.Normal,
     }: DefaultTitleBarConfig = {}) {
         this.buttons = buttons || DefaultTitleBar.defaultButtons;
         this.onEvent = onEvent;
         this.onDragStart = onDragStart;
         this.namespace = namespace;
         this.title = title;
+        this.state = state;
     }
 
     public readonly namespace: string;
@@ -47,11 +50,26 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public $buttons: HTMLElement | undefined;
 
-    public updateTitle(title: string): void {
+    public setTitle(title: string): void {
         this.title = title;
         if (this.$title) {
             this.$title.textContent = title;
             this.$title.title = title;
+        }
+    }
+
+    public setState(state: TeleBoxState): void {
+        if (this.state !== state) {
+            this.state = state;
+
+            this.buttons.forEach((btn, i) => {
+                if (typeof btn.icon === "function") {
+                    const $img = this.$btnImgs[i];
+                    if ($img) {
+                        $img.src = btn.icon(state);
+                    }
+                }
+            });
         }
     }
 
@@ -81,6 +99,7 @@ export class DefaultTitleBar implements TeleTitleBar {
             $buttons.className = this.wrapClassName("titlebar-btns");
             this.$buttons = $buttons;
 
+            this.$btnImgs.length = 0;
             this.buttons.forEach(({ icon }, i) => {
                 const teleTitleBarBtnIndex = String(i);
 
@@ -90,8 +109,10 @@ export class DefaultTitleBar implements TeleTitleBar {
 
                 const $img = document.createElement("img");
                 $img.className = this.wrapClassName("titlebar-btn-icon");
-                $img.src = icon;
+                $img.src = typeof icon === "function" ? icon(this.state) : icon;
                 $img.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
+
+                this.$btnImgs.push($img);
 
                 $btn.appendChild($img);
                 $buttons.appendChild($btn);
@@ -130,6 +151,7 @@ export class DefaultTitleBar implements TeleTitleBar {
             }
             this.$titleBar = void 0;
             this.$title = void 0;
+            this.$btnImgs.length = 0;
             this.onDragStart = void 0;
             this.onEvent = void 0;
         }
@@ -142,6 +164,10 @@ export class DefaultTitleBar implements TeleTitleBar {
     protected title?: string;
 
     protected buttons: ReadonlyArray<DefaultTitleBarButton>;
+
+    protected state: TeleBoxState;
+
+    protected $btnImgs: HTMLImageElement[] = [];
 
     protected handleBtnClick = (ev: MouseEvent): void => {
         const target = ev.target as HTMLElement;
@@ -204,7 +230,10 @@ export class DefaultTitleBar implements TeleTitleBar {
             {
                 type: TeleBoxEventType.State,
                 value: TeleBoxState.Maximized,
-                icon: maximizeSVG,
+                icon: (state) =>
+                    state === TeleBoxState.Maximized
+                        ? maximizeActiveSVG
+                        : maximizeSVG,
             },
             {
                 type: TeleBoxEventType.Close,

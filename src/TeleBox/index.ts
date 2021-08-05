@@ -408,6 +408,8 @@ export class TeleBox {
 
             this.syncTeleStateDOM();
 
+            this.titleBar.setState(state);
+
             if (!skipUpdate) {
                 this.events.emit(TeleBoxEventType.State, state);
             }

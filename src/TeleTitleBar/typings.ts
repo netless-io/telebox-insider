@@ -1,4 +1,4 @@
-import type { TeleBoxEventArgs } from "../TeleBox";
+import type { TeleBoxEventArgs, TeleBoxState } from "../TeleBox";
 
 export type TeleTitleBarEvent<U = keyof TeleBoxEventArgs> =
     U extends keyof TeleBoxEventArgs
@@ -9,13 +9,16 @@ export type TeleTitleBarEvent<U = keyof TeleBoxEventArgs> =
 
 export interface TeleTitleBarConfig {
     title?: string;
+    state?: TeleBoxState;
     namespace?: string;
     onEvent?: (event: TeleTitleBarEvent) => void;
     onDragStart?: (event: MouseEvent | TouchEvent) => void;
 }
 
 export interface TeleTitleBar {
-    updateTitle(title: string): void;
+    setTitle(title: string): void;
+
+    setState(state: TeleBoxState): void;
 
     render(): HTMLElement;
 
