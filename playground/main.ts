@@ -13,7 +13,7 @@ const manager = new TeleBoxManager({
 });
 
 btnCreate.addEventListener("click", () => {
-    manager.create();
+    manager.create({ focus: true });
 });
 
 btnRemove.addEventListener("click", () => {

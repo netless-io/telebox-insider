@@ -482,15 +482,24 @@ export class TeleBox {
     }
 
     public setContainerRect(rect: TeleBoxRect): this {
-        const x = (this._x * this.containerRect.width) / rect.width;
-        const y = (this._y * this.containerRect.height) / rect.height;
-        const width = (this._width * this.containerRect.width) / rect.width;
-        const height = (this._height * this.containerRect.height) / rect.height;
-
         (this.containerRect as TeleBoxRect) = rect;
 
-        this.move(x, y);
-        this.resize(width, height);
+        if (this.$box) {
+            const translateX =
+                this._x * this.containerRect.width +
+                this.containerRect.x +
+                "px";
+            const translateY =
+                this._y * this.containerRect.height +
+                this.containerRect.y +
+                "px";
+
+            this.$box.style.transform = `translate(${translateX},${translateY})`;
+            this.$box.style.width =
+                this._width * this.containerRect.width + "px";
+            this.$box.style.height =
+                this._height * this.containerRect.height + "px";
+        }
 
         return this;
     }
