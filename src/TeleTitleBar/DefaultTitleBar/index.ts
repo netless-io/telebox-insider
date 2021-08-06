@@ -84,7 +84,8 @@ export class DefaultTitleBar implements TeleTitleBar {
             );
             this.$titleBar.addEventListener(
                 "touchstart",
-                this.handleTitleBarClick
+                this.handleTitleBarClick,
+                { passive: true }
             );
 
             this.$title = document.createElement("h1");

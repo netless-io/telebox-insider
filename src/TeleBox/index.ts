@@ -690,7 +690,8 @@ export class TeleBox {
             $resizeHandles.addEventListener("mousedown", this.handleTrackStart);
             $resizeHandles.addEventListener(
                 "touchstart",
-                this.handleTrackStart
+                this.handleTrackStart,
+                { passive: true }
             );
             this.$resizeHandles = $resizeHandles;
 
@@ -989,12 +990,14 @@ export class TeleBox {
     }
 
     protected takeRectSnapshot(): void {
-        this.rectSnapshot = {
-            x: this._x,
-            y: this._y,
-            width: this._width,
-            height: this._height,
-        };
+        if (this._state === TeleBoxState.Normal) {
+            this.rectSnapshot = {
+                x: this._x,
+                y: this._y,
+                width: this._width,
+                height: this._height,
+            };
+        }
     }
 }
 
