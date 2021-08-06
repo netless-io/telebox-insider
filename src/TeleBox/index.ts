@@ -102,17 +102,11 @@ export class TeleBox {
 
     /** Box width relative to container element. 0~1. Default 0.5. */
     public get width(): number {
-        if (this._state === TeleBoxState.Maximized) {
-            return 1;
-        }
         return this._width;
     }
 
     /** Box height relative to container element. 0~1. Default 0.5. */
     public get height(): number {
-        if (this._state === TeleBoxState.Maximized) {
-            return 1;
-        }
         return this._height;
     }
 
@@ -406,7 +400,7 @@ export class TeleBox {
         if (this._state !== state) {
             this._state = state;
 
-            this.syncTeleStateDOM();
+            this.syncTeleStateDOM(skipUpdate);
 
             this.titleBar.setState(state);
 
@@ -531,7 +525,7 @@ export class TeleBox {
     public setCollectorRect(rect: TeleBoxRect, skipUpdate = false): this {
         (this.collectorRect as TeleBoxRect) = rect;
         if (!skipUpdate) {
-            this.syncTeleStateDOM();
+            this.syncTeleStateDOM(skipUpdate);
         }
         return this;
     }
@@ -586,6 +580,8 @@ export class TeleBox {
     protected $resizeHandles: HTMLElement | undefined;
 
     protected $trackMask: HTMLElement | undefined;
+
+    protected rectSnapshot: TeleBoxRect | undefined;
 
     public render(root?: HTMLElement): HTMLElement {
         if (root && this.$box) {
@@ -663,7 +659,7 @@ export class TeleBox {
                 $resizeHandles.appendChild($handle);
             });
 
-            this.syncTeleStateDOM();
+            this.syncTeleStateDOM(true);
 
             this.$box.appendChild($titleBar);
             this.$box.appendChild(this.$content);
@@ -891,7 +887,7 @@ export class TeleBox {
         this.$trackMask.remove();
     };
 
-    protected syncTeleStateDOM(): this {
+    protected syncTeleStateDOM(skipUpdate = false): this {
         if (this.$box) {
             this.$box.classList.toggle(
                 this.wrapClassName("minimized"),
@@ -903,15 +899,14 @@ export class TeleBox {
             );
 
             if (this._state === TeleBoxState.Minimized && this.collectorRect) {
-                const width = this._width * this.containerRect.width;
-                const height = this._height * this.containerRect.height;
+                this.takeRectSnapshot();
                 const translateX =
                     this.collectorRect.x -
-                    width / 2 +
+                    (this._width * this.containerRect.width) / 2 +
                     this.collectorRect.width / 2;
                 const translateY =
                     this.collectorRect.y -
-                    height / 2 +
+                    (this._height * this.containerRect.height) / 2 +
                     this.collectorRect.height / 2;
                 const scaleX =
                     this.collectorRect.width /
@@ -919,32 +914,42 @@ export class TeleBox {
                 const scaleY =
                     this.collectorRect.height /
                     (this._height * this.containerRect.height);
-
+                this.move(
+                    translateX / this.containerRect.width,
+                    translateY / this.containerRect.height,
+                    skipUpdate
+                );
                 this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
-                this.$box.style.width = width + "px";
-                this.$box.style.height = height + "px";
             } else if (this._state === TeleBoxState.Maximized) {
-                this.$box.style.transform = `translate(${this.containerRect.x}px,${this.containerRect.y}px)`;
-                this.$box.style.width = this.containerRect.width + "px";
-                this.$box.style.height = this.containerRect.height + "px";
+                this.takeRectSnapshot();
+                this.move(0, 0, skipUpdate);
+                this.resize(1, 1, skipUpdate);
             } else {
-                const translateX =
-                    this._x * this.containerRect.width +
-                    this.containerRect.x +
-                    "px";
-                const translateY =
-                    this._y * this.containerRect.height +
-                    this.containerRect.y +
-                    "px";
-                const width = this._width * this.containerRect.width;
-                const height = this._height * this.containerRect.height;
-
-                this.$box.style.transform = `translate(${translateX},${translateY})`;
-                this.$box.style.width = width + "px";
-                this.$box.style.height = height + "px";
+                if (this.rectSnapshot) {
+                    this.move(
+                        this.rectSnapshot.x,
+                        this.rectSnapshot.y,
+                        skipUpdate
+                    );
+                    this.resize(
+                        this.rectSnapshot.width,
+                        this.rectSnapshot.height,
+                        skipUpdate
+                    );
+                    this.rectSnapshot = void 0;
+                }
             }
         }
         return this;
+    }
+
+    protected takeRectSnapshot(): void {
+        this.rectSnapshot = {
+            x: this._x,
+            y: this._y,
+            width: this._width,
+            height: this._height,
+        };
     }
 }
 
