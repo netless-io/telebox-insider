@@ -1,7 +1,6 @@
 import React from "react";
 import { Meta, Story } from "@storybook/react";
 import faker from "faker";
-import { TeleBoxReact } from "../../TeleBoxReact";
 import { TeleBoxState } from "../../TeleBox/constants";
 import { MaxTitleBarReact, MaxTitleBarReactProps } from "./MaxTitleBarReact";
 
