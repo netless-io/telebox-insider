@@ -5,10 +5,12 @@ import { DefaultTitleBar, DefaultTitleBarConfig } from "../../TeleTitleBar";
 import { TeleBoxState } from "../../TeleBox/constants";
 import { TeleBoxRect } from "../../TeleBox/typings";
 
+export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title">;
+
 export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
-    boxes: TeleBox[];
+    boxes: MaxTitleBarTeleBox[];
     containerRect: TeleBoxRect;
-    focusedBox?: TeleBox;
+    focusedBox?: MaxTitleBarTeleBox;
 }
 
 export class MaxTitleBar extends DefaultTitleBar {
@@ -20,7 +22,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         this.containerRect = config.containerRect;
     }
 
-    public focusBox(box?: TeleBox): void {
+    public focusBox(box?: MaxTitleBarTeleBox): void {
         if (!box) {
             box = this.boxes[this.boxes.length - 1];
         }
@@ -61,7 +63,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         }
     }
 
-    public setBoxes(boxes: TeleBox[]): void {
+    public setBoxes(boxes: MaxTitleBarTeleBox[]): void {
         this.boxes = boxes;
         this.updateTitles();
     }
@@ -81,11 +83,19 @@ export class MaxTitleBar extends DefaultTitleBar {
         const $titleBar = super.render();
         $titleBar.removeEventListener("mousedown", this.handleTitleBarClick);
         $titleBar.removeEventListener("touchstart", this.handleTitleBarClick);
+
         const { x, y, width } = this.containerRect;
         $titleBar.style.transform = `translate(${x}px, ${y}px)`;
         $titleBar.style.width = width + "px";
+
         $titleBar.classList.add(this.wrapClassName("max-titlebar"));
+        $titleBar.classList.toggle(
+            this.wrapClassName("max-titlebar-maximized"),
+            this.state === TeleBoxState.Maximized
+        );
+
         this.updateTitles();
+
         return $titleBar;
     }
 
@@ -151,9 +161,9 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     protected $titles: HTMLElement | undefined;
 
-    protected boxes: TeleBox[];
+    protected boxes: MaxTitleBarTeleBox[];
 
-    protected focusedBox: TeleBox | undefined;
+    protected focusedBox: MaxTitleBarTeleBox | undefined;
 
     protected containerRect: TeleBoxRect;
 }
