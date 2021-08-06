@@ -373,6 +373,9 @@ export class TeleBoxManager {
         if (config.content != null) {
             box.mountContent(config.content);
         }
+        if (config.footer != null) {
+            box.mountFooter(config.footer);
+        }
     }
 
     protected focusBox(focus: boolean, box: TeleBox, skipUpdate = false): void {

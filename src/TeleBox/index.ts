@@ -45,6 +45,7 @@ export class TeleBox {
         namespace = "telebox",
         titleBar,
         content,
+        footer,
         containerRect = {
             x: 0,
             y: 0,
@@ -71,6 +72,7 @@ export class TeleBox {
         this._zIndex = zIndex;
         this._titleBar = titleBar;
         this.content = content;
+        this.footer = footer;
         this.containerRect = containerRect;
         this.collectorRect = collectorRect;
 
@@ -82,6 +84,8 @@ export class TeleBox {
     }
 
     public content: HTMLElement | undefined;
+
+    public footer: HTMLElement | undefined;
 
     public readonly containerRect: TeleBoxRect;
 
@@ -239,6 +243,34 @@ export class TeleBox {
         if (this.$content) {
             if (this.$content.firstChild) {
                 this.$content.removeChild(this.$content.firstChild);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Mount dom to box footer.
+     */
+    public mountFooter(footer: HTMLElement): this {
+        if (this.footer !== footer) {
+            this.footer = footer;
+            if (this.$footer) {
+                if (this.$footer.firstChild) {
+                    this.$footer.removeChild(this.$footer.firstChild);
+                }
+                this.$footer.appendChild(footer);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Unmount footer from the box.
+     */
+    public unmountFooter(): this {
+        if (this.$footer) {
+            if (this.$footer.firstChild) {
+                this.$footer.removeChild(this.$footer.firstChild);
             }
         }
         return this;
@@ -541,6 +573,8 @@ export class TeleBox {
             this._titleBar.destroy();
         }
         this.unRender();
+        this.content = void 0;
+        this.footer = void 0;
         this.events.removeAllListeners();
     }
 
@@ -576,6 +610,9 @@ export class TeleBox {
 
     /** DOM of the box content */
     protected $content: HTMLElement | undefined;
+
+    /** DOM of the box footer */
+    protected $footer: HTMLElement | undefined;
 
     protected $resizeHandles: HTMLElement | undefined;
 
@@ -642,6 +679,12 @@ export class TeleBox {
                 this.$content.appendChild(this.content);
             }
 
+            this.$footer = document.createElement("div");
+            this.$footer.className = this.wrapClassName("footer");
+            if (this.footer) {
+                this.$footer.appendChild(this.footer);
+            }
+
             const $resizeHandles = document.createElement("div");
             $resizeHandles.className = this.wrapClassName("resize-handles");
             $resizeHandles.addEventListener("mousedown", this.handleTrackStart);
@@ -663,6 +706,7 @@ export class TeleBox {
 
             this.$box.appendChild($titleBar);
             this.$box.appendChild(this.$content);
+            this.$box.appendChild(this.$footer);
             this.$box.appendChild($resizeHandles);
         }
 
@@ -683,6 +727,7 @@ export class TeleBox {
         }
         this.$box = void 0;
         this.$content = void 0;
+        this.$footer = void 0;
         this.$trackMask = void 0;
     }
 

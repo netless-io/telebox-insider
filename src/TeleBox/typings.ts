@@ -53,6 +53,8 @@ export interface TeleBoxConfig {
     readonly titleBar?: TeleTitleBar;
     /** Box content. */
     readonly content?: HTMLElement;
+    /** Box footer. */
+    readonly footer?: HTMLElement;
     /** Position and dimension of container */
     readonly containerRect?: TeleBoxRect;
     /** Position and dimension of collector */

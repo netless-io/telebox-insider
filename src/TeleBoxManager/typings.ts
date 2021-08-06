@@ -31,7 +31,7 @@ type TeleBoxManagerBoxConfigBaseProps =
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "content"
+    TeleBoxManagerBoxConfigBaseProps | "content" | "footer"
 >;
 
 export type TeleBoxManagerQueryConfig = Pick<
@@ -41,7 +41,7 @@ export type TeleBoxManagerQueryConfig = Pick<
 
 export type TeleBoxManagerUpdateConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "content"
+    TeleBoxManagerBoxConfigBaseProps | "content" | "footer"
 >;
 
 export type TeleBoxManagerEventArgs = {
