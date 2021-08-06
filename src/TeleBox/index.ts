@@ -430,6 +430,10 @@ export class TeleBox {
 
     public setState(state: TeleBoxState, skipUpdate = false): this {
         if (this._state !== state) {
+            if (this._state === TeleBoxState.Normal) {
+                this.takeRectSnapshot();
+            }
+
             this._state = state;
 
             this.syncTeleStateDOM(skipUpdate);
@@ -945,7 +949,6 @@ export class TeleBox {
             );
 
             if (this._state === TeleBoxState.Minimized && this.collectorRect) {
-                this.takeRectSnapshot();
                 const translateX =
                     this.collectorRect.x -
                     (this._width * this.containerRect.width) / 2 +
@@ -967,7 +970,6 @@ export class TeleBox {
                 );
                 this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
             } else if (this._state === TeleBoxState.Maximized) {
-                this.takeRectSnapshot();
                 this.move(0, 0, skipUpdate);
                 this.resize(1, 1, skipUpdate);
             } else {
@@ -990,14 +992,12 @@ export class TeleBox {
     }
 
     protected takeRectSnapshot(): void {
-        if (this._state === TeleBoxState.Normal) {
-            this.rectSnapshot = {
-                x: this._x,
-                y: this._y,
-                width: this._width,
-                height: this._height,
-            };
-        }
+        this.rectSnapshot = {
+            x: this._x,
+            y: this._y,
+            width: this._width,
+            height: this._height,
+        };
     }
 }
 
