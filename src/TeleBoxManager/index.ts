@@ -34,18 +34,17 @@ export class TeleBoxManager {
         this.containerRect = containerRect;
         this.namespace = namespace;
         this.zIndex = zIndex;
-        this.collector = collector;
+        this.collector =
+            collector || new TeleBoxCollector({ namespace }).mount(root);
 
-        if (collector) {
-            collector.setVisible(this._state === TeleBoxState.Minimized);
-            collector.onClick = () => {
-                if (this._state === TeleBoxState.Minimized) {
-                    this.setState(this.lastState ?? TeleBoxState.Normal);
-                } else {
-                    this.setState(TeleBoxState.Minimized);
-                }
-            };
-        }
+        this.collector.setVisible(this._state === TeleBoxState.Minimized);
+        this.collector.onClick = () => {
+            if (this._state === TeleBoxState.Minimized) {
+                this.setState(this.lastState ?? TeleBoxState.Normal);
+            } else {
+                this.setState(TeleBoxState.Minimized);
+            }
+        };
 
         window.addEventListener("mousedown", this.checkFocusBox, true);
         window.addEventListener("touchstart", this.checkFocusBox, true);
