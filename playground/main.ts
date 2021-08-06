@@ -1,3 +1,4 @@
+import faker from "faker";
 import { TeleBoxCollector, TeleBoxManager } from "../src";
 
 const btnCreate = document.querySelector(".btn-create")!;
@@ -19,7 +20,17 @@ const manager = new TeleBoxManager({
 });
 
 btnCreate.addEventListener("click", () => {
-    manager.create({ focus: true });
+    const title = faker.datatype.boolean()
+        ? faker.commerce.productName()
+        : faker.random.words(50);
+    const content = document.createElement("div");
+    content.style.padding = "16px";
+    content.textContent = `Content ${title}`;
+    manager.create({
+        title: title.slice(0, 50),
+        focus: true,
+        content,
+    });
 });
 
 btnRemove.addEventListener("click", () => {

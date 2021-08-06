@@ -11,6 +11,7 @@ import type {
     TeleBoxManagerQueryConfig,
     TeleBoxManagerUpdateConfig,
 } from "./typings";
+import { MaxTitleBar } from "./MaxTitleBar";
 
 export class TeleBoxManager {
     public constructor({
@@ -48,6 +49,44 @@ export class TeleBoxManager {
 
         window.addEventListener("mousedown", this.checkFocusBox, true);
         window.addEventListener("touchstart", this.checkFocusBox, true);
+
+        this.maxTitleBar = new MaxTitleBar({
+            namespace: this.namespace,
+            state: this._state,
+            boxes: this.boxes,
+            focusedBox: this._focusedBox,
+            containerRect: this.containerRect,
+            onEvent: (event): void => {
+                switch (event.type) {
+                    case TeleBoxEventType.State: {
+                        if (event.value === TeleBoxState.Maximized) {
+                            this.setState(
+                                this._state === TeleBoxState.Maximized
+                                    ? TeleBoxState.Normal
+                                    : TeleBoxState.Maximized
+                            );
+                        } else {
+                            this.setState(event.value);
+                        }
+                        break;
+                    }
+                    case TeleBoxEventType.Close: {
+                        const box =
+                            this._focusedBox ??
+                            this.boxes[this.boxes.length - 1];
+                        if (box) {
+                            this.remove(box.id);
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            },
+        });
+
+        this.root.appendChild(this.maxTitleBar.render());
     }
 
     public readonly events = new EventEmitter() as TeleBoxManagerEvents;
@@ -80,6 +119,8 @@ export class TeleBoxManager {
         if (box.state !== this.state) {
             this.setState(box.state);
         }
+
+        this.maxTitleBar.setBoxes(this.boxes);
 
         box.events.on(TeleBoxEventType.State, (state) => {
             this.setState(state);
@@ -144,9 +185,13 @@ export class TeleBoxManager {
         const index = this.boxes.findIndex((box) => box.id === boxID);
         if (index >= 0) {
             const boxes = this.boxes.splice(index, 1);
+            this.maxTitleBar.setBoxes(this.boxes);
             const box = boxes[0];
             this.focusBox(false, box);
             box.destroy();
+            if (this.boxes.length <= 0) {
+                this.setState(TeleBoxState.Normal);
+            }
             if (!skipUpdate) {
                 this.events.emit(TeleBoxManagerEventType.Removed, boxes);
             }
@@ -168,7 +213,11 @@ export class TeleBoxManager {
             }
         }
         const boxes = this.boxes.splice(0, this.boxes.length);
+        this.maxTitleBar.setBoxes(this.boxes);
         boxes.forEach((box) => box.destroy());
+        if (this.boxes.length <= 0) {
+            this.setState(TeleBoxState.Normal);
+        }
         if (!skipUpdate) {
             this.events.emit(TeleBoxManagerEventType.Removed, boxes);
         }
@@ -190,6 +239,8 @@ export class TeleBoxManager {
         this.boxes.forEach((box) => {
             box.setContainerRect(this.containerRect);
         });
+
+        this.maxTitleBar.setContainerRect(rect);
 
         return this;
     }
@@ -216,6 +267,8 @@ export class TeleBoxManager {
             }
 
             this.boxes.forEach((box) => box.setState(state, skipUpdate));
+
+            this.maxTitleBar.setState(state);
 
             if (!skipUpdate) {
                 this.events.emit(TeleBoxManagerEventType.State, state);
@@ -249,6 +302,8 @@ export class TeleBoxManager {
     public wrapClassName(className: string): string {
         return `${this.namespace}-${className}`;
     }
+
+    protected maxTitleBar: MaxTitleBar;
 
     protected _state: TeleBoxState;
 
@@ -293,6 +348,7 @@ export class TeleBoxManager {
         }
         if (config.title != null) {
             box.setTitle(config.title);
+            this.maxTitleBar.updateTitles();
         }
         if (config.visible != null) {
             box.setVisible(config.visible, skipUpdate);
@@ -350,6 +406,7 @@ export class TeleBoxManager {
                 }
             }
         }
+        this.maxTitleBar.focusBox(this._focusedBox);
     }
 
     protected checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
@@ -358,17 +415,13 @@ export class TeleBoxManager {
             return;
         }
 
-        const boxClassName = this.wrapClassName("box");
-
         for (let el: HTMLElement | null = target; el; el = el.parentElement) {
-            if (el.classList?.contains(boxClassName)) {
-                const id = el.dataset?.teleBoxID;
-                if (id) {
-                    const box = this.boxes.find((box) => box.id === id);
-                    if (box) {
-                        this.focusBox(true, box);
-                        return;
-                    }
+            const id = el.dataset?.teleBoxID;
+            if (id) {
+                const box = this.boxes.find((box) => box.id === id);
+                if (box) {
+                    this.focusBox(true, box);
+                    return;
                 }
             }
         }
