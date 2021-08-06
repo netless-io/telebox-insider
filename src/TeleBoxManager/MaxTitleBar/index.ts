@@ -81,9 +81,6 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     public render(): HTMLElement {
         const $titleBar = super.render();
-        $titleBar.removeEventListener("mousedown", this.handleTitleBarClick);
-        $titleBar.removeEventListener("touchstart", this.handleTitleBarClick);
-
         const { x, y, width } = this.containerRect;
         $titleBar.style.transform = `translate(${x}px, ${y}px)`;
         $titleBar.style.width = width + "px";
@@ -148,6 +145,7 @@ export class MaxTitleBar extends DefaultTitleBar {
             $tab.className = this.wrapClassName("titles-tab");
             $tab.textContent = box.title;
             $tab.dataset.teleBoxID = box.id;
+            $tab.dataset.teleTitleBarNoDblClick = "true";
 
             if (this.focusedBox && box.id === this.focusedBox.id) {
                 $tab.classList.add(this.wrapClassName("titles-tab-focus"));

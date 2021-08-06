@@ -107,11 +107,13 @@ export class DefaultTitleBar implements TeleTitleBar {
                 const $btn = document.createElement("button");
                 $btn.className = this.wrapClassName("titlebar-btn");
                 $btn.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
+                $btn.dataset.teleTitleBarNoDblClick = "true";
 
                 const $img = document.createElement("img");
                 $img.className = this.wrapClassName("titlebar-btn-icon");
                 $img.src = typeof icon === "function" ? icon(this.state) : icon;
                 $img.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
+                $btn.dataset.teleTitleBarNoDblClick = "true";
 
                 this.$btnImgs.push($img);
 
@@ -200,7 +202,7 @@ export class DefaultTitleBar implements TeleTitleBar {
             return; // Not left mouse
         }
 
-        if ((ev.target as HTMLElement).dataset?.teleTitleBarBtnIndex) {
+        if ((ev.target as HTMLElement).dataset?.teleTitleBarNoDblClick) {
             return; // btns
         }
 
