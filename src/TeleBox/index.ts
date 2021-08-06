@@ -81,6 +81,9 @@ export class TeleBox {
         if (this._fixRatio) {
             this.transform(this._x, this._y, this._width, this._height, true);
         }
+
+        // take snapshot before initial maximize
+        this.takeRectSnapshot();
     }
 
     public content: HTMLElement | undefined;
