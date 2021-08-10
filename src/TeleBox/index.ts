@@ -616,10 +616,10 @@ export class TeleBox {
     protected $box: HTMLElement | undefined;
 
     /** DOM of the box content */
-    protected $content: HTMLElement | undefined;
+    public $content: HTMLElement | undefined;
 
     /** DOM of the box footer */
-    protected $footer: HTMLElement | undefined;
+    public $footer: HTMLElement | undefined;
 
     protected $resizeHandles: HTMLElement | undefined;
 
