@@ -1010,4 +1010,11 @@ type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox
         : K
     : never;
 
-export type ReadonlyTeleBox = Pick<TeleBox, PropKeys>;
+export type ReadonlyTeleBox = Pick<
+    TeleBox,
+    | PropKeys
+    | "wrapClassName"
+    | "mountContent"
+    | "mountFooter"
+    | "handleTrackStart"
+>;
