@@ -681,7 +681,10 @@ export class TeleBox {
             const $titleBar = this.titleBar.render();
 
             this.$content = document.createElement("div");
-            this.$content.className = this.wrapClassName("content");
+            this.$content.className =
+                this.wrapClassName("content") +
+                " " +
+                this.wrapClassName("fancy-scrollbar");
             if (this.content) {
                 this.$content.appendChild(this.content);
             }

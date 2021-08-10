@@ -16,7 +16,6 @@
 
 .#{$namespace}-content {
     flex: 1;
-    overflow: hidden;
 }
 
 .#{$namespace}-n {
@@ -50,7 +49,7 @@
     position: absolute;
     width: 10px;
     height: 100%;
-    right: -5px;
+    right: -10px; // leave space to scrollbar
     top: 0;
     cursor: e-resize;
 }
