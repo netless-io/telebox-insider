@@ -8,6 +8,7 @@ const board = document.querySelector<HTMLDivElement>(".board")!;
 setBoardRect();
 
 const manager = new TeleBoxManager({
+    fence: false,
     root: document.body,
     containerRect: board.getBoundingClientRect(),
     collector: new TeleBoxCollector({

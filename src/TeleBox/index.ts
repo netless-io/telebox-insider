@@ -332,15 +332,6 @@ export class TeleBox {
      * @returns this
      */
     public resize(width: number, height: number, skipUpdate = false): this {
-        if (
-            width < this._minWidth ||
-            width > 1 ||
-            height < this._minHeight ||
-            height > 1
-        ) {
-            return this;
-        }
-
         if (this._width !== width || this._height !== height) {
             this._width = width;
             this._height = height;
@@ -384,21 +375,19 @@ export class TeleBox {
             height = newHeight;
         }
 
-        if (
-            x < 0 ||
-            y < 0 ||
-            x > 1 - width ||
-            y > 1 - height ||
-            width < this._minWidth ||
-            width > 1 ||
-            height < this._minHeight ||
-            height > 1
-        ) {
-            return this;
+        if (y < 0) {
+            y = 0;
+            if (height > this._height) {
+                height = this._height;
+            }
         }
 
         this.move(x, y, skipUpdate);
-        this.resize(width, height, skipUpdate);
+        this.resize(
+            clamp(width, this._minWidth, 1),
+            clamp(height, this._minHeight, 1),
+            skipUpdate
+        );
 
         return this;
     }
@@ -909,8 +898,12 @@ export class TeleBox {
                     );
                 } else {
                     this.move(
-                        this.trackStartX + offsetX,
-                        this.trackStartY + offsetY
+                        clamp(
+                            this.trackStartX + offsetX,
+                            0 - this._height + 0.01,
+                            0.99
+                        ),
+                        clamp(this.trackStartY + offsetY, 0, 0.99)
                     );
                 }
                 break;
