@@ -11,6 +11,7 @@ export enum TeleBoxEventType {
     Move = "move",
     Resize = "resize",
     State = "state",
+    Snapshot = "snapshot",
 }
 
 export enum TeleBoxResizeHandle {

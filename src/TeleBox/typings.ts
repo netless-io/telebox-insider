@@ -68,6 +68,7 @@ export type TeleBoxEventArgs = {
     [TeleBoxEventType.Move]: { x: number; y: number };
     [TeleBoxEventType.Resize]: { width: number; height: number };
     [TeleBoxEventType.State]: TeleBoxState;
+    [TeleBoxEventType.Snapshot]: TeleBoxRect;
 };
 
 export interface TeleBoxEvents extends EventEmitter<keyof TeleBoxEventArgs> {

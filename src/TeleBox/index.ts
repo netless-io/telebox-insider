@@ -581,6 +581,11 @@ export class TeleBox {
         return `${this.namespace}-${className}`;
     }
 
+    public setSnapshot(rect: TeleBoxRect): this {
+        this.rectSnapshot = rect;
+        return this;
+    }
+
     protected _title: string;
     protected _visible: boolean;
     protected _width: number;
@@ -995,6 +1000,7 @@ export class TeleBox {
             width: this._width,
             height: this._height,
         };
+        this.events.emit(TeleBoxEventType.Snapshot, { ...this.rectSnapshot });
     }
 }
 
