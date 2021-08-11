@@ -682,9 +682,7 @@ export class TeleBox {
 
             this.$content = document.createElement("div");
             this.$content.className =
-                this.wrapClassName("content") +
-                " " +
-                this.wrapClassName("fancy-scrollbar");
+                this.wrapClassName("content") + " tele-fancy-scrollbar";
             if (this.content) {
                 this.$content.appendChild(this.content);
             }

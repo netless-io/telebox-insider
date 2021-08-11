@@ -1,5 +1,3 @@
-@import "./variables.scss";
-
 $scrollbar-size: 8px;
 $scrollbar-ff-width: auto; // FF-only accepts auto, thin, none
 $scrollbar-minlength: 50px; // Minimum length of scrollbar thumb
@@ -8,7 +6,7 @@ $scrollbar-color: rgba(68, 78, 96, 0.1);
 $scrollbar-color-hover: rgba(68, 78, 96, 0.2);
 $scrollbar-color-active: rgba(68, 78, 96, 0.2);
 
-.#{$namespace}-fancy-scrollbar {
+.tele-fancy-scrollbar {
     overscroll-behavior: contain;
     overflow: auto;
     overflow-y: scroll;
