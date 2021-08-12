@@ -13,6 +13,9 @@ import type {
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
 
+export * from "./typings";
+export * from "./constants";
+
 export class TeleBoxManager {
     public constructor({
         root = document.body,
