@@ -126,7 +126,6 @@ export class TeleBoxManager {
 
         box.events.on(TeleBoxEventType.State, (state) => {
             this.setState(state);
-            this.focusBox(true, box);
         });
         box.events.on(TeleBoxEventType.Close, () => {
             this.focusBox(false, box);
@@ -134,11 +133,9 @@ export class TeleBoxManager {
         });
         box.events.on(TeleBoxEventType.Move, () => {
             this.events.emit(TeleBoxManagerEventType.Move, box);
-            this.focusBox(true, box);
         });
         box.events.on(TeleBoxEventType.Resize, () => {
             this.events.emit(TeleBoxManagerEventType.Resize, box);
-            this.focusBox(true, box);
         });
 
         this.events.emit(TeleBoxManagerEventType.Created, box);
