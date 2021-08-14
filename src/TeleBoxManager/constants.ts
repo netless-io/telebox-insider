@@ -1,4 +1,4 @@
-export enum TeleBoxManagerEventType {
+export enum TELE_BOX_MANAGER_EVENT {
     Focused = "focused",
     Created = "created",
     Removed = "removed",

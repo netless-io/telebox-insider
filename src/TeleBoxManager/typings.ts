@@ -2,7 +2,7 @@ import type EventEmitter from "eventemitter3";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
 import type { TeleBoxConfig } from "../TeleBox/typings";
 import type { TeleBoxCollector } from "../TeleBoxCollector";
-import type { TeleBoxManagerEventType } from "./constants";
+import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 
 export interface TeleBoxManagerConfig
     extends Pick<
@@ -44,35 +44,38 @@ export type TeleBoxManagerUpdateConfig = Pick<
     TeleBoxManagerBoxConfigBaseProps | "content" | "footer"
 >;
 
-export type TeleBoxManagerEventArgs = {
+type CheckTeleBoxManagerConfig<
+    T extends Record<`${TELE_BOX_MANAGER_EVENT}`, any>
+> = T;
+
+export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     /** current focused box and last focused box */
-    [TeleBoxManagerEventType.Focused]: [
-        ReadonlyTeleBox | undefined,
-        ReadonlyTeleBox | undefined
-    ];
-    [TeleBoxManagerEventType.Created]: [ReadonlyTeleBox];
-    [TeleBoxManagerEventType.Removed]: [ReadonlyTeleBox[]];
-    [TeleBoxManagerEventType.State]: [TeleBoxState];
-    [TeleBoxManagerEventType.Move]: [ReadonlyTeleBox];
-    [TeleBoxManagerEventType.Resize]: [ReadonlyTeleBox];
-};
+    focused: [ReadonlyTeleBox | undefined, ReadonlyTeleBox | undefined];
+    created: [ReadonlyTeleBox];
+    removed: [ReadonlyTeleBox[]];
+    state: [TeleBoxState];
+    move: [ReadonlyTeleBox];
+    resize: [ReadonlyTeleBox];
+}>;
+
+export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;
 
 export interface TeleBoxManagerEvents
-    extends EventEmitter<keyof TeleBoxManagerEventArgs> {
-    on<U extends keyof TeleBoxManagerEventArgs>(
+    extends EventEmitter<TeleBoxManagerEvent> {
+    on<U extends TeleBoxManagerEvent>(
         event: U,
-        listener: (...value: TeleBoxManagerEventArgs[U]) => void
+        listener: (...value: TeleBoxManagerEventConfig[U]) => void
     ): this;
-    once<U extends keyof TeleBoxManagerEventArgs>(
+    once<U extends TeleBoxManagerEvent>(
         event: U,
-        listener: (...value: TeleBoxManagerEventArgs[U]) => void
+        listener: (...value: TeleBoxManagerEventConfig[U]) => void
     ): this;
-    addListener<U extends keyof TeleBoxManagerEventArgs>(
+    addListener<U extends TeleBoxManagerEvent>(
         event: U,
-        listener: (...value: TeleBoxManagerEventArgs[U]) => void
+        listener: (...value: TeleBoxManagerEventConfig[U]) => void
     ): this;
-    emit<U extends keyof TeleBoxManagerEventArgs>(
+    emit<U extends TeleBoxManagerEvent>(
         event: U,
-        ...value: TeleBoxManagerEventArgs[U]
+        ...value: TeleBoxManagerEventConfig[U]
     ): boolean;
 }

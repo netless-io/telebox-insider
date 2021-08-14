@@ -7,7 +7,7 @@ import type {
 import { TeleBoxCollector } from "../TeleBoxCollector";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
 import { TELE_BOX_EVENT, TELE_BOX_STATE } from "../TeleBox/constants";
-import { TeleBoxManagerEventType } from "./constants";
+import { TELE_BOX_MANAGER_EVENT } from "./constants";
 import type {
     TeleBoxManagerConfig,
     TeleBoxManagerCreateConfig,
@@ -136,13 +136,13 @@ export class TeleBoxManager {
             this.remove(box.id);
         });
         box.events.on(TELE_BOX_EVENT.Move, () => {
-            this.events.emit(TeleBoxManagerEventType.Move, box);
+            this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
         });
         box.events.on(TELE_BOX_EVENT.Resize, () => {
-            this.events.emit(TeleBoxManagerEventType.Resize, box);
+            this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
         });
 
-        this.events.emit(TeleBoxManagerEventType.Created, box);
+        this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
 
         return box;
     }
@@ -196,7 +196,7 @@ export class TeleBoxManager {
                 this.setState(TELE_BOX_STATE.Normal);
             }
             if (!skipUpdate) {
-                this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, boxes);
             }
             return box;
         }
@@ -209,7 +209,7 @@ export class TeleBoxManager {
             this._focusedBox = void 0;
             if (!skipUpdate) {
                 this.events.emit(
-                    TeleBoxManagerEventType.Focused,
+                    TELE_BOX_MANAGER_EVENT.Focused,
                     undefined,
                     box
                 );
@@ -222,7 +222,7 @@ export class TeleBoxManager {
             this.setState(TELE_BOX_STATE.Normal);
         }
         if (!skipUpdate) {
-            this.events.emit(TeleBoxManagerEventType.Removed, boxes);
+            this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, boxes);
         }
         return boxes;
     }
@@ -274,7 +274,7 @@ export class TeleBoxManager {
             this.maxTitleBar.setState(state);
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxManagerEventType.State, state);
+                this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
             }
         }
     }
@@ -393,7 +393,7 @@ export class TeleBoxManager {
                 this._focusedBox = box;
                 if (!skipUpdate) {
                     this.events.emit(
-                        TeleBoxManagerEventType.Focused,
+                        TELE_BOX_MANAGER_EVENT.Focused,
                         box,
                         lastFocusedBox
                     );
@@ -405,7 +405,7 @@ export class TeleBoxManager {
 
                 if (!skipUpdate) {
                     this.events.emit(
-                        TeleBoxManagerEventType.Focused,
+                        TELE_BOX_MANAGER_EVENT.Focused,
                         undefined,
                         box
                     );
