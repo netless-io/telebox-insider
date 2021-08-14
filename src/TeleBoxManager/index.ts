@@ -103,7 +103,7 @@ export class TeleBoxManager {
 
     public readonly namespace: string;
 
-    public readonly zIndex: number;
+    public zIndex: number;
 
     public get state(): TeleBoxState {
         return this._state;
@@ -383,6 +383,9 @@ export class TeleBoxManager {
     }
 
     protected focusBox(focus: boolean, box: TeleBox, skipUpdate = false): void {
+        if (focus) {
+            box.setZIndex(++this.zIndex);
+        }
         box.setFocus(focus, skipUpdate);
         if (box.focus) {
             if (this._focusedBox !== box) {

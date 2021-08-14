@@ -72,6 +72,8 @@ export class TeleBox {
         this._focus = focus;
         this._zIndex = zIndex;
         this._titleBar = titleBar;
+        // @TODO
+        // this._readonly = readonly
         this.content = content;
         this.footer = footer;
         this.containerRect = containerRect;
@@ -502,13 +504,20 @@ export class TeleBox {
             this._focus = focus;
             if (this.$box) {
                 this.$box.classList.toggle(this.wrapClassName("blur"), !focus);
-                this.$box.style.zIndex = String(this.zIndex);
             }
             if (!skipUpdate) {
                 this.events.emit(
                     focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
                 );
             }
+        }
+        return this;
+    }
+
+    public setZIndex(zIndex: number): this {
+        this._zIndex = zIndex;
+        if (this.$box) {
+            this.$box.style.zIndex = String(this.zIndex);
         }
         return this;
     }
@@ -784,6 +793,7 @@ export class TeleBox {
     };
 
     protected mountTrackMask(): void {
+        // console.log("mountTrackMask");
         if (this.$box) {
             if (!this.$trackMask) {
                 this.$trackMask = document.createElement("div");
