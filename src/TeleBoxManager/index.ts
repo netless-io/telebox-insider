@@ -1,8 +1,12 @@
 import EventEmitter from "eventemitter3";
-import type { TeleBoxConfig, TeleBoxRect } from "../TeleBox/typings";
+import type {
+    TeleBoxConfig,
+    TeleBoxRect,
+    TeleBoxState,
+} from "../TeleBox/typings";
 import { TeleBoxCollector } from "../TeleBoxCollector";
 import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
-import { TeleBoxEventType, TeleBoxState } from "../TeleBox/constants";
+import { TELE_BOX_EVENT, TELE_BOX_STATE } from "../TeleBox/constants";
 import { TeleBoxManagerEventType } from "./constants";
 import type {
     TeleBoxManagerConfig,
@@ -19,7 +23,7 @@ export * from "./constants";
 export class TeleBoxManager {
     public constructor({
         root = document.body,
-        state = TeleBoxState.Normal,
+        state = TELE_BOX_STATE.Normal,
         fence = true,
         containerRect = {
             x: 0,
@@ -40,12 +44,12 @@ export class TeleBoxManager {
         this.collector =
             collector || new TeleBoxCollector({ namespace }).mount(root);
 
-        this.collector.setVisible(this._state === TeleBoxState.Minimized);
+        this.collector.setVisible(this._state === TELE_BOX_STATE.Minimized);
         this.collector.onClick = () => {
-            if (this._state === TeleBoxState.Minimized) {
-                this.setState(this.lastState ?? TeleBoxState.Normal);
+            if (this._state === TELE_BOX_STATE.Minimized) {
+                this.setState(this.lastState ?? TELE_BOX_STATE.Normal);
             } else {
-                this.setState(TeleBoxState.Minimized);
+                this.setState(TELE_BOX_STATE.Minimized);
             }
         };
 
@@ -60,19 +64,19 @@ export class TeleBoxManager {
             containerRect: this.containerRect,
             onEvent: (event): void => {
                 switch (event.type) {
-                    case TeleBoxEventType.State: {
-                        if (event.value === TeleBoxState.Maximized) {
+                    case TELE_BOX_EVENT.State: {
+                        if (event.value === TELE_BOX_STATE.Maximized) {
                             this.setState(
-                                this._state === TeleBoxState.Maximized
-                                    ? TeleBoxState.Normal
-                                    : TeleBoxState.Maximized
+                                this._state === TELE_BOX_STATE.Maximized
+                                    ? TELE_BOX_STATE.Normal
+                                    : TELE_BOX_STATE.Maximized
                             );
                         } else {
                             this.setState(event.value);
                         }
                         break;
                     }
-                    case TeleBoxEventType.Close: {
+                    case TELE_BOX_EVENT.Close: {
                         const box =
                             this._focusedBox ??
                             this.boxes[this.boxes.length - 1];
@@ -124,17 +128,17 @@ export class TeleBoxManager {
 
         this.maxTitleBar.setBoxes(this.boxes);
 
-        box.events.on(TeleBoxEventType.State, (state) => {
+        box.events.on(TELE_BOX_EVENT.State, (state) => {
             this.setState(state);
         });
-        box.events.on(TeleBoxEventType.Close, () => {
+        box.events.on(TELE_BOX_EVENT.Close, () => {
             this.focusBox(false, box);
             this.remove(box.id);
         });
-        box.events.on(TeleBoxEventType.Move, () => {
+        box.events.on(TELE_BOX_EVENT.Move, () => {
             this.events.emit(TeleBoxManagerEventType.Move, box);
         });
-        box.events.on(TeleBoxEventType.Resize, () => {
+        box.events.on(TELE_BOX_EVENT.Resize, () => {
             this.events.emit(TeleBoxManagerEventType.Resize, box);
         });
 
@@ -189,7 +193,7 @@ export class TeleBoxManager {
             this.focusBox(false, box);
             box.destroy();
             if (this.boxes.length <= 0) {
-                this.setState(TeleBoxState.Normal);
+                this.setState(TELE_BOX_STATE.Normal);
             }
             if (!skipUpdate) {
                 this.events.emit(TeleBoxManagerEventType.Removed, boxes);
@@ -215,7 +219,7 @@ export class TeleBoxManager {
         this.maxTitleBar.setBoxes(this.boxes);
         boxes.forEach((box) => box.destroy());
         if (this.boxes.length <= 0) {
-            this.setState(TeleBoxState.Normal);
+            this.setState(TELE_BOX_STATE.Normal);
         }
         if (!skipUpdate) {
             this.events.emit(TeleBoxManagerEventType.Removed, boxes);
@@ -226,7 +230,7 @@ export class TeleBoxManager {
     public destroy(skipUpdate = false): void {
         this.events.removeAllListeners();
         this._focusedBox = void 0;
-        this._state = TeleBoxState.Normal;
+        this._state = TELE_BOX_STATE.Normal;
         this.removeAll(skipUpdate);
         window.removeEventListener("mousedown", this.checkFocusBox, true);
         window.removeEventListener("touchstart", this.checkFocusBox, true);
@@ -250,10 +254,10 @@ export class TeleBoxManager {
             this._state = state;
 
             if (this.collector) {
-                this.collector.setVisible(state === TeleBoxState.Minimized);
+                this.collector.setVisible(state === TELE_BOX_STATE.Minimized);
             }
 
-            if (state === TeleBoxState.Minimized) {
+            if (state === TELE_BOX_STATE.Minimized) {
                 if (this.collector?.$collector) {
                     const rect =
                         this.collector.$collector.getBoundingClientRect();
@@ -290,10 +294,10 @@ export class TeleBoxManager {
         (this.collector as TeleBoxCollector) = collector;
 
         collector.onClick = () => {
-            if (this._state === TeleBoxState.Minimized) {
-                this.setState(this.lastState ?? TeleBoxState.Normal);
+            if (this._state === TELE_BOX_STATE.Minimized) {
+                this.setState(this.lastState ?? TELE_BOX_STATE.Normal);
             } else {
-                this.setState(TeleBoxState.Minimized);
+                this.setState(TELE_BOX_STATE.Minimized);
             }
         };
     }

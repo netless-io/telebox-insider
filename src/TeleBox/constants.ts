@@ -1,10 +1,10 @@
-export enum TeleBoxState {
+export enum TELE_BOX_STATE {
     Normal = "normal",
     Minimized = "minimized",
     Maximized = "maximized",
 }
 
-export enum TeleBoxEventType {
+export enum TELE_BOX_EVENT {
     Close = "close",
     Focus = "focus",
     Blur = "blur",

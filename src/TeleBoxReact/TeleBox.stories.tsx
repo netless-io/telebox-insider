@@ -2,7 +2,7 @@ import React from "react";
 import { Meta, Story } from "@storybook/react";
 import faker from "faker";
 import { TeleBoxReact, TeleBoxReactProps } from ".";
-import { TeleBoxState } from "../TeleBox/constants";
+import { TELE_BOX_STATE } from "../TeleBox/constants";
 
 const storyMeta: Meta<TeleBoxReactProps> = {
     title: "TeleBox",
@@ -15,7 +15,7 @@ const storyMeta: Meta<TeleBoxReactProps> = {
         minHeight: 0.05,
         x: 0.1,
         y: 0.1,
-        state: TeleBoxState.Normal,
+        state: TELE_BOX_STATE.Normal,
         draggable: true,
         resizable: true,
     },

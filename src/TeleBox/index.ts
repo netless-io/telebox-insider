@@ -10,8 +10,8 @@ import {
     preventEvent,
 } from "../utils";
 import {
-    TeleBoxEventType,
-    TeleBoxState,
+    TELE_BOX_EVENT,
+    TELE_BOX_STATE,
     TeleBoxResizeHandle,
 } from "./constants";
 import type {
@@ -19,6 +19,7 @@ import type {
     TeleBoxRect,
     TeleBoxEvents,
     TeleBoxHandleType,
+    TeleBoxState,
 } from "./typings";
 
 export * from "./constants";
@@ -35,7 +36,7 @@ export class TeleBox {
         minHeight = 0,
         x = 0.1,
         y = 0.1,
-        state = TeleBoxState.Normal,
+        state = TELE_BOX_STATE.Normal,
         resizable = true,
         draggable = true,
         fence = true,
@@ -129,7 +130,7 @@ export class TeleBox {
 
     /** x position relative to container element. 0~1. Default 0.1. */
     public get x(): number {
-        if (this._state === TeleBoxState.Maximized) {
+        if (this._state === TELE_BOX_STATE.Maximized) {
             return 0;
         }
         return this._x;
@@ -137,7 +138,7 @@ export class TeleBox {
 
     /** y position relative to container element. 0~1. Default 0.1. */
     public get y(): number {
-        if (this._state === TeleBoxState.Maximized) {
+        if (this._state === TELE_BOX_STATE.Maximized) {
             return 0;
         }
         return this._y;
@@ -187,14 +188,14 @@ export class TeleBox {
                 onDragStart: this.handleTrackStart,
                 onEvent: (event): void => {
                     if (
-                        event.type === TeleBoxEventType.State &&
-                        event.value === TeleBoxState.Maximized
+                        event.type === TELE_BOX_EVENT.State &&
+                        event.value === TELE_BOX_STATE.Maximized
                     ) {
                         this.events.emit(
-                            TeleBoxEventType.State,
-                            this._state === TeleBoxState.Maximized
-                                ? TeleBoxState.Normal
-                                : TeleBoxState.Maximized
+                            TELE_BOX_EVENT.State,
+                            this._state === TELE_BOX_STATE.Maximized
+                                ? TELE_BOX_STATE.Normal
+                                : TELE_BOX_STATE.Maximized
                         );
                     } else {
                         this.events.emit(event.type, event.value);
@@ -317,7 +318,7 @@ export class TeleBox {
             }
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxEventType.Move, { x, y });
+                this.events.emit(TELE_BOX_EVENT.Move, { x, y });
             }
         }
 
@@ -344,7 +345,7 @@ export class TeleBox {
             }
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxEventType.Resize, { width, height });
+                this.events.emit(TELE_BOX_EVENT.Resize, { width, height });
             }
         }
 
@@ -422,7 +423,7 @@ export class TeleBox {
 
     public setState(state: TeleBoxState, skipUpdate = false): this {
         if (this._state !== state) {
-            if (this._state === TeleBoxState.Normal) {
+            if (this._state === TELE_BOX_STATE.Normal) {
                 this.takeRectSnapshot();
             }
 
@@ -433,7 +434,7 @@ export class TeleBox {
             this.titleBar.setState(state);
 
             if (!skipUpdate) {
-                this.events.emit(TeleBoxEventType.State, state);
+                this.events.emit(TELE_BOX_EVENT.State, state);
             }
         }
 
@@ -505,7 +506,7 @@ export class TeleBox {
             }
             if (!skipUpdate) {
                 this.events.emit(
-                    focus ? TeleBoxEventType.Focus : TeleBoxEventType.Blur
+                    focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
                 );
             }
         }
@@ -520,7 +521,7 @@ export class TeleBox {
             }
             if (!skipUpdate) {
                 if (!visible) {
-                    this.events.emit(TeleBoxEventType.Close);
+                    this.events.emit(TELE_BOX_EVENT.Close);
                 }
             }
         }
@@ -758,7 +759,7 @@ export class TeleBox {
             !this.draggable ||
             this.trackingHandle ||
             !this.$box ||
-            this.state !== TeleBoxState.Normal
+            this.state !== TELE_BOX_STATE.Normal
         ) {
             return;
         }
@@ -943,14 +944,17 @@ export class TeleBox {
         if (this.$box) {
             this.$box.classList.toggle(
                 this.wrapClassName("minimized"),
-                this._state === TeleBoxState.Minimized
+                this._state === TELE_BOX_STATE.Minimized
             );
             this.$box.classList.toggle(
                 this.wrapClassName("maximized"),
-                this._state === TeleBoxState.Maximized
+                this._state === TELE_BOX_STATE.Maximized
             );
 
-            if (this._state === TeleBoxState.Minimized && this.collectorRect) {
+            if (
+                this._state === TELE_BOX_STATE.Minimized &&
+                this.collectorRect
+            ) {
                 const translateX =
                     this.collectorRect.x -
                     (this._width * this.containerRect.width) / 2 +
@@ -971,7 +975,7 @@ export class TeleBox {
                     skipUpdate
                 );
                 this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
-            } else if (this._state === TeleBoxState.Maximized) {
+            } else if (this._state === TELE_BOX_STATE.Maximized) {
                 this.move(0, 0, skipUpdate);
                 this.resize(1, 1, skipUpdate);
             } else {
@@ -1000,7 +1004,7 @@ export class TeleBox {
             width: this._width,
             height: this._height,
         };
-        this.events.emit(TeleBoxEventType.Snapshot, { ...this.rectSnapshot });
+        this.events.emit(TELE_BOX_EVENT.Snapshot, { ...this.rectSnapshot });
     }
 }
 

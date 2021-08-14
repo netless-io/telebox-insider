@@ -1,11 +1,13 @@
 import type EventEmitter from "eventemitter3";
 import type { TeleTitleBar } from "../TeleTitleBar";
-import {
+import type {
     TeleBoxDragHandleType,
-    TeleBoxEventType,
+    TELE_BOX_EVENT,
     TeleBoxResizeHandle,
-    TeleBoxState,
+    TELE_BOX_STATE,
 } from "./constants";
+
+export type TeleBoxState = `${TELE_BOX_STATE}`;
 
 export interface TeleBoxRect {
     readonly x: number;
@@ -61,32 +63,38 @@ export interface TeleBoxConfig {
     readonly collectorRect?: TeleBoxRect;
 }
 
-export type TeleBoxEventArgs = {
-    [TeleBoxEventType.Close]: void;
-    [TeleBoxEventType.Focus]: void;
-    [TeleBoxEventType.Blur]: void;
-    [TeleBoxEventType.Move]: { x: number; y: number };
-    [TeleBoxEventType.Resize]: { width: number; height: number };
-    [TeleBoxEventType.State]: TeleBoxState;
-    [TeleBoxEventType.Snapshot]: TeleBoxRect;
-};
+type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
 
-export interface TeleBoxEvents extends EventEmitter<keyof TeleBoxEventArgs> {
-    on<U extends keyof TeleBoxEventArgs>(
+export type TeleBoxEventConfig = CheckTeleBoxConfig<{
+    close: void;
+    focus: void;
+    blur: void;
+    move: { x: number; y: number };
+    resize: { width: number; height: number };
+    state: TeleBoxState;
+    snapshot: TeleBoxRect;
+}>;
+
+export type TeleBoxEvent = keyof TeleBoxEventConfig;
+
+export interface TeleBoxEvents extends EventEmitter<TeleBoxEvent> {
+    on<U extends TeleBoxEvent>(
         event: U,
-        listener: (value: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventConfig[U]) => void
     ): this;
-    once<U extends keyof TeleBoxEventArgs>(
+    once<U extends TeleBoxEvent>(
         event: U,
-        listener: (value: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventConfig[U]) => void
     ): this;
-    addListener<U extends keyof TeleBoxEventArgs>(
+    addListener<U extends TeleBoxEvent>(
         event: U,
-        listener: (value: TeleBoxEventArgs[U]) => void
+        listener: (value: TeleBoxEventConfig[U]) => void
     ): this;
-    emit<U extends keyof TeleBoxEventArgs>(
+    emit<U extends TeleBoxEvent>(
         event: U,
-        ...value: TeleBoxEventArgs[U] extends void ? [] : [TeleBoxEventArgs[U]]
+        ...value: TeleBoxEventConfig[U] extends void
+            ? []
+            : [TeleBoxEventConfig[U]]
     ): boolean;
 }
 

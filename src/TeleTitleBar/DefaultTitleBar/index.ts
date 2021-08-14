@@ -7,9 +7,10 @@ import closeSVG from "./icons/close.svg";
 
 import {
     TeleBoxDragHandleType,
-    TeleBoxEventType,
-    TeleBoxState,
+    TELE_BOX_EVENT,
+    TELE_BOX_STATE,
 } from "../../TeleBox/constants";
+import type { TeleBoxState } from "../../TeleBox/typings";
 import type {
     TeleTitleBar,
     TeleTitleBarConfig,
@@ -32,7 +33,7 @@ export class DefaultTitleBar implements TeleTitleBar {
         onEvent,
         onDragStart,
         namespace = "telebox",
-        state = TeleBoxState.Normal,
+        state = TELE_BOX_STATE.Normal,
     }: DefaultTitleBarConfig = {}) {
         this.buttons = buttons || DefaultTitleBar.defaultButtons;
         this.onEvent = onEvent;
@@ -213,8 +214,8 @@ export class DefaultTitleBar implements TeleTitleBar {
             // double click
             if (this.onEvent) {
                 this.onEvent({
-                    type: TeleBoxEventType.State,
-                    value: TeleBoxState.Maximized,
+                    type: TELE_BOX_EVENT.State,
+                    value: TELE_BOX_STATE.Maximized,
                 });
             }
         } else if (this.onDragStart) {
@@ -226,20 +227,20 @@ export class DefaultTitleBar implements TeleTitleBar {
     protected static readonly defaultButtons: ReadonlyArray<DefaultTitleBarButton> =
         [
             {
-                type: TeleBoxEventType.State,
-                value: TeleBoxState.Minimized,
+                type: TELE_BOX_EVENT.State,
+                value: TELE_BOX_STATE.Minimized,
                 icon: minimizeSVG,
             },
             {
-                type: TeleBoxEventType.State,
-                value: TeleBoxState.Maximized,
+                type: TELE_BOX_EVENT.State,
+                value: TELE_BOX_STATE.Maximized,
                 icon: (state) =>
-                    state === TeleBoxState.Maximized
+                    state === TELE_BOX_STATE.Maximized
                         ? maximizeActiveSVG
                         : maximizeSVG,
             },
             {
-                type: TeleBoxEventType.Close,
+                type: TELE_BOX_EVENT.Close,
                 icon: closeSVG,
             },
         ];

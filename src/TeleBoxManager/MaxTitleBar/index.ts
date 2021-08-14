@@ -2,8 +2,8 @@ import "./style.scss";
 
 import type { TeleBox } from "../../TeleBox";
 import { DefaultTitleBar, DefaultTitleBarConfig } from "../../TeleTitleBar";
-import { TeleBoxState } from "../../TeleBox/constants";
-import { TeleBoxRect } from "../../TeleBox/typings";
+import { TELE_BOX_STATE } from "../../TeleBox/constants";
+import { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
 
 export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title">;
 
@@ -31,7 +31,7 @@ export class MaxTitleBar extends DefaultTitleBar {
             return;
         }
 
-        if (this.$titles && this.state === TeleBoxState.Maximized) {
+        if (this.$titles && this.state === TELE_BOX_STATE.Maximized) {
             const { children } = this.$titles.firstElementChild as HTMLElement;
             for (let i = children.length - 1; i >= 0; i -= 1) {
                 const $tab = children[i] as HTMLElement;
@@ -73,7 +73,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         if (this.$titleBar) {
             this.$titleBar.classList.toggle(
                 this.wrapClassName("max-titlebar-maximized"),
-                state === TeleBoxState.Maximized
+                state === TELE_BOX_STATE.Maximized
             );
         }
         this.updateTitles();
@@ -88,7 +88,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         $titleBar.classList.add(this.wrapClassName("max-titlebar"));
         $titleBar.classList.toggle(
             this.wrapClassName("max-titlebar-maximized"),
-            this.state === TeleBoxState.Maximized
+            this.state === TELE_BOX_STATE.Maximized
         );
 
         this.updateTitles();
@@ -104,7 +104,7 @@ export class MaxTitleBar extends DefaultTitleBar {
     }
 
     public updateTitles(): void {
-        if (this.$titleBar && this.state === TeleBoxState.Maximized) {
+        if (this.$titleBar && this.state === TELE_BOX_STATE.Maximized) {
             if (this.boxes.length === 1) {
                 if (this.$title) {
                     this.$title.textContent = this.boxes[0].title;

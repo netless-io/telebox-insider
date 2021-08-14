@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from "react";
 import { TeleBox } from "../TeleBox";
-import { TeleBoxConfig } from "../TeleBox/typings";
-import { TeleBoxState, TeleBoxEventType } from "../TeleBox/constants";
+import { TeleBoxConfig, TeleBoxState } from "../TeleBox/typings";
+import { TELE_BOX_EVENT } from "../TeleBox/constants";
 import { useUpdateEffect } from "./utils";
 
 export type TeleBoxReactProps = TeleBoxConfig & {
@@ -90,9 +90,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onResize) {
-            teleBox.events.on(TeleBoxEventType.Resize, props.onResize);
+            teleBox.events.on(TELE_BOX_EVENT.Resize, props.onResize);
             return () => {
-                teleBox.events.off(TeleBoxEventType.Resize, props.onResize);
+                teleBox.events.off(TELE_BOX_EVENT.Resize, props.onResize);
             };
         }
         return;
@@ -100,9 +100,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onMove) {
-            teleBox.events.on(TeleBoxEventType.Move, props.onMove);
+            teleBox.events.on(TELE_BOX_EVENT.Move, props.onMove);
             return () => {
-                teleBox.events.off(TeleBoxEventType.Move, props.onMove);
+                teleBox.events.off(TELE_BOX_EVENT.Move, props.onMove);
             };
         }
         return;
@@ -110,9 +110,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onClose) {
-            teleBox.events.on(TeleBoxEventType.Close, props.onClose);
+            teleBox.events.on(TELE_BOX_EVENT.Close, props.onClose);
             return () => {
-                teleBox.events.off(TeleBoxEventType.Close, props.onClose);
+                teleBox.events.off(TELE_BOX_EVENT.Close, props.onClose);
             };
         }
         return;
@@ -120,9 +120,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onFocus) {
-            teleBox.events.on(TeleBoxEventType.Focus, props.onFocus);
+            teleBox.events.on(TELE_BOX_EVENT.Focus, props.onFocus);
             return () => {
-                teleBox.events.off(TeleBoxEventType.Focus, props.onFocus);
+                teleBox.events.off(TELE_BOX_EVENT.Focus, props.onFocus);
             };
         }
         return;
@@ -130,9 +130,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onBlur) {
-            teleBox.events.on(TeleBoxEventType.Blur, props.onBlur);
+            teleBox.events.on(TELE_BOX_EVENT.Blur, props.onBlur);
             return () => {
-                teleBox.events.off(TeleBoxEventType.Blur, props.onBlur);
+                teleBox.events.off(TELE_BOX_EVENT.Blur, props.onBlur);
             };
         }
         return;
@@ -140,12 +140,9 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
 
     useEffect(() => {
         if (props.onStateChanged) {
-            teleBox.events.on(TeleBoxEventType.State, props.onStateChanged);
+            teleBox.events.on(TELE_BOX_EVENT.State, props.onStateChanged);
             return () => {
-                teleBox.events.off(
-                    TeleBoxEventType.State,
-                    props.onStateChanged
-                );
+                teleBox.events.off(TELE_BOX_EVENT.State, props.onStateChanged);
             };
         }
         return;
