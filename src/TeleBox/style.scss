@@ -12,6 +12,10 @@
     box-shadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15);
     border-radius: 6px;
     border: 1px solid #e3e3ec;
+    will-change: transform;
+    transition: width 0.4s cubic-bezier(0.4, 0.9, 0.71, 1.02),
+        height 0.4s cubic-bezier(0.55, 0.82, 0.63, 0.95),
+        opacity 0.6s cubic-bezier(0.7, 0, 0.84, 0), transform 0.4s ease;
 }
 
 .#{$namespace}-content {
