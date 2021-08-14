@@ -14,7 +14,7 @@ export enum TELE_BOX_EVENT {
     Snapshot = "snapshot",
 }
 
-export enum TeleBoxResizeHandle {
+export enum TELE_BOX_RESIZE_HANDLE {
     North = "n",
     South = "s",
     West = "w",

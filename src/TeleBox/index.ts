@@ -12,7 +12,7 @@ import {
 import {
     TELE_BOX_EVENT,
     TELE_BOX_STATE,
-    TeleBoxResizeHandle,
+    TELE_BOX_RESIZE_HANDLE,
 } from "./constants";
 import type {
     TeleBoxConfig,
@@ -698,7 +698,7 @@ export class TeleBox {
             );
             this.$resizeHandles = $resizeHandles;
 
-            Object.values(TeleBoxResizeHandle).forEach((handleType) => {
+            Object.values(TELE_BOX_RESIZE_HANDLE).forEach((handleType) => {
                 const $handle = document.createElement("div");
                 $handle.className = this.wrapClassName(handleType);
                 $handle.dataset.teleBoxHandle = handleType;
@@ -777,7 +777,7 @@ export class TeleBox {
                 flattenEvent(ev));
 
             this.trackingHandle = target.dataset
-                .teleBoxHandle as TeleBoxResizeHandle;
+                .teleBoxHandle as TELE_BOX_RESIZE_HANDLE;
 
             this.mountTrackMask();
         }
@@ -824,7 +824,7 @@ export class TeleBox {
             (pageY - this.trackStartPageY) / this.containerRect.height;
 
         switch (this.trackingHandle) {
-            case TeleBoxResizeHandle.North: {
+            case TELE_BOX_RESIZE_HANDLE.North: {
                 this.transform(
                     this._x,
                     this.trackStartY + offsetY,
@@ -833,7 +833,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.South: {
+            case TELE_BOX_RESIZE_HANDLE.South: {
                 this.transform(
                     this._x,
                     this._y,
@@ -842,7 +842,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.West: {
+            case TELE_BOX_RESIZE_HANDLE.West: {
                 this.transform(
                     this.trackStartX + offsetX,
                     this._y,
@@ -851,7 +851,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.East: {
+            case TELE_BOX_RESIZE_HANDLE.East: {
                 this.transform(
                     this._x,
                     this._y,
@@ -860,7 +860,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.NorthWest: {
+            case TELE_BOX_RESIZE_HANDLE.NorthWest: {
                 this.transform(
                     this.trackStartX + offsetX,
                     this.trackStartY + offsetY,
@@ -869,7 +869,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.NorthEast: {
+            case TELE_BOX_RESIZE_HANDLE.NorthEast: {
                 this.transform(
                     this._x,
                     this.trackStartY + offsetY,
@@ -878,7 +878,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.SouthEast: {
+            case TELE_BOX_RESIZE_HANDLE.SouthEast: {
                 this.transform(
                     this._x,
                     this._y,
@@ -887,7 +887,7 @@ export class TeleBox {
                 );
                 break;
             }
-            case TeleBoxResizeHandle.SouthWest: {
+            case TELE_BOX_RESIZE_HANDLE.SouthWest: {
                 this.transform(
                     this.trackStartX + offsetX,
                     this._y,

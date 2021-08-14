@@ -3,7 +3,7 @@ import type { TeleTitleBar } from "../TeleTitleBar";
 import type {
     TeleBoxDragHandleType,
     TELE_BOX_EVENT,
-    TeleBoxResizeHandle,
+    TELE_BOX_RESIZE_HANDLE,
     TELE_BOX_STATE,
 } from "./constants";
 
@@ -99,5 +99,5 @@ export interface TeleBoxEvents extends EventEmitter<TeleBoxEvent> {
 }
 
 export type TeleBoxHandleType =
-    | TeleBoxResizeHandle
+    | TELE_BOX_RESIZE_HANDLE
     | typeof TeleBoxDragHandleType;
