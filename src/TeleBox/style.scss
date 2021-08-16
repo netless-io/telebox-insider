@@ -1,21 +1,26 @@
 @import "../scss/variables.scss";
 
 .#{$namespace}-box {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
     position: absolute;
     top: 0;
     left: 0;
     z-index: $base-z-index;
-    background: #f9f9fc;
-    box-shadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15);
-    border-radius: 6px;
-    border: 1px solid #e3e3ec;
     will-change: transform;
     transition: width 0.4s cubic-bezier(0.4, 0.9, 0.71, 1.02),
         height 0.4s cubic-bezier(0.55, 0.82, 0.63, 0.95),
         opacity 0.6s cubic-bezier(0.7, 0, 0.84, 0), transform 0.4s ease;
+}
+
+.#{$namespace}-box-main {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #f9f9fc;
+    box-shadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15);
+    border-radius: 6px;
+    border: 1px solid #e3e3ec;
 }
 
 .#{$namespace}-content {
@@ -23,35 +28,36 @@
     position: relative;
 }
 
-.#{$namespace}-n {
+.#{$namespace}-resize-handle {
     position: absolute;
+    z-index: 2147483647;
+}
+
+.#{$namespace}-n {
     width: 100%;
     height: 10px;
     left: 0;
-    top: -5px;
+    top: -10px;
     cursor: n-resize;
 }
 
 .#{$namespace}-s {
-    position: absolute;
     width: 100%;
     height: 10px;
     left: 0;
-    bottom: -5px;
+    bottom: -10px;
     cursor: s-resize;
 }
 
 .#{$namespace}-w {
-    position: absolute;
     width: 10px;
     height: 100%;
-    left: -5px;
+    left: -10px;
     top: 0;
     cursor: w-resize;
 }
 
 .#{$namespace}-e {
-    position: absolute;
     width: 10px;
     height: 100%;
     right: -10px; // leave space to scrollbar
@@ -62,7 +68,6 @@
 .#{$namespace}-nw {
     width: 15px;
     height: 15px;
-    position: absolute;
     top: -5px;
     left: -5px;
     cursor: nw-resize;
@@ -71,7 +76,6 @@
 .#{$namespace}-ne {
     width: 15px;
     height: 15px;
-    position: absolute;
     top: -5px;
     right: -5px;
     cursor: ne-resize;
@@ -80,7 +84,6 @@
 .#{$namespace}-se {
     width: 15px;
     height: 15px;
-    position: absolute;
     bottom: -5px;
     right: -5px;
     cursor: se-resize;
@@ -89,7 +92,6 @@
 .#{$namespace}-sw {
     width: 15px;
     height: 15px;
-    position: absolute;
     bottom: -5px;
     left: -5px;
     cursor: sw-resize;
@@ -168,23 +170,8 @@
 }
 
 .#{$namespace}-readonly {
-    .#{$namespace}-n,
-    .#{$namespace}-s,
-    .#{$namespace}-w,
-    .#{$namespace}-e,
-    .#{$namespace}-nw,
-    .#{$namespace}-ne,
-    .#{$namespace}-se,
-    .#{$namespace}-sw,
-    .#{$namespace}-cursor-n,
-    .#{$namespace}-cursor-s,
-    .#{$namespace}-cursor-w,
-    .#{$namespace}-cursor-e,
-    .#{$namespace}-cursor-nw,
-    .#{$namespace}-cursor-ne,
-    .#{$namespace}-cursor-se,
-    .#{$namespace}-cursor-sw {
-        cursor: initial;
-        pointer-events: none;
+    .#{$namespace}-resize-handle {
+        cursor: initial !important;
+        pointer-events: none !important;
     }
 }

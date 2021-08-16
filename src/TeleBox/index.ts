@@ -707,6 +707,10 @@ export class TeleBox {
                 this.$box.className = this.wrapClassName("box");
             }
 
+            const $boxMain = document.createElement("div");
+            $boxMain.className = this.wrapClassName("box-main");
+            this.$box.appendChild($boxMain);
+
             if (!this._draggable) {
                 this.$box.classList.add(this.wrapClassName("no-drag"));
             }
@@ -774,7 +778,10 @@ export class TeleBox {
 
             Object.values(TELE_BOX_RESIZE_HANDLE).forEach((handleType) => {
                 const $handle = document.createElement("div");
-                $handle.className = this.wrapClassName(handleType);
+                $handle.className =
+                    this.wrapClassName(handleType) +
+                    " " +
+                    this.wrapClassName("resize-handle");
                 $handle.dataset.teleBoxHandle = handleType;
 
                 $resizeHandles.appendChild($handle);
@@ -782,10 +789,10 @@ export class TeleBox {
 
             this.syncTeleStateDOM(true);
 
-            this.$box.appendChild($titleBar);
-            this.$box.appendChild(this.$content);
-            this.$box.appendChild(this.$footer);
-            this.$box.appendChild($resizeHandles);
+            $boxMain.appendChild($titleBar);
+            $boxMain.appendChild(this.$content);
+            $boxMain.appendChild(this.$footer);
+            $boxMain.appendChild($resizeHandles);
         }
 
         return this.$box;
