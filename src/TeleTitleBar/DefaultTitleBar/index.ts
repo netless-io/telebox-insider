@@ -28,6 +28,7 @@ export interface DefaultTitleBarConfig extends TeleTitleBarConfig {
 
 export class DefaultTitleBar implements TeleTitleBar {
     public constructor({
+        readonly = false,
         title,
         buttons,
         onEvent,
@@ -35,6 +36,7 @@ export class DefaultTitleBar implements TeleTitleBar {
         namespace = "telebox",
         state = TELE_BOX_STATE.Normal,
     }: DefaultTitleBarConfig = {}) {
+        this.readonly = readonly;
         this.buttons = buttons || DefaultTitleBar.defaultButtons;
         this.onEvent = onEvent;
         this.onDragStart = onDragStart;
@@ -71,6 +73,12 @@ export class DefaultTitleBar implements TeleTitleBar {
                     }
                 }
             });
+        }
+    }
+
+    public setReadonly(readonly: boolean): void {
+        if (this.readonly !== readonly) {
+            this.readonly = readonly;
         }
     }
 
@@ -165,6 +173,8 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public onDragStart?: TeleTitleBarConfig["onDragStart"];
 
+    protected readonly: boolean;
+
     protected title?: string;
 
     protected buttons: ReadonlyArray<DefaultTitleBarButton>;
@@ -174,6 +184,10 @@ export class DefaultTitleBar implements TeleTitleBar {
     protected $btnImgs: HTMLImageElement[] = [];
 
     protected handleBtnClick = (ev: MouseEvent): void => {
+        if (this.readonly) {
+            return;
+        }
+
         const target = ev.target as HTMLElement;
         const teleTitleBarBtnIndex = Number(
             target.dataset?.teleTitleBarBtnIndex
@@ -196,6 +210,10 @@ export class DefaultTitleBar implements TeleTitleBar {
     protected lastTitleBarClick = 0;
 
     protected handleTitleBarClick = (ev: MouseEvent | TouchEvent): void => {
+        if (this.readonly) {
+            return;
+        }
+
         if (
             (ev as MouseEvent).button != null &&
             (ev as MouseEvent).button !== 0

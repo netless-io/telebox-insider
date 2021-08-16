@@ -8,6 +8,7 @@ export type TeleTitleBarEvent<U = keyof TeleBoxEventConfig> =
         : never;
 
 export interface TeleTitleBarConfig {
+    readonly?: boolean;
     title?: string;
     state?: TeleBoxState;
     namespace?: string;
@@ -19,6 +20,8 @@ export interface TeleTitleBar {
     setTitle(title: string): void;
 
     setState(state: TeleBoxState): void;
+
+    setReadonly(readonly: boolean): void;
 
     render(): HTMLElement;
 

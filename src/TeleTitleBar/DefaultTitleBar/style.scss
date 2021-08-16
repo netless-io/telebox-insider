@@ -49,3 +49,9 @@
     width: 22px;
     height: 22px;
 }
+
+.#{$namespace}-readonly {
+    .#{$namespace}-titlebar-btn {
+        cursor: not-allowed;
+    }
+}

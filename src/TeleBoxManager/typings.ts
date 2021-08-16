@@ -24,6 +24,7 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "minHeight"
     | "x"
     | "y"
+    | "readonly"
     | "resizable"
     | "draggable"
     | "fixRatio"

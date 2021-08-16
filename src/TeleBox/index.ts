@@ -37,6 +37,7 @@ export class TeleBox {
         x = 0.1,
         y = 0.1,
         state = TELE_BOX_STATE.Normal,
+        readonly = false,
         resizable = true,
         draggable = true,
         fence = true,
@@ -66,6 +67,7 @@ export class TeleBox {
         this._x = clamp(x, 0, 1);
         this._y = clamp(y, 0, 1);
         this._state = state;
+        this._readonly = readonly;
         this._resizable = resizable;
         this._draggable = draggable;
         this._fence = fence;
@@ -73,8 +75,6 @@ export class TeleBox {
         this._focus = focus;
         this._zIndex = zIndex;
         this._titleBar = titleBar;
-        // @TODO
-        // this._readonly = readonly
         this.$userContent = content;
         this.$userFooter = footer;
         this.$userStyles = styles;
@@ -155,6 +155,11 @@ export class TeleBox {
         return this._state;
     }
 
+    /** Is box readonly */
+    public get readonly(): boolean {
+        return this._readonly;
+    }
+
     /** Able to resize box window */
     public get resizable(): boolean {
         return this._resizable;
@@ -189,6 +194,7 @@ export class TeleBox {
     public get titleBar(): TeleTitleBar {
         if (!this._titleBar) {
             this._titleBar = new DefaultTitleBar({
+                readonly: this._readonly,
                 title: this.title,
                 namespace: this.namespace,
                 onDragStart: this.handleTrackStart,
@@ -489,6 +495,20 @@ export class TeleBox {
         return this;
     }
 
+    public setReadonly(readonly: boolean): this {
+        if (this._readonly !== readonly) {
+            this._readonly = readonly;
+            this.titleBar.setReadonly(readonly);
+            if (this.$box) {
+                this.$box.classList.toggle(
+                    this.wrapClassName("readonly"),
+                    readonly
+                );
+            }
+        }
+        return this;
+    }
+
     public setResizable(resizable: boolean): this {
         if (this._resizable !== resizable) {
             this._resizable = resizable;
@@ -639,6 +659,7 @@ export class TeleBox {
     protected _x: number;
     protected _y: number;
     protected _state: TeleBoxState;
+    protected _readonly: boolean;
     protected _resizable: boolean;
     protected _draggable: boolean;
     protected _fence: boolean;
@@ -685,6 +706,10 @@ export class TeleBox {
 
             if (!this._draggable) {
                 this.$box.classList.add(this.wrapClassName("no-drag"));
+            }
+
+            if (this._readonly) {
+                this.$box.classList.add(this.wrapClassName("readonly"));
             }
 
             if (!this._resizable) {
@@ -793,6 +818,10 @@ export class TeleBox {
     protected trackingHandle: TeleBoxHandleType | undefined;
 
     public handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
+        if (this._readonly) {
+            return;
+        }
+
         if (
             (ev as MouseEvent).button != null &&
             (ev as MouseEvent).button !== 0

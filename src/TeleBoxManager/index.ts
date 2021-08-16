@@ -362,6 +362,9 @@ export class TeleBoxManager {
         if (config.minWidth != null) {
             box.setMinWidth(config.minWidth, skipUpdate);
         }
+        if (config.readonly != null) {
+            box.setReadonly(config.readonly);
+        }
         if (config.resizable != null) {
             box.setResizable(config.resizable);
         }

@@ -166,3 +166,25 @@
         height 0.05s cubic-bezier(0.55, 0.82, 0.63, 0.95),
         opacity 0.6s cubic-bezier(0.7, 0, 0.84, 0), transform 0.03s ease;
 }
+
+.#{$namespace}-readonly {
+    .#{$namespace}-n,
+    .#{$namespace}-s,
+    .#{$namespace}-w,
+    .#{$namespace}-e,
+    .#{$namespace}-nw,
+    .#{$namespace}-ne,
+    .#{$namespace}-se,
+    .#{$namespace}-sw,
+    .#{$namespace}-cursor-n,
+    .#{$namespace}-cursor-s,
+    .#{$namespace}-cursor-w,
+    .#{$namespace}-cursor-e,
+    .#{$namespace}-cursor-nw,
+    .#{$namespace}-cursor-ne,
+    .#{$namespace}-cursor-se,
+    .#{$namespace}-cursor-sw {
+        cursor: initial;
+        pointer-events: none;
+    }
+}

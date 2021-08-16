@@ -37,6 +37,8 @@ export interface TeleBoxConfig {
     readonly y?: number;
     /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
+    /** Is box readonly */
+    readonly readonly?: boolean;
     /** Able to resize box window. Default true. */
     readonly resizable?: boolean;
     /** Able to drag box window Default true. */
