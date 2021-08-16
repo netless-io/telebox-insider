@@ -5,7 +5,7 @@ import { DefaultTitleBar, DefaultTitleBarConfig } from "../../TeleTitleBar";
 import { TELE_BOX_STATE } from "../../TeleBox/constants";
 import { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
 
-export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title">;
+export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title" | "readonly">;
 
 export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
     boxes: MaxTitleBarTeleBox[];
@@ -20,11 +20,19 @@ export class MaxTitleBar extends DefaultTitleBar {
         this.boxes = config.boxes;
         this.focusedBox = config.focusedBox;
         this.containerRect = config.containerRect;
+
+        if (this.focusedBox) {
+            this.setReadonly(this.focusedBox.readonly);
+        }
     }
 
     public focusBox(box?: MaxTitleBarTeleBox): void {
         if (!box) {
             box = this.boxes[this.boxes.length - 1];
+        }
+
+        if (box) {
+            this.setReadonly(box.readonly);
         }
 
         if (this.focusedBox && this.focusedBox === box) {

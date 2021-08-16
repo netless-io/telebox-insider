@@ -25,7 +25,11 @@ Overview.args = {
     state: TELE_BOX_STATE.Maximized,
     boxes: Array(3)
         .fill(0)
-        .map((_, i) => ({ id: `${i + 1}`, title: `tab ${i + 1}` })),
+        .map((_, i) => ({
+            id: `${i + 1}`,
+            title: `tab ${i + 1}`,
+            readonly: faker.datatype.boolean(),
+        })),
     containerRect,
 };
 Overview.args.focusedBox = Overview.args.boxes![1];
@@ -35,7 +39,13 @@ export const SingleBox: Story<MaxTitleBarReactProps> = (props) => (
 );
 SingleBox.args = {
     state: TELE_BOX_STATE.Maximized,
-    boxes: [{ id: `1`, title: faker.commerce.productName() }],
+    boxes: [
+        {
+            id: `1`,
+            title: faker.commerce.productName(),
+            readonly: faker.datatype.boolean(),
+        },
+    ],
     containerRect,
 };
 
@@ -46,7 +56,11 @@ BoxOverflows.args = {
     state: TELE_BOX_STATE.Maximized,
     boxes: Array(50)
         .fill(0)
-        .map((_, i) => ({ id: `${i + 1}`, title: `tab ${i + 1}` })),
+        .map((_, i) => ({
+            id: `${i + 1}`,
+            title: `tab ${i + 1}`,
+            readonly: faker.datatype.boolean(),
+        })),
     containerRect,
 };
 BoxOverflows.args.focusedBox = BoxOverflows.args.boxes![3];

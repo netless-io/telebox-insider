@@ -16,6 +16,7 @@ const storyMeta: Meta<TeleBoxReactProps> = {
         x: 0.1,
         y: 0.1,
         state: TELE_BOX_STATE.Normal,
+        readonly: false,
         draggable: true,
         resizable: true,
     },
@@ -61,4 +62,13 @@ export const FixRatio: Story<TeleBoxReactProps> = (args) => {
 FixRatio.args = {
     title: "Fix Ratio",
     fixRatio: true,
+};
+
+export const Readonly: Story<TeleBoxReactProps> = (args) => {
+    return <TeleBoxReact {...args} />;
+};
+
+Readonly.args = {
+    title: "Readonly",
+    readonly: true,
 };
