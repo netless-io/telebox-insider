@@ -1,6 +1,6 @@
 {
     "name": "@netless/telebox-insider",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "private": false,
     "description": "Window widget for Whiteboard",
     "license": "MIT",
@@ -13,7 +13,7 @@
     "types": "./dist/index.d.ts",
     "files": [
         "src",
-        "build"
+        "dist"
     ],
     "scripts": {
         "start": "vite ./playground --open --host",
