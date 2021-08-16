@@ -47,6 +47,7 @@ export class TeleBox {
         titleBar,
         content,
         footer,
+        styles,
         containerRect = {
             x: 0,
             y: 0,
@@ -74,8 +75,9 @@ export class TeleBox {
         this._titleBar = titleBar;
         // @TODO
         // this._readonly = readonly
-        this.content = content;
-        this.footer = footer;
+        this.$userContent = content;
+        this.$userFooter = footer;
+        this.$userStyles = styles;
         this.containerRect = containerRect;
         this.collectorRect = collectorRect;
 
@@ -89,9 +91,11 @@ export class TeleBox {
         this.takeRectSnapshot();
     }
 
-    public content: HTMLElement | undefined;
+    public $userContent: HTMLElement | undefined;
 
-    public footer: HTMLElement | undefined;
+    public $userFooter: HTMLElement | undefined;
+
+    public $userStyles: HTMLStyleElement | undefined;
 
     public readonly containerRect: TeleBoxRect;
 
@@ -226,16 +230,43 @@ export class TeleBox {
         return this;
     }
 
+    public mountStyles(styles: string | HTMLStyleElement): this {
+        let $styles: HTMLStyleElement;
+        if (typeof styles === "string") {
+            $styles = document.createElement("style");
+            $styles.textContent = styles;
+        } else {
+            $styles = styles;
+        }
+        if (this.$userStyles !== $styles) {
+            this.unmountStyles();
+            this.$userStyles = $styles;
+            if (this.$content) {
+                this.$content.appendChild($styles);
+            }
+        }
+        return this;
+    }
+
+    public unmountStyles(): this {
+        if (
+            this.$content &&
+            this.$userStyles &&
+            this.$userStyles.parentElement === this.$content
+        ) {
+            this.$userStyles.remove();
+        }
+        return this;
+    }
+
     /**
      * Mount dom to box content.
      */
     public mountContent(content: HTMLElement): this {
-        if (this.content !== content) {
-            this.content = content;
+        if (this.$userContent !== content) {
+            this.unmountContent();
+            this.$userContent = content;
             if (this.$content) {
-                if (this.$content.firstChild) {
-                    this.$content.removeChild(this.$content.firstChild);
-                }
                 this.$content.appendChild(content);
             }
         }
@@ -246,10 +277,12 @@ export class TeleBox {
      * Unmount content from the box.
      */
     public unmountContent(): this {
-        if (this.$content) {
-            if (this.$content.firstChild) {
-                this.$content.removeChild(this.$content.firstChild);
-            }
+        if (
+            this.$content &&
+            this.$userContent &&
+            this.$userContent.parentElement === this.$content
+        ) {
+            this.$userContent.remove();
         }
         return this;
     }
@@ -258,12 +291,10 @@ export class TeleBox {
      * Mount dom to box footer.
      */
     public mountFooter(footer: HTMLElement): this {
-        if (this.footer !== footer) {
-            this.footer = footer;
+        if (this.$userFooter !== footer) {
+            this.unmountFooter();
+            this.$userFooter = footer;
             if (this.$footer) {
-                if (this.$footer.firstChild) {
-                    this.$footer.removeChild(this.$footer.firstChild);
-                }
                 this.$footer.appendChild(footer);
             }
         }
@@ -274,10 +305,12 @@ export class TeleBox {
      * Unmount footer from the box.
      */
     public unmountFooter(): this {
-        if (this.$footer) {
-            if (this.$footer.firstChild) {
-                this.$footer.removeChild(this.$footer.firstChild);
-            }
+        if (
+            this.$content &&
+            this.$userFooter &&
+            this.$userFooter.parentElement === this.$footer
+        ) {
+            this.$userFooter.remove();
         }
         return this;
     }
@@ -579,8 +612,9 @@ export class TeleBox {
             this._titleBar.destroy();
         }
         this.unRender();
-        this.content = void 0;
-        this.footer = void 0;
+        this.$userContent = void 0;
+        this.$userFooter = void 0;
+        this.$userStyles = void 0;
         this.events.removeAllListeners();
     }
 
@@ -687,14 +721,17 @@ export class TeleBox {
             this.$content = document.createElement("div");
             this.$content.className =
                 this.wrapClassName("content") + " tele-fancy-scrollbar";
-            if (this.content) {
-                this.$content.appendChild(this.content);
+            if (this.$userStyles) {
+                this.$content.appendChild(this.$userStyles);
+            }
+            if (this.$userContent) {
+                this.$content.appendChild(this.$userContent);
             }
 
             this.$footer = document.createElement("div");
             this.$footer.className = this.wrapClassName("footer");
-            if (this.footer) {
-                this.$footer.appendChild(this.footer);
+            if (this.$userFooter) {
+                this.$footer.appendChild(this.$userFooter);
             }
 
             const $resizeHandles = document.createElement("div");
@@ -1030,5 +1067,6 @@ export type ReadonlyTeleBox = Pick<
     | "wrapClassName"
     | "mountContent"
     | "mountFooter"
+    | "mountStyles"
     | "handleTrackStart"
 >;
