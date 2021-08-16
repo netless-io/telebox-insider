@@ -11,6 +11,7 @@ export default ({ command, mode }) => {
                 formats: ["es", "cjs"],
             },
             outDir: "dist",
+            sourcemap: isProd,
             rollupOptions: {
                 external: ["react"],
             },
