@@ -77,6 +77,7 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     resize: { width: number; height: number };
     state: TeleBoxState;
     snapshot: TeleBoxRect;
+    readonly: boolean;
 }>;
 
 export type TeleBoxEvent = keyof TeleBoxEventConfig;

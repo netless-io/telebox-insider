@@ -12,6 +12,7 @@ export enum TELE_BOX_EVENT {
     Resize = "resize",
     State = "state",
     Snapshot = "snapshot",
+    Readonly = "readonly",
 }
 
 export enum TELE_BOX_RESIZE_HANDLE {

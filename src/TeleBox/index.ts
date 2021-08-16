@@ -495,7 +495,7 @@ export class TeleBox {
         return this;
     }
 
-    public setReadonly(readonly: boolean): this {
+    public setReadonly(readonly: boolean, skipUpdate = false): this {
         if (this._readonly !== readonly) {
             this._readonly = readonly;
             this.titleBar.setReadonly(readonly);
@@ -504,6 +504,9 @@ export class TeleBox {
                     this.wrapClassName("readonly"),
                     readonly
                 );
+            }
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.Readonly, readonly);
             }
         }
         return this;
