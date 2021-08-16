@@ -34,6 +34,7 @@ export class TeleBoxManager {
         collector,
         namespace = "telebox",
         zIndex = 100,
+        readonly = false,
     }: TeleBoxManagerConfig = {}) {
         this.root = root;
         this._state = state;
@@ -43,9 +44,14 @@ export class TeleBoxManager {
         this.zIndex = zIndex;
         this.collector =
             collector || new TeleBoxCollector({ namespace }).mount(root);
+        this.readonly = readonly;
 
         this.collector.setVisible(this._state === TELE_BOX_STATE.Minimized);
         this.collector.onClick = () => {
+            if (this.readonly) {
+                return;
+            }
+
             if (this._state === TELE_BOX_STATE.Minimized) {
                 this.setState(this.lastState ?? TELE_BOX_STATE.Normal);
             } else {
@@ -57,6 +63,7 @@ export class TeleBoxManager {
         window.addEventListener("touchstart", this.checkFocusBox, true);
 
         this.maxTitleBar = new MaxTitleBar({
+            readonly: this.readonly,
             namespace: this.namespace,
             state: this._state,
             boxes: this.boxes,
@@ -102,6 +109,8 @@ export class TeleBoxManager {
     public readonly collector: TeleBoxCollector | undefined;
 
     public readonly namespace: string;
+
+    public readonly readonly: boolean;
 
     public zIndex: number;
 
@@ -302,6 +311,14 @@ export class TeleBoxManager {
         };
     }
 
+    public setReadonly(readonly: boolean, skipUpdate = false): void {
+        if (this.readonly !== readonly) {
+            (this.readonly as boolean) = readonly;
+            this.maxTitleBar.setReadonly(readonly);
+            this.boxes.forEach((box) => box.setReadonly(readonly, skipUpdate));
+        }
+    }
+
     public wrapClassName(className: string): string {
         return `${this.namespace}-${className}`;
     }
@@ -362,9 +379,6 @@ export class TeleBoxManager {
         if (config.minWidth != null) {
             box.setMinWidth(config.minWidth, skipUpdate);
         }
-        if (config.readonly != null) {
-            box.setReadonly(config.readonly);
-        }
         if (config.resizable != null) {
             box.setResizable(config.resizable);
         }
@@ -422,6 +436,10 @@ export class TeleBoxManager {
     }
 
     protected checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
+        if (this.readonly) {
+            return;
+        }
+
         const target = ev.target as HTMLElement;
         if (!target.tagName) {
             return;
@@ -473,6 +491,7 @@ export class TeleBoxManager {
             zIndex: this.zIndex,
             namespace: this.namespace,
             containerRect: this.containerRect,
+            readonly: this.readonly,
         };
     }
 }

@@ -7,7 +7,12 @@ import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 export interface TeleBoxManagerConfig
     extends Pick<
         TeleBoxConfig,
-        "fence" | "containerRect" | "state" | "namespace" | "zIndex"
+        | "fence"
+        | "containerRect"
+        | "state"
+        | "namespace"
+        | "zIndex"
+        | "readonly"
     > {
     /** Element to mount boxes. */
     root?: HTMLElement;
@@ -24,7 +29,6 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "minHeight"
     | "x"
     | "y"
-    | "readonly"
     | "resizable"
     | "draggable"
     | "fixRatio"

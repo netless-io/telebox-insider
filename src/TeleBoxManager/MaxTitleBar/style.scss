@@ -117,3 +117,9 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
 .#{$namespace}-titles-tab-focus {
     color: #357bf6;
 }
+
+.#{$namespace}-readonly {
+    .#{$namespace}-titles-tab {
+        cursor: not-allowed;
+    }
+}
