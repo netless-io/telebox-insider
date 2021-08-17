@@ -185,9 +185,6 @@ export class TeleBox {
     }
 
     public get zIndex(): number {
-        if (this._focus) {
-            return this._zIndex + 1;
-        }
         return this._zIndex;
     }
 
@@ -573,7 +570,7 @@ export class TeleBox {
     public setZIndex(zIndex: number): this {
         this._zIndex = zIndex;
         if (this.$box) {
-            this.$box.style.zIndex = String(this.zIndex);
+            this.$box.style.zIndex = String(zIndex);
         }
         return this;
     }
@@ -742,7 +739,7 @@ export class TeleBox {
 
             this.$box.dataset.teleBoxID = this.id;
             this.$box.style.transform = `translate(${x},${y})`;
-            this.$box.style.zIndex = String(this.zIndex);
+            this.$box.style.zIndex = String(this._zIndex);
             this.$box.style.width =
                 this._width * this.containerRect.width + "px";
             this.$box.style.height =
