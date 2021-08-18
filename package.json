@@ -70,6 +70,7 @@
         "vite": "^2.4.4"
     },
     "dependencies": {
-        "eventemitter3": "^4.0.7"
+        "eventemitter3": "^4.0.7",
+        "stylefire": "^7.0.3"
     }
 }

@@ -1,6 +1,7 @@
 import "./style.scss";
 
 import EventEmitter from "eventemitter3";
+import styler, { Styler } from "stylefire";
 import { DefaultTitleBar, TeleTitleBar } from "../TeleTitleBar";
 import {
     clamp,
@@ -365,9 +366,12 @@ export class TeleBox {
             this._y = y;
 
             if (this.$box) {
-                const x = this.absoluteX + this.containerRect.x + "px";
-                const y = this.absoluteY + this.containerRect.y + "px";
-                this.$box.style.transform = `translate(${x},${y})`;
+                if (this.boxStyler) {
+                    this.boxStyler.set({
+                        x: this.absoluteX + this.containerRect.x,
+                        y: this.absoluteY + this.containerRect.y,
+                    });
+                }
             }
 
             if (!skipUpdate) {
@@ -390,9 +394,11 @@ export class TeleBox {
             this._width = width;
             this._height = height;
 
-            if (this.$box) {
-                this.$box.style.width = this.absoluteWidth + "px";
-                this.$box.style.height = this.absoluteHeight + "px";
+            if (this.boxStyler) {
+                this.boxStyler.set({
+                    width: this.absoluteWidth,
+                    height: this.absoluteHeight,
+                });
             }
 
             if (!skipUpdate) {
@@ -609,22 +615,14 @@ export class TeleBox {
 
     public setContainerRect(rect: TeleBoxRect): this {
         (this.containerRect as TeleBoxRect) = rect;
-
-        if (this.$box) {
-            const translateX =
-                this._x * this.containerRect.width +
-                this.containerRect.x +
-                "px";
-            const translateY =
-                this._y * this.containerRect.height +
-                this.containerRect.y +
-                "px";
-
-            this.$box.style.transform = `translate(${translateX},${translateY})`;
-            this.$box.style.width = this.absoluteWidth + "px";
-            this.$box.style.height = this.absoluteHeight + "px";
+        if (this.boxStyler) {
+            this.boxStyler.set({
+                x: this._x * this.containerRect.width + this.containerRect.x,
+                y: this._y * this.containerRect.height + this.containerRect.y,
+                width: this.absoluteWidth,
+                height: this.absoluteHeight,
+            });
         }
-
         return this;
     }
 
@@ -705,6 +703,8 @@ export class TeleBox {
 
     protected rectSnapshot: TeleBoxRect | undefined;
 
+    protected boxStyler: Styler | undefined;
+
     public render(root?: HTMLElement): HTMLElement {
         if (root && this.$box) {
             if (root === this.$box) {
@@ -722,6 +722,8 @@ export class TeleBox {
                 this.$box = document.createElement("div");
                 this.$box.className = this.wrapClassName("box");
             }
+
+            this.boxStyler = styler(this.$box);
 
             const $boxMain = document.createElement("div");
             $boxMain.className = this.wrapClassName("box-main");
@@ -757,8 +759,8 @@ export class TeleBox {
                 "px";
 
             this.$box.dataset.teleBoxID = this.id;
-            this.$box.style.transform = `translate(${x},${y})`;
             this.$box.style.zIndex = String(this._zIndex);
+            this.$box.style.transform = `translate(${x},${y})`;
             this.$box.style.width = this.absoluteWidth + "px";
             this.$box.style.height = this.absoluteHeight + "px";
 
@@ -1075,10 +1077,18 @@ export class TeleBox {
                     translateY / this.containerRect.height,
                     skipUpdate
                 );
-                this.$box.style.transform = `translate(${translateX}px,${translateY}px) scale(${scaleX},${scaleY})`;
+                if (this.boxStyler) {
+                    this.boxStyler.set({
+                        x: translateX,
+                        y: translateY,
+                        scaleX: scaleX,
+                        scaleY: scaleY,
+                    });
+                }
             } else if (this._state === TELE_BOX_STATE.Maximized) {
                 this.move(0, 0, skipUpdate);
                 this.resize(1, 1, skipUpdate);
+                this.boxStyler?.set({ scaleX: 1, scaleY: 1 });
             } else {
                 if (this.rectSnapshot) {
                     this.move(
@@ -1091,6 +1101,7 @@ export class TeleBox {
                         this.rectSnapshot.height,
                         skipUpdate
                     );
+                    this.boxStyler?.set({ scaleX: 1, scaleY: 1 });
                     this.rectSnapshot = void 0;
                 }
             }
