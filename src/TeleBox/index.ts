@@ -673,12 +673,12 @@ export class TeleBox {
     protected _titleBar: TeleTitleBar | undefined;
 
     /** Classname Prefix. For CSS styling. Default "telebox" */
-    protected readonly namespace: string;
+    public readonly namespace: string;
 
     /** DOM of the box */
-    protected $box: HTMLElement | undefined;
+    public $box: HTMLElement | undefined;
 
-    protected $contentWrap: HTMLElement | undefined;
+    public $contentWrap: HTMLElement | undefined;
 
     /** DOM of the box content */
     public $content: HTMLElement | undefined;
@@ -686,9 +686,9 @@ export class TeleBox {
     /** DOM of the box footer */
     public $footer: HTMLElement | undefined;
 
-    protected $resizeHandles: HTMLElement | undefined;
+    public $resizeHandles: HTMLElement | undefined;
 
-    protected $trackMask: HTMLElement | undefined;
+    public $trackMask: HTMLElement | undefined;
 
     protected rectSnapshot: TeleBoxRect | undefined;
 
