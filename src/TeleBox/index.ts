@@ -680,6 +680,8 @@ export class TeleBox {
 
     public $contentWrap: HTMLElement | undefined;
 
+    public $titleBar: HTMLElement | undefined;
+
     /** DOM of the box content */
     public $content: HTMLElement | undefined;
 
@@ -749,7 +751,9 @@ export class TeleBox {
             this.$box.style.width = this.absoluteWidth + "px";
             this.$box.style.height = this.absoluteHeight + "px";
 
-            const $titleBar = this.titleBar.render();
+            this.$titleBar = document.createElement("div");
+            this.$titleBar.className = this.wrapClassName("titlebar-wrap");
+            this.$titleBar.appendChild(this.titleBar.render());
 
             this.$contentWrap = document.createElement("div");
             this.$contentWrap.className = this.wrapClassName("content-wrap");
@@ -767,7 +771,7 @@ export class TeleBox {
             this.$contentWrap.appendChild(this.$content);
 
             this.$footer = document.createElement("div");
-            this.$footer.className = this.wrapClassName("footer");
+            this.$footer.className = this.wrapClassName("footer-wrap");
             if (this.$userFooter) {
                 this.$footer.appendChild(this.$userFooter);
             }
@@ -794,7 +798,7 @@ export class TeleBox {
             });
 
             this.syncTeleStateDOM(true);
-            $boxMain.appendChild($titleBar);
+            $boxMain.appendChild(this.$titleBar);
             $boxMain.appendChild(this.$contentWrap);
             $boxMain.appendChild(this.$footer);
             $boxMain.appendChild($resizeHandles);

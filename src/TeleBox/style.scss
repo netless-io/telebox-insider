@@ -38,6 +38,17 @@
     position: relative;
 }
 
+.#{$namespace}-footer-wrap {
+    display: flex;
+    flex-direction: column;
+
+    &::before {
+        content: "";
+        display: block;
+        flex: 1;
+    }
+}
+
 .#{$namespace}-resize-handle {
     position: absolute;
     z-index: 2147483647;
