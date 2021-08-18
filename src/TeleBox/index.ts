@@ -434,7 +434,11 @@ export class TeleBox {
             }
         }
 
-        this.move(x, y, skipUpdate);
+        this.move(
+            width >= this._minWidth ? x : this._x,
+            height >= this._minHeight ? y : this._y,
+            skipUpdate
+        );
         this.resize(
             clamp(width, this._minWidth, 1),
             clamp(height, this._minHeight, 1),
