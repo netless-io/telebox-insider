@@ -89,6 +89,13 @@ export class TeleBox {
 
         // take snapshot before initial maximize
         this.takeRectSnapshot();
+
+        if (this._state === TELE_BOX_STATE.Maximized) {
+            this._x = 0;
+            this._y = 0;
+            this._width = 1;
+            this._height = 1;
+        }
     }
 
     public $userContent: HTMLElement | undefined;
