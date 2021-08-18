@@ -26,6 +26,7 @@ btnCreate.addEventListener("click", () => {
         : faker.random.words(50);
     const content = document.createElement("div");
     content.style.padding = "16px";
+    content.style.background = "#fff";
     content.textContent = `Content ${title}`;
     manager.create({
         title: title.slice(0, 50),

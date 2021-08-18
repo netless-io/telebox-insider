@@ -124,6 +124,16 @@ export class TeleBox {
         return this._height;
     }
 
+    /** Box width in pixels. */
+    public get absoluteWidth(): number {
+        return this._width * this.containerRect.width;
+    }
+
+    /** Box height in pixels. */
+    public get absoluteHeight(): number {
+        return this._height * this.containerRect.height;
+    }
+
     /** Minimum box width relative to container element. 0~1. Default 0. */
     public get minWidth(): number {
         return this._minWidth;
@@ -134,20 +144,24 @@ export class TeleBox {
         return this._minHeight;
     }
 
-    /** x position relative to container element. 0~1. Default 0.1. */
+    /** Box x position relative to container element. 0~1. Default 0.1. */
     public get x(): number {
-        if (this._state === TELE_BOX_STATE.Maximized) {
-            return 0;
-        }
         return this._x;
     }
 
-    /** y position relative to container element. 0~1. Default 0.1. */
+    /** Box y position relative to container element. 0~1. Default 0.1. */
     public get y(): number {
-        if (this._state === TELE_BOX_STATE.Maximized) {
-            return 0;
-        }
         return this._y;
+    }
+
+    /** Box x position in pixels. */
+    public get absoluteX(): number {
+        return this._x * this.containerRect.width;
+    }
+
+    /** Box y position in pixels. */
+    public get absoluteY(): number {
+        return this._y * this.containerRect.height;
     }
 
     /** Is box maximized. Default false. */
@@ -344,14 +358,8 @@ export class TeleBox {
             this._y = y;
 
             if (this.$box) {
-                const x =
-                    this._x * this.containerRect.width +
-                    this.containerRect.x +
-                    "px";
-                const y =
-                    this._y * this.containerRect.height +
-                    this.containerRect.y +
-                    "px";
+                const x = this.absoluteX + this.containerRect.x + "px";
+                const y = this.absoluteY + this.containerRect.y + "px";
                 this.$box.style.transform = `translate(${x},${y})`;
             }
 
@@ -376,10 +384,8 @@ export class TeleBox {
             this._height = height;
 
             if (this.$box) {
-                this.$box.style.width =
-                    this._width * this.containerRect.width + "px";
-                this.$box.style.height =
-                    this._height * this.containerRect.height + "px";
+                this.$box.style.width = this.absoluteWidth + "px";
+                this.$box.style.height = this.absoluteHeight + "px";
             }
 
             if (!skipUpdate) {
@@ -604,10 +610,8 @@ export class TeleBox {
                 "px";
 
             this.$box.style.transform = `translate(${translateX},${translateY})`;
-            this.$box.style.width =
-                this._width * this.containerRect.width + "px";
-            this.$box.style.height =
-                this._height * this.containerRect.height + "px";
+            this.$box.style.width = this.absoluteWidth + "px";
+            this.$box.style.height = this.absoluteHeight + "px";
         }
 
         return this;
@@ -673,6 +677,8 @@ export class TeleBox {
 
     /** DOM of the box */
     protected $box: HTMLElement | undefined;
+
+    protected $contentWrap: HTMLElement | undefined;
 
     /** DOM of the box content */
     public $content: HTMLElement | undefined;
@@ -740,12 +746,13 @@ export class TeleBox {
             this.$box.dataset.teleBoxID = this.id;
             this.$box.style.transform = `translate(${x},${y})`;
             this.$box.style.zIndex = String(this._zIndex);
-            this.$box.style.width =
-                this._width * this.containerRect.width + "px";
-            this.$box.style.height =
-                this._height * this.containerRect.height + "px";
+            this.$box.style.width = this.absoluteWidth + "px";
+            this.$box.style.height = this.absoluteHeight + "px";
 
             const $titleBar = this.titleBar.render();
+
+            this.$contentWrap = document.createElement("div");
+            this.$contentWrap.className = this.wrapClassName("content-wrap");
 
             this.$content = document.createElement("div");
             this.$content.className =
@@ -756,6 +763,8 @@ export class TeleBox {
             if (this.$userContent) {
                 this.$content.appendChild(this.$userContent);
             }
+
+            this.$contentWrap.appendChild(this.$content);
 
             this.$footer = document.createElement("div");
             this.$footer.className = this.wrapClassName("footer");
@@ -785,9 +794,8 @@ export class TeleBox {
             });
 
             this.syncTeleStateDOM(true);
-
             $boxMain.appendChild($titleBar);
-            $boxMain.appendChild(this.$content);
+            $boxMain.appendChild(this.$contentWrap);
             $boxMain.appendChild(this.$footer);
             $boxMain.appendChild($resizeHandles);
         }
@@ -866,7 +874,6 @@ export class TeleBox {
     };
 
     protected mountTrackMask(): void {
-        // console.log("mountTrackMask");
         if (this.$box) {
             if (!this.$trackMask) {
                 this.$trackMask = document.createElement("div");
@@ -1040,18 +1047,14 @@ export class TeleBox {
             ) {
                 const translateX =
                     this.collectorRect.x -
-                    (this._width * this.containerRect.width) / 2 +
+                    this.absoluteWidth / 2 +
                     this.collectorRect.width / 2;
                 const translateY =
                     this.collectorRect.y -
-                    (this._height * this.containerRect.height) / 2 +
+                    this.absoluteHeight / 2 +
                     this.collectorRect.height / 2;
-                const scaleX =
-                    this.collectorRect.width /
-                    (this._width * this.containerRect.width);
-                const scaleY =
-                    this.collectorRect.height /
-                    (this._height * this.containerRect.height);
+                const scaleX = this.collectorRect.width / this.absoluteWidth;
+                const scaleY = this.collectorRect.height / this.absoluteHeight;
                 this.move(
                     translateX / this.containerRect.width,
                     translateY / this.containerRect.height,
