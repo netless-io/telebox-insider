@@ -122,7 +122,7 @@ export class DefaultTitleBar implements TeleTitleBar {
                 $img.className = this.wrapClassName("titlebar-btn-icon");
                 $img.src = typeof icon === "function" ? icon(this.state) : icon;
                 $img.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
-                $btn.dataset.teleTitleBarNoDblClick = "true";
+                $img.dataset.teleTitleBarNoDblClick = "true";
 
                 this.$btnImgs.push($img);
 
