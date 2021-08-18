@@ -457,28 +457,43 @@ export class TeleBoxManager {
         }
     };
 
-    protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
-        const offsetX = 10 / this.containerRect.width;
-        const offsetY = 10 / this.containerRect.height;
+    /** In px */
+    protected initialPos = 0;
 
-        let { x, y } = config;
+    protected initialPosYOffset = 0;
 
-        const refBox = this._focusedBox || this.boxes[this.boxes.length - 1];
+    protected getInitialPosition(): { x: number; y: number } {
+        this.initialPos += 10;
 
-        if (x == null) {
-            x = (refBox?.x ?? 0) + offsetX;
-            if (x * this.containerRect.width >= this.containerRect.width - 20) {
-                x = offsetX;
-            }
+        if (
+            this.initialPos >= this.containerRect.width - 30 ||
+            this.initialPos + this.initialPosYOffset >=
+                this.containerRect.height - 30
+        ) {
+            this.initialPos = 10;
+            this.initialPosYOffset += 10;
         }
 
-        if (y == null) {
-            y = (refBox?.y ?? 0) + offsetY;
-            if (
-                y * this.containerRect.height >=
-                this.containerRect.height - 20
-            ) {
-                y = offsetY;
+        return {
+            x: this.initialPos / this.containerRect.width,
+            y:
+                (this.initialPos + this.initialPosYOffset) /
+                this.containerRect.height,
+        };
+    }
+
+    protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
+        let { x, y } = config;
+
+        if (x == null || y == null) {
+            const initialPos = this.getInitialPosition();
+
+            if (x == null) {
+                x = initialPos.x;
+            }
+
+            if (y == null) {
+                y = initialPos.y;
             }
         }
 
