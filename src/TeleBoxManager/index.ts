@@ -400,9 +400,6 @@ export class TeleBoxManager {
     }
 
     protected focusBox(focus: boolean, box: TeleBox, skipUpdate = false): void {
-        if (focus) {
-            box.setZIndex(++this.zIndex);
-        }
         box.setFocus(focus, skipUpdate);
         if (box.focus) {
             if (this._focusedBox !== box) {
@@ -411,6 +408,7 @@ export class TeleBoxManager {
                     this._focusedBox.setFocus(false, skipUpdate);
                 }
                 this._focusedBox = box;
+                box.setZIndex(++this.zIndex);
                 if (!skipUpdate) {
                     this.events.emit(
                         TELE_BOX_MANAGER_EVENT.Focused,
