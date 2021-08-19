@@ -1010,13 +1010,19 @@ export class TeleBox {
                         clamp(this.trackStartY + offsetY, 0, 1 - this._height)
                     );
                 } else {
+                    const xOverflowOffset = 20 / this.containerRect.width;
+                    const yOverflowOffset = 20 / this.containerRect.height;
                     this.move(
                         clamp(
                             this.trackStartX + offsetX,
-                            0 - this._height + 0.01,
-                            0.99
+                            xOverflowOffset - this._width,
+                            1 - xOverflowOffset
                         ),
-                        clamp(this.trackStartY + offsetY, 0, 0.99)
+                        clamp(
+                            this.trackStartY + offsetY,
+                            0,
+                            1 - yOverflowOffset
+                        )
                     );
                 }
                 break;
