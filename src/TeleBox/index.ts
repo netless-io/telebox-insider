@@ -749,20 +749,16 @@ export class TeleBox {
                 this.$box.style.display = "none";
             }
 
-            const x =
-                this._x * this.containerRect.width +
-                this.containerRect.x +
-                "px";
+            const x = this._x * this.containerRect.width + this.containerRect.x;
             const y =
-                this._y * this.containerRect.height +
-                this.containerRect.y +
-                "px";
+                this._y * this.containerRect.height + this.containerRect.y;
 
             this.$box.dataset.teleBoxID = this.id;
             this.$box.style.zIndex = String(this._zIndex);
-            this.$box.style.transform = `translate(${x},${y})`;
+            this.$box.style.transform = `translate(${x - 10}px,${y - 10}px)`;
             this.$box.style.width = this.absoluteWidth + "px";
             this.$box.style.height = this.absoluteHeight + "px";
+            this.boxStyler.set({ x, y });
 
             this.$titleBar = document.createElement("div");
             this.$titleBar.className = this.wrapClassName("titlebar-wrap");

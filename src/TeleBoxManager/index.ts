@@ -461,15 +461,16 @@ export class TeleBoxManager {
     protected initialPosYOffset = 0;
 
     protected getInitialPosition(): { x: number; y: number } {
-        this.initialPos += 10;
+        const OFFSET = 20;
+        this.initialPos += OFFSET;
 
         if (
             this.initialPos >= this.containerRect.width - 30 ||
             this.initialPos + this.initialPosYOffset >=
                 this.containerRect.height - 30
         ) {
-            this.initialPos = 10;
-            this.initialPosYOffset += 10;
+            this.initialPos = OFFSET;
+            this.initialPosYOffset += OFFSET;
         }
 
         return {
