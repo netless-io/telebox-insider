@@ -1,5 +1,7 @@
+import "./style.scss";
+
 import faker from "faker";
-import { TeleBoxCollector, TeleBoxManager } from "../src";
+import { TeleBoxCollector, TeleBoxManager, TeleBoxRect } from "../src";
 
 const btnCreate = document.querySelector(".btn-create")!;
 const btnRemove = document.querySelector(".btn-remove")!;
@@ -9,15 +11,15 @@ setBoardRect();
 
 const manager = new TeleBoxManager({
     fence: false,
-    root: document.body,
-    containerRect: board.getBoundingClientRect(),
+    root: board,
+    containerRect: getBoardRect(),
     collector: new TeleBoxCollector({
         styles: {
             position: "absolute",
             bottom: "10px",
             right: "50px",
         },
-    }).mount(document.body),
+    }).mount(board),
 });
 
 btnCreate.addEventListener("click", () => {
@@ -27,8 +29,11 @@ btnCreate.addEventListener("click", () => {
     const content = document.createElement("div");
     content.style.padding = "16px";
     content.style.background = "#fff";
+    content.style.height = "1000px";
     content.textContent = `Content ${title}`;
     manager.create({
+        minHeight: 0.1,
+        minWidth: 0.1,
         title: title.slice(0, 50),
         focus: true,
         content,
@@ -44,8 +49,13 @@ btnRemove.addEventListener("click", () => {
 
 window.addEventListener("resize", () => {
     setBoardRect();
-    manager.setContainerRect(board.getBoundingClientRect());
+    manager.setContainerRect(getBoardRect());
 });
+
+function getBoardRect(): TeleBoxRect {
+    const { width, height } = board.getBoundingClientRect();
+    return { width, height, x: 0, y: 0 };
+}
 
 function setBoardRect(): void {
     const { innerWidth, innerHeight } = window;

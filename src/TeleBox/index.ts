@@ -363,13 +363,11 @@ export class TeleBox {
             this._x = x;
             this._y = y;
 
-            if (this.$box) {
-                if (this.boxStyler) {
-                    this.boxStyler.set({
-                        x: this.absoluteX + this.containerRect.x,
-                        y: this.absoluteY + this.containerRect.y,
-                    });
-                }
+            if (this.boxStyler) {
+                this.boxStyler.set({
+                    x: this.absoluteX + this.containerRect.x,
+                    y: this.absoluteY + this.containerRect.y,
+                });
             }
 
             if (!skipUpdate) {
@@ -1047,16 +1045,33 @@ export class TeleBox {
         this.$trackMask.remove();
     };
 
+    //@TODO use animation lib to sequence
+    protected removeMaximizedTimeout = NaN;
+
     protected syncTeleStateDOM(skipUpdate = false): this {
         if (this.$box) {
             this.$box.classList.toggle(
                 this.wrapClassName("minimized"),
                 this._state === TELE_BOX_STATE.Minimized
             );
-            this.$box.classList.toggle(
-                this.wrapClassName("maximized"),
-                this._state === TELE_BOX_STATE.Maximized
-            );
+
+            window.clearTimeout(this.removeMaximizedTimeout);
+            if (this._state === TELE_BOX_STATE.Maximized) {
+                this.$box.classList.toggle(
+                    this.wrapClassName("maximized"),
+                    true
+                );
+            } else {
+                // delay so that transition won't be triggered
+                this.removeMaximizedTimeout = window.setTimeout(() => {
+                    if (this.$box) {
+                        this.$box.classList.toggle(
+                            this.wrapClassName("maximized"),
+                            false
+                        );
+                    }
+                }, 0);
+            }
 
             if (
                 this._state === TELE_BOX_STATE.Minimized &&
