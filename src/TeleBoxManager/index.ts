@@ -43,7 +43,11 @@ export class TeleBoxManager {
         this.namespace = namespace;
         this.zIndex = zIndex;
         this.collector =
-            collector || new TeleBoxCollector({ namespace }).mount(root);
+            collector ||
+            new TeleBoxCollector({
+                visible: this._state === TELE_BOX_STATE.Minimized,
+                namespace,
+            }).mount(root);
         this.readonly = readonly;
 
         this.collector.setVisible(this._state === TELE_BOX_STATE.Minimized);
