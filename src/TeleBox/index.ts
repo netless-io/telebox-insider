@@ -697,7 +697,7 @@ export class TeleBox {
 
     public $trackMask: HTMLElement | undefined;
 
-    protected rectSnapshot: TeleBoxRect | undefined;
+    public rectSnapshot: TeleBoxRect | undefined;
 
     protected boxStyler: Styler | undefined;
 
