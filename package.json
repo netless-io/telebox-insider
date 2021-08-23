@@ -1,6 +1,6 @@
 {
     "name": "@netless/telebox-insider",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "private": false,
     "description": "Window widget for Whiteboard",
     "license": "MIT",
