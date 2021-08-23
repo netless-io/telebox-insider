@@ -132,7 +132,7 @@ export class TeleBoxManager {
         this.boxes.push(box);
 
         if (box.focus) {
-            this.focusBox(true, box);
+            this.focusBox({ focus: true, box, increaseZIndex: false });
         }
 
         if (box.state !== this.state) {
@@ -145,7 +145,7 @@ export class TeleBoxManager {
             this.setState(state);
         });
         box.events.on(TELE_BOX_EVENT.Close, () => {
-            this.focusBox(false, box);
+            this.focusBox({ focus: false, box });
             this.remove(box.id);
         });
         box.events.on(TELE_BOX_EVENT.Move, () => {
@@ -203,7 +203,7 @@ export class TeleBoxManager {
             const boxes = this.boxes.splice(index, 1);
             this.maxTitleBar.setBoxes(this.boxes);
             const box = boxes[0];
-            this.focusBox(false, box);
+            this.focusBox({ focus: false, box });
             box.destroy();
             if (this.boxes.length <= 0) {
                 this.setState(TELE_BOX_STATE.Normal);
@@ -393,7 +393,7 @@ export class TeleBoxManager {
             box.setFixRatio(config.fixRatio, skipUpdate);
         }
         if (config.focus != null) {
-            this.focusBox(config.focus, box, skipUpdate);
+            this.focusBox({ focus: config.focus, box, skipUpdate });
         }
         if (config.content != null) {
             box.mountContent(config.content);
@@ -403,7 +403,17 @@ export class TeleBoxManager {
         }
     }
 
-    protected focusBox(focus: boolean, box: TeleBox, skipUpdate = false): void {
+    protected focusBox({
+        focus,
+        box,
+        skipUpdate = false,
+        increaseZIndex = true,
+    }: {
+        focus: boolean;
+        box: TeleBox;
+        skipUpdate?: boolean;
+        increaseZIndex?: boolean;
+    }): void {
         box.setFocus(focus, skipUpdate);
         if (box.focus) {
             if (this._focusedBox !== box) {
@@ -412,7 +422,9 @@ export class TeleBoxManager {
                     this._focusedBox.setFocus(false, skipUpdate);
                 }
                 this._focusedBox = box;
-                box.setZIndex(++this.zIndex);
+                if (increaseZIndex) {
+                    box.setZIndex(++this.zIndex);
+                }
                 if (!skipUpdate) {
                     this.events.emit(
                         TELE_BOX_MANAGER_EVENT.Focused,
@@ -452,7 +464,7 @@ export class TeleBoxManager {
             if (id) {
                 const box = this.boxes.find((box) => box.id === id);
                 if (box) {
-                    this.focusBox(true, box);
+                    this.focusBox({ focus: true, box });
                     return;
                 }
             }
