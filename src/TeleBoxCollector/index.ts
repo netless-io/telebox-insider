@@ -56,9 +56,10 @@ export class TeleBoxCollector {
         if (this._visible !== visible) {
             this._visible = visible;
             if (this.$collector) {
-                this.$collector.style.display = this._visible
-                    ? "block"
-                    : "none";
+                this.$collector.classList.toggle(
+                    this.wrapClassName("collector-visible"),
+                    visible
+                );
             }
         }
         return this;
@@ -82,11 +83,16 @@ export class TeleBoxCollector {
         if (!this.$collector) {
             this.$collector = document.createElement("button");
             this.$collector.className = this.wrapClassName("collector");
-            this.$collector.style.display = this._visible ? "block" : "none";
             this.$collector.addEventListener(
                 "click",
                 this.handleCollectorClick
             );
+
+            if (this._visible) {
+                this.$collector.classList.add(
+                    this.wrapClassName("collector-visible")
+                );
+            }
 
             const $icon = document.createElement("img");
             $icon.draggable = false;

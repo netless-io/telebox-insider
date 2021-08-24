@@ -272,10 +272,20 @@ export class TeleBoxManager {
 
             if (state === TELE_BOX_STATE.Minimized) {
                 if (this.collector?.$collector) {
-                    const rect =
+                    const { x, y, width, height } =
                         this.collector.$collector.getBoundingClientRect();
+                    const containerRect =
+                        this.collector.$collector.offsetParent?.getBoundingClientRect();
                     this.boxes.forEach((box) => {
-                        box.setCollectorRect(rect, true);
+                        box.setCollectorRect(
+                            {
+                                x: x - (containerRect?.x || 0),
+                                y: y - (containerRect?.y || 0),
+                                width,
+                                height,
+                            },
+                            true
+                        );
                     });
                 } else if (import.meta.env.DEV) {
                     console.warn("No collector for minimized boxes.");
