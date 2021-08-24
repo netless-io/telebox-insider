@@ -5,4 +5,5 @@ export enum TELE_BOX_MANAGER_EVENT {
     State = "state",
     Move = "move",
     Resize = "resize",
+    Snapshot = "snapshot",
 }

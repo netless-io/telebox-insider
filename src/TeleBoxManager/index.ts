@@ -154,6 +154,9 @@ export class TeleBoxManager {
         box.events.on(TELE_BOX_EVENT.Resize, () => {
             this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
         });
+        box.events.on(TELE_BOX_EVENT.Snapshot, () => {
+            this.events.emit(TELE_BOX_MANAGER_EVENT.Snapshot, box);
+        });
 
         this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
 

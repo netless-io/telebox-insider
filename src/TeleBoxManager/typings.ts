@@ -61,6 +61,7 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     state: [TeleBoxState];
     move: [ReadonlyTeleBox];
     resize: [ReadonlyTeleBox];
+    snapshot: [ReadonlyTeleBox];
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;
