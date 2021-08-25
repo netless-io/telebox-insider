@@ -277,13 +277,12 @@ export class TeleBoxManager {
                 if (this.collector?.$collector) {
                     const { x, y, width, height } =
                         this.collector.$collector.getBoundingClientRect();
-                    const containerRect =
-                        this.collector.$collector.offsetParent?.getBoundingClientRect();
+                    const rootRect = this.root.getBoundingClientRect();
                     this.boxes.forEach((box) => {
                         box.setCollectorRect(
                             {
-                                x: x - (containerRect?.x || 0),
-                                y: y - (containerRect?.y || 0),
+                                x: x - rootRect.x,
+                                y: y - rootRect.y,
                                 width,
                                 height,
                             },
