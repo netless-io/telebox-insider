@@ -781,6 +781,11 @@ export class TeleBox {
                 this.$footer.appendChild(this.$userFooter);
             }
 
+            this.syncTeleStateDOM(true);
+            $boxMain.appendChild(this.$titleBar);
+            $boxMain.appendChild(this.$contentWrap);
+            $boxMain.appendChild(this.$footer);
+
             const $resizeHandles = document.createElement("div");
             $resizeHandles.className = this.wrapClassName("resize-handles");
             $resizeHandles.addEventListener("mousedown", this.handleTrackStart);
@@ -802,11 +807,7 @@ export class TeleBox {
                 $resizeHandles.appendChild($handle);
             });
 
-            this.syncTeleStateDOM(true);
-            $boxMain.appendChild(this.$titleBar);
-            $boxMain.appendChild(this.$contentWrap);
-            $boxMain.appendChild(this.$footer);
-            $boxMain.appendChild($resizeHandles);
+            this.$box.appendChild($resizeHandles);
         }
 
         return this.$box;
