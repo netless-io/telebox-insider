@@ -1091,7 +1091,7 @@ export class TeleBox {
                 this.move(
                     translateX / this.containerRect.width,
                     translateY / this.containerRect.height,
-                    skipUpdate
+                    true // do not report position
                 );
                 if (this.boxStyler) {
                     this.boxStyler.set({
