@@ -483,37 +483,48 @@ export class TeleBoxManager {
         }
     };
 
-    /** In px */
-    protected initialPos = 0;
+    protected getInitialPosition(
+        width: number,
+        height: number
+    ): { x: number; y: number } {
+        const upMostBox =
+            this.boxes.length > 0 &&
+            this.boxes.reduce((box1, box2) =>
+                box1.zIndex > box2.zIndex ? box1 : box2
+            );
 
-    protected initialPosYOffset = 0;
+        let x = 20;
+        let y = 20;
 
-    protected getInitialPosition(): { x: number; y: number } {
-        const OFFSET = 20;
-        this.initialPos += OFFSET;
+        if (upMostBox) {
+            x = upMostBox.x * this.containerRect.width + 20;
+            y = upMostBox.y * this.containerRect.height + 20;
 
-        if (
-            this.initialPos >= this.containerRect.width - 30 ||
-            this.initialPos + this.initialPosYOffset >=
-                this.containerRect.height - 30
-        ) {
-            this.initialPos = OFFSET;
-            this.initialPosYOffset += OFFSET;
+            if (
+                x >
+                    this.containerRect.width -
+                        width * this.containerRect.width ||
+                y >
+                    this.containerRect.height -
+                        height * this.containerRect.height
+            ) {
+                x = 20;
+                y = 20;
+            }
         }
 
         return {
-            x: this.initialPos / this.containerRect.width,
-            y:
-                (this.initialPos + this.initialPosYOffset) /
-                this.containerRect.height,
+            x: x / this.containerRect.width,
+            y: y / this.containerRect.height,
         };
     }
 
     protected wrapCreateConfig(config: TeleBoxConfig = {}): TeleBoxConfig {
         let { x, y } = config;
+        const { width = 0.5, height = 0.5 } = config;
 
         if (x == null || y == null) {
-            const initialPos = this.getInitialPosition();
+            const initialPos = this.getInitialPosition(width, height);
 
             if (x == null) {
                 x = initialPos.x;
@@ -528,6 +539,8 @@ export class TeleBoxManager {
             ...config,
             x,
             y,
+            width,
+            height,
             state: this._state,
             fence: this._fence,
             zIndex: this.zIndex,
