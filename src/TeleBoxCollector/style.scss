@@ -29,3 +29,7 @@
     visibility: visible;
     pointer-events: initial;
 }
+
+.#{$namespace}-collector-readonly {
+    cursor: not-allowed;
+}

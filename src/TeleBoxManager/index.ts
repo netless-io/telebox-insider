@@ -42,26 +42,35 @@ export class TeleBoxManager {
         this.containerRect = containerRect;
         this.namespace = namespace;
         this.zIndex = zIndex;
-        this.collector =
-            collector ||
-            new TeleBoxCollector({
-                visible: this._state === TELE_BOX_STATE.Minimized,
-                namespace,
-            }).mount(root);
         this.readonly = readonly;
 
-        this.collector.setVisible(this._state === TELE_BOX_STATE.Minimized);
-        this.collector.onClick = () => {
-            if (this.readonly) {
-                return;
+        if (collector !== null) {
+            if (collector) {
+                this.collector = collector;
+                this.collector.setVisible(
+                    this._state === TELE_BOX_STATE.Minimized
+                );
+                this.collector.setReadonly(readonly);
+            } else {
+                this.collector = new TeleBoxCollector({
+                    visible: this._state === TELE_BOX_STATE.Minimized,
+                    readonly: readonly,
+                    namespace,
+                }).mount(root);
             }
 
-            if (this._state === TELE_BOX_STATE.Minimized) {
-                this.setState(this.lastState ?? TELE_BOX_STATE.Normal);
-            } else {
-                this.setState(TELE_BOX_STATE.Minimized);
-            }
-        };
+            this.collector.onClick = () => {
+                if (this.readonly) {
+                    return;
+                }
+
+                if (this._state === TELE_BOX_STATE.Minimized) {
+                    this.setState(this.lastState ?? TELE_BOX_STATE.Normal);
+                } else {
+                    this.setState(TELE_BOX_STATE.Minimized);
+                }
+            };
+        }
 
         window.addEventListener("mousedown", this.checkFocusBox, true);
         window.addEventListener("touchstart", this.checkFocusBox, true);
@@ -110,7 +119,7 @@ export class TeleBoxManager {
 
     public readonly containerRect: TeleBoxRect;
 
-    public readonly collector: TeleBoxCollector | undefined;
+    public readonly collector?: TeleBoxCollector | null = null;
 
     public readonly namespace: string;
 
@@ -331,6 +340,7 @@ export class TeleBoxManager {
         if (this.readonly !== readonly) {
             (this.readonly as boolean) = readonly;
             this.maxTitleBar.setReadonly(readonly);
+            this.collector?.setReadonly(readonly);
             this.boxes.forEach((box) => box.setReadonly(readonly, skipUpdate));
         }
     }

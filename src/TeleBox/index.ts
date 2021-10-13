@@ -792,7 +792,7 @@ export class TeleBox {
             $resizeHandles.addEventListener(
                 "touchstart",
                 this.handleTrackStart,
-                { passive: true }
+                { passive: false }
             );
             this.$resizeHandles = $resizeHandles;
 
@@ -900,9 +900,16 @@ export class TeleBox {
                 true
             );
             window.addEventListener("mousemove", this.handleTracking);
-            window.addEventListener("touchmove", this.handleTracking);
+            window.addEventListener("touchmove", this.handleTracking, {
+                passive: false,
+            });
             window.addEventListener("mouseup", this.handleTrackEnd);
-            window.addEventListener("touchend", this.handleTrackEnd);
+            window.addEventListener("touchend", this.handleTrackEnd, {
+                passive: false,
+            });
+            window.addEventListener("touchcancel", this.handleTrackEnd, {
+                passive: false,
+            });
         }
     }
 
@@ -1043,6 +1050,7 @@ export class TeleBox {
         window.removeEventListener("touchmove", this.handleTracking);
         window.removeEventListener("mouseup", this.handleTrackEnd);
         window.removeEventListener("touchend", this.handleTrackEnd);
+        window.removeEventListener("touchcancel", this.handleTrackEnd);
         this.$trackMask.remove();
     };
 

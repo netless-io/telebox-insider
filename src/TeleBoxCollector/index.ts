@@ -4,6 +4,7 @@ import { TeleStyles } from "../typings";
 
 export interface TeleBoxCollectorConfig {
     visible?: boolean;
+    readonly?: boolean;
     namespace?: string;
     styles?: TeleStyles;
     onClick?: () => void;
@@ -12,11 +13,13 @@ export interface TeleBoxCollectorConfig {
 export class TeleBoxCollector {
     public constructor({
         visible = true,
+        readonly = false,
         namespace = "telebox",
         styles = {},
         onClick,
     }: TeleBoxCollectorConfig = {}) {
         this._visible = Boolean(visible);
+        this._readonly = Boolean(readonly);
         this.namespace = namespace;
         this.styles = styles;
         this.onClick = onClick;
@@ -28,6 +31,10 @@ export class TeleBoxCollector {
 
     public get visible(): boolean {
         return this._visible;
+    }
+
+    public get readonly(): boolean {
+        return this._readonly;
     }
 
     public onClick: (() => void) | undefined;
@@ -65,6 +72,19 @@ export class TeleBoxCollector {
         return this;
     }
 
+    public setReadonly(readonly: boolean): this {
+        if (this._readonly !== readonly) {
+            this._readonly = readonly;
+            if (this.$collector) {
+                this.$collector.classList.toggle(
+                    this.wrapClassName("collector-readonly"),
+                    readonly
+                );
+            }
+        }
+        return this;
+    }
+
     public setStyles(styles: TeleStyles): this {
         Object.assign(this.styles, styles);
         if (this.$collector) {
@@ -91,6 +111,12 @@ export class TeleBoxCollector {
             if (this._visible) {
                 this.$collector.classList.add(
                     this.wrapClassName("collector-visible")
+                );
+            }
+
+            if (this._readonly) {
+                this.$collector.classList.add(
+                    this.wrapClassName("collector-readonly")
                 );
             }
 
@@ -125,8 +151,10 @@ export class TeleBoxCollector {
 
     protected _visible: boolean;
 
+    protected _readonly: boolean;
+
     protected handleCollectorClick = (): void => {
-        if (this.onClick) {
+        if (!this._readonly && this.onClick) {
             this.onClick();
         }
     };

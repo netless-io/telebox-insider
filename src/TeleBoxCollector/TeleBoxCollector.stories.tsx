@@ -15,6 +15,7 @@ export const Overview: Story<TeleBoxCollectorConfig> = (args) => {
 
 Overview.args = {
     visible: true,
+    readonly: false,
 };
 
 Overview.argTypes = {
