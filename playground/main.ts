@@ -3,9 +3,15 @@ import "./style.scss";
 import faker from "faker";
 import { TeleBoxCollector, TeleBoxManager, TeleBoxRect } from "../src";
 
-const btnCreate = document.querySelector(".btn-create")!;
-const btnRemove = document.querySelector(".btn-remove")!;
+const btns = document.querySelector(".btns")!;
 const board = document.querySelector<HTMLDivElement>(".board")!;
+
+const createBtn = (title: string): HTMLButtonElement => {
+    const btn = document.createElement("button");
+    btn.textContent = title;
+    btns.appendChild(btn);
+    return btn;
+};
 
 setBoardRect();
 
@@ -22,7 +28,7 @@ const manager = new TeleBoxManager({
     }).mount(board),
 });
 
-btnCreate.addEventListener("click", () => {
+createBtn("Create").addEventListener("click", () => {
     const title = faker.datatype.boolean()
         ? faker.commerce.productName()
         : faker.random.words(50);
@@ -40,12 +46,22 @@ btnCreate.addEventListener("click", () => {
     });
 });
 
-btnRemove.addEventListener("click", () => {
+createBtn("Remove").addEventListener("click", () => {
     const boxes = manager.query();
     if (boxes.length > 0) {
         manager.remove(boxes[boxes.length - 1].id);
     }
 });
+
+createBtn(manager.readonly ? "Readonly" : "Writable").addEventListener(
+    "click",
+    (evt) => {
+        manager.setReadonly(!manager.readonly);
+        (evt.currentTarget as HTMLButtonElement).textContent = manager.readonly
+            ? "Readonly"
+            : "Writable";
+    }
+);
 
 window.addEventListener("resize", () => {
     setBoardRect();

@@ -25,4 +25,8 @@ body {
     left: 0;
     display: flex;
     flex-direction: column;
+
+    & > button {
+        margin-bottom: 1em;
+    }
 }
