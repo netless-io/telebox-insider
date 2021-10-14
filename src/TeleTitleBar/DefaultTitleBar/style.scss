@@ -55,3 +55,19 @@
         cursor: not-allowed;
     }
 }
+
+.#{$namespace}-titlebar-icon-minimize {
+    background: center / cover no-repeat url("./icons/minimize.svg");
+}
+
+.#{$namespace}-titlebar-icon-maximize {
+    background: center / cover no-repeat url("./icons/maximize.svg");
+
+    &.is-active {
+        background-image: url("./icons/maximize-active.svg");
+    }
+}
+
+.#{$namespace}-titlebar-icon-close {
+    background: center / cover no-repeat url("./icons/close.svg");
+}
