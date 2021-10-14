@@ -71,6 +71,7 @@
     },
     "dependencies": {
         "eventemitter3": "^4.0.7",
+        "side-effect-manager": "^0.1.3",
         "stylefire": "^7.0.3"
     }
 }
