@@ -32,3 +32,15 @@ let defaultBoxCount = 1;
 export function getBoxDefaultName(): string {
     return `New Box ${defaultBoxCount++}`;
 }
+
+export function identity<TValue>(value: TValue): TValue {
+    return value;
+}
+
+export function isTruthy<TValue>(value: TValue): boolean {
+    return Boolean(value);
+}
+
+export function isFalsy<TValue>(value: TValue): boolean {
+    return !value;
+}

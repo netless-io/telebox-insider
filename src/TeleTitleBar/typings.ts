@@ -1,10 +1,10 @@
-import type { TeleBoxEventConfig, TeleBoxState } from "../TeleBox";
+import type { TeleBoxDelegateEventConfig, TeleBoxState } from "../TeleBox";
 
-export type TeleTitleBarEvent<U = keyof TeleBoxEventConfig> =
-    U extends keyof TeleBoxEventConfig
-        ? TeleBoxEventConfig[U] extends void
-            ? { type: U; value?: TeleBoxEventConfig[U] }
-            : { type: U; value: TeleBoxEventConfig[U] }
+export type TeleTitleBarEvent<U = keyof TeleBoxDelegateEventConfig> =
+    U extends keyof TeleBoxDelegateEventConfig
+        ? TeleBoxDelegateEventConfig[U] extends void
+            ? { type: U; value?: TeleBoxDelegateEventConfig[U] }
+            : { type: U; value: TeleBoxDelegateEventConfig[U] }
         : never;
 
 export interface TeleTitleBarConfig {

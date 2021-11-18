@@ -3,9 +3,14 @@ import type { TeleTitleBar } from "../TeleTitleBar";
 import type {
     TeleBoxDragHandleType,
     TELE_BOX_EVENT,
+    TELE_BOX_DELEGATE_EVENT,
     TELE_BOX_RESIZE_HANDLE,
     TELE_BOX_STATE,
 } from "./constants";
+
+export type TeleBoxCoord = { x: number; y: number };
+
+export type TeleBoxSize = { width: number; height: number };
 
 export type TeleBoxState = `${TELE_BOX_STATE}`;
 
@@ -35,6 +40,10 @@ export interface TeleBoxConfig {
     readonly x?: number;
     /** y position relative to root element. 0~1. Default 0.1. */
     readonly y?: number;
+    /** Maximize box. Default false. */
+    readonly maximized?: boolean;
+    /** Minimize box. Overwrites maximized state. Default false. */
+    readonly minimized?: boolean;
     /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
     /** Is box readonly */
@@ -75,9 +84,12 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     blur: void;
     move: { x: number; y: number };
     resize: { width: number; height: number };
+    intrinsic_move: { x: number; y: number };
+    intrinsic_resize: { width: number; height: number };
+    visual_resize: { width: number; height: number };
     state: TeleBoxState;
-    snapshot: TeleBoxRect;
     readonly: boolean;
+    destroyed: void;
 }>;
 
 export type TeleBoxEvent = keyof TeleBoxEventConfig;
@@ -106,3 +118,37 @@ export interface TeleBoxEvents extends EventEmitter<TeleBoxEvent> {
 export type TeleBoxHandleType =
     | TELE_BOX_RESIZE_HANDLE
     | typeof TeleBoxDragHandleType;
+
+type CheckTeleBoxDelegateConfig<
+    T extends Record<`${TELE_BOX_DELEGATE_EVENT}`, any>
+> = T;
+
+export type TeleBoxDelegateEventConfig = CheckTeleBoxDelegateConfig<{
+    close: void;
+    maximize: void;
+    minimize: void;
+}>;
+
+export type TeleBoxDelegateEvent = keyof TeleBoxDelegateEventConfig;
+
+export interface TeleBoxDelegateEvents
+    extends EventEmitter<TeleBoxDelegateEvent> {
+    on<U extends TeleBoxDelegateEvent>(
+        event: U,
+        listener: (value: TeleBoxDelegateEventConfig[U]) => void
+    ): this;
+    once<U extends TeleBoxDelegateEvent>(
+        event: U,
+        listener: (value: TeleBoxDelegateEventConfig[U]) => void
+    ): this;
+    addListener<U extends TeleBoxDelegateEvent>(
+        event: U,
+        listener: (value: TeleBoxDelegateEventConfig[U]) => void
+    ): this;
+    emit<U extends TeleBoxDelegateEvent>(
+        event: U,
+        ...value: TeleBoxDelegateEventConfig[U] extends void
+            ? []
+            : [TeleBoxDelegateEventConfig[U]]
+    ): boolean;
+}

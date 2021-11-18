@@ -9,7 +9,8 @@ export interface TeleBoxManagerConfig
         TeleBoxConfig,
         | "fence"
         | "containerRect"
-        | "state"
+        | "maximized"
+        | "minimized"
         | "namespace"
         | "zIndex"
         | "readonly"
@@ -61,7 +62,9 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     state: [TeleBoxState];
     move: [ReadonlyTeleBox];
     resize: [ReadonlyTeleBox];
-    snapshot: [ReadonlyTeleBox];
+    intrinsic_move: [ReadonlyTeleBox];
+    intrinsic_resize: [ReadonlyTeleBox];
+    visual_resize: [ReadonlyTeleBox];
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;

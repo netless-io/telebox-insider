@@ -5,5 +5,7 @@ export enum TELE_BOX_MANAGER_EVENT {
     State = "state",
     Move = "move",
     Resize = "resize",
-    Snapshot = "snapshot",
+    IntrinsicMove = "intrinsic_move",
+    IntrinsicResize = "intrinsic_resize",
+    VisualResize = "visual_resize",
 }

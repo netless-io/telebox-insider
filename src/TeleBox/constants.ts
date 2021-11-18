@@ -10,9 +10,18 @@ export enum TELE_BOX_EVENT {
     Blur = "blur",
     Move = "move",
     Resize = "resize",
+    IntrinsicMove = "intrinsic_move",
+    IntrinsicResize = "intrinsic_resize",
+    VisualResize = "visual_resize",
     State = "state",
-    Snapshot = "snapshot",
     Readonly = "readonly",
+    Destroyed = "destroyed",
+}
+
+export enum TELE_BOX_DELEGATE_EVENT {
+    Close = "close",
+    Maximize = "maximize",
+    Minimize = "minimize",
 }
 
 export enum TELE_BOX_RESIZE_HANDLE {

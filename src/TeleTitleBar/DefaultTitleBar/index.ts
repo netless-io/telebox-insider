@@ -4,7 +4,7 @@ import { SideEffectManager } from "side-effect-manager";
 
 import {
     TeleBoxDragHandleType,
-    TELE_BOX_EVENT,
+    TELE_BOX_DELEGATE_EVENT,
     TELE_BOX_STATE,
 } from "../../TeleBox/constants";
 import type { TeleBoxState } from "../../TeleBox/typings";
@@ -43,18 +43,16 @@ export class DefaultTitleBar implements TeleTitleBar {
 
         this.buttons = buttons || [
             {
-                type: TELE_BOX_EVENT.State,
-                value: TELE_BOX_STATE.Minimized,
+                type: TELE_BOX_DELEGATE_EVENT.Minimize,
                 iconClassName: this.wrapClassName("titlebar-icon-minimize"),
             },
             {
-                type: TELE_BOX_EVENT.State,
-                value: TELE_BOX_STATE.Maximized,
+                type: TELE_BOX_DELEGATE_EVENT.Maximize,
                 iconClassName: this.wrapClassName("titlebar-icon-maximize"),
                 isActive: (state) => state === TELE_BOX_STATE.Maximized,
             },
             {
-                type: TELE_BOX_EVENT.Close,
+                type: TELE_BOX_DELEGATE_EVENT.Close,
                 iconClassName: this.wrapClassName("titlebar-icon-close"),
             },
         ];
@@ -235,10 +233,7 @@ export class DefaultTitleBar implements TeleTitleBar {
         if (now - this.lastTitleBarClick <= 500) {
             // double click
             if (this.onEvent) {
-                this.onEvent({
-                    type: TELE_BOX_EVENT.State,
-                    value: TELE_BOX_STATE.Maximized,
-                });
+                this.onEvent({ type: TELE_BOX_DELEGATE_EVENT.Maximize });
             }
         } else if (this.onDragStart) {
             this.onDragStart(ev);
