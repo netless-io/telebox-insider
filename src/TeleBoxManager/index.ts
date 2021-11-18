@@ -502,15 +502,15 @@ export class TeleBoxManager {
     ): void {
         if (config.x != null || config.y != null) {
             box.move(
-                config.x == null ? box.x : config.x,
-                config.y == null ? box.y : config.y,
+                config.x == null ? box.intrinsicX : config.x,
+                config.y == null ? box.intrinsicY : config.y,
                 skipUpdate
             );
         }
         if (config.width != null || config.height != null) {
             box.resize(
-                config.width == null ? box.width : config.width,
-                config.height == null ? box.height : config.height,
+                config.width == null ? box.intrinsicWidth : config.width,
+                config.height == null ? box.intrinsicHeight : config.height,
                 skipUpdate
             );
         }
