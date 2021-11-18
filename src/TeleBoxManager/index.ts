@@ -59,6 +59,9 @@ export class TeleBoxManager {
             this.boxes.forEach((box) =>
                 box.setMaximized(maximized, skipUpdate)
             );
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Maximized, maximized);
+            }
         });
 
         this._state = new CombinedVal(
@@ -145,6 +148,10 @@ export class TeleBoxManager {
             this.boxes.forEach((box) =>
                 box.setMinimized(minimized, skipUpdate)
             );
+
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Minimized, minimized);
+            }
         });
 
         const checkFocusBox = (ev: MouseEvent | TouchEvent): void => {

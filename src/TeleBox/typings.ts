@@ -88,6 +88,8 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     intrinsic_resize: { width: number; height: number };
     visual_resize: { width: number; height: number };
     state: TeleBoxState;
+    minimized: boolean;
+    maximized: boolean;
     readonly: boolean;
     destroyed: void;
 }>;

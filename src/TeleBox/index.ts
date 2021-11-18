@@ -110,7 +110,18 @@ export class TeleBox {
         });
 
         this._minimized = new Val(minimized);
+        this._minimized.reaction((minimized, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.Minimized, minimized);
+            }
+        });
+
         this._maximized = new Val(maximized);
+        this._maximized.reaction((maximized, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.Maximized, maximized);
+            }
+        });
 
         this._state = new CombinedVal(
             [this._minimized, this._maximized],

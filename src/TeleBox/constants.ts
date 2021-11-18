@@ -14,6 +14,8 @@ export enum TELE_BOX_EVENT {
     IntrinsicResize = "intrinsic_resize",
     VisualResize = "visual_resize",
     State = "state",
+    Minimized = "minimized",
+    Maximized = "maximized",
     Readonly = "readonly",
     Destroyed = "destroyed",
 }

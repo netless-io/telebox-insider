@@ -60,6 +60,8 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     created: [ReadonlyTeleBox];
     removed: [ReadonlyTeleBox[]];
     state: [TeleBoxState];
+    maximized: [boolean];
+    minimized: [boolean];
     move: [ReadonlyTeleBox];
     resize: [ReadonlyTeleBox];
     intrinsic_move: [ReadonlyTeleBox];
