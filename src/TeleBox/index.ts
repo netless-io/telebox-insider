@@ -1008,7 +1008,7 @@ export class TeleBox {
                 }
                 last$userFooter = $userFooter;
                 if ($userFooter) {
-                    $content.appendChild($userFooter);
+                    $footer.appendChild($userFooter);
                 }
             });
         });
