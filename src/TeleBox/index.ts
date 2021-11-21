@@ -330,7 +330,7 @@ export class TeleBox {
 
     public readonly id: string;
 
-    /** Classname Prefix. For CSS styling. Default "telebox" */
+    /** ClassName Prefix. For CSS styling. Default "telebox" */
     public readonly namespace: string;
 
     public readonly events: TeleBoxEvents;
