@@ -690,6 +690,9 @@ export class TeleBox {
     /** DOM of the box content */
     public $content!: HTMLElement;
 
+    /** DOM of the box title bar */
+    public $titleBar!: HTMLElement;
+
     /** DOM of the box footer */
     public $footer!: HTMLElement;
 
@@ -833,6 +836,7 @@ export class TeleBox {
         const $titleBar = document.createElement("div");
         $titleBar.className = this.wrapClassName("titlebar-wrap");
         $titleBar.appendChild(this.titleBar.render());
+        this.$titleBar = $titleBar;
 
         const $contentWrap = document.createElement("div");
         $contentWrap.className = this.wrapClassName("content-wrap");
