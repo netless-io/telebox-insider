@@ -44,6 +44,9 @@ createBtn("Create").addEventListener("click", () => {
         focus: true,
         content,
     });
+    if (manager.minimized) {
+        manager.setMinimized(false);
+    }
 });
 
 createBtn("Remove").addEventListener("click", () => {

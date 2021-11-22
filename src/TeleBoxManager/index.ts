@@ -570,8 +570,8 @@ export class TeleBoxManager {
         let y = 20;
 
         if (upMostBox) {
-            x = upMostBox.x * this.containerRect.width + 20;
-            y = upMostBox.y * this.containerRect.height + 20;
+            x = upMostBox.intrinsicX * this.containerRect.width + 20;
+            y = upMostBox.intrinsicY * this.containerRect.height + 20;
 
             if (
                 x >
