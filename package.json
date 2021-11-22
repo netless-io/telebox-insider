@@ -73,7 +73,8 @@
         "@types/shallowequal": "^1.1.1",
         "eventemitter3": "^4.0.7",
         "shallowequal": "^1.1.0",
-        "side-effect-manager": "^0.1.4",
-        "stylefire": "^7.0.3"
+        "side-effect-manager": "^0.1.5",
+        "stylefire": "^7.0.3",
+        "value-enhancer": "^0.0.7"
     }
 }

@@ -18,11 +18,26 @@ import type {
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
 import { TELE_BOX_DELEGATE_EVENT } from "..";
-import { Val, CombinedVal } from "../Val";
 import { SideEffectManager } from "side-effect-manager";
+import {
+    createSideEffectBinder,
+    Val,
+    ValEnhancedResult,
+    withValueEnhancer,
+} from "value-enhancer";
 
 export * from "./typings";
 export * from "./constants";
+
+type ValConfig = {
+    containerRect: Val<TeleBoxRect, boolean>;
+    collector: Val<TeleBoxCollector | null>;
+    readonly: Val<boolean, boolean>;
+    minimized: Val<boolean, boolean>;
+    maximized: Val<boolean, boolean>;
+    fence: Val<boolean, boolean>;
+};
+export interface TeleBoxManager extends ValEnhancedResult<ValConfig> {}
 
 export class TeleBoxManager {
     public constructor({
@@ -42,20 +57,21 @@ export class TeleBoxManager {
         readonly = false,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
+        const { combine, createVal } = createSideEffectBinder(this._sideEffect);
 
         this.root = root;
         this.namespace = namespace;
         this.zIndex = zIndex;
 
-        this._readonly = new Val(readonly);
-        this._readonly.reaction((readonly, skipUpdate) => {
+        const readonly$ = createVal(readonly);
+        readonly$.reaction((readonly, _, skipUpdate) => {
             this.boxes.forEach((box) => box.setReadonly(readonly, skipUpdate));
         });
 
-        this._minimized = new Val(minimized);
+        const minimized$ = createVal(minimized);
 
-        this._maximized = new Val(maximized);
-        this._maximized.reaction((maximized, skipUpdate) => {
+        const maximized$ = createVal(maximized);
+        maximized$.reaction((maximized, _, skipUpdate) => {
             this.boxes.forEach((box) =>
                 box.setMaximized(maximized, skipUpdate)
             );
@@ -64,8 +80,8 @@ export class TeleBoxManager {
             }
         });
 
-        this._state = new CombinedVal(
-            [this._minimized, this._maximized],
+        const state$ = combine(
+            [minimized$, maximized$],
             ([minimized, maximized]): TeleBoxState =>
                 minimized
                     ? TELE_BOX_STATE.Minimized
@@ -73,61 +89,61 @@ export class TeleBoxManager {
                     ? TELE_BOX_STATE.Maximized
                     : TELE_BOX_STATE.Normal
         );
-        this._state.reaction((state, skipUpdate) => {
+        state$.reaction((state, _, skipUpdate) => {
             this.maxTitleBar.setState(state);
             if (!skipUpdate) {
                 this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
             }
         });
 
-        this._fence = new Val(fence);
-        this._fence.subscribe((fence, skipUpdate) => {
+        const fence$ = createVal(fence);
+        fence$.subscribe((fence, _, skipUpdate) => {
             this.boxes.forEach((box) => box.setFence(fence, skipUpdate));
         });
 
-        this._containerRect = new Val(containerRect, shallowequal);
-        this._containerRect.reaction((containerRect, skipUpdate) => {
+        const containerRect$ = createVal(containerRect, shallowequal);
+        containerRect$.reaction((containerRect, _, skipUpdate) => {
             this.boxes.forEach((box) =>
                 box.setContainerRect(containerRect, skipUpdate)
             );
             this.maxTitleBar.setContainerRect(containerRect);
         });
 
-        this._collector = new Val(
+        const collector$ = createVal(
             collector === null
                 ? null
                 : collector ||
-                  new TeleBoxCollector({
-                      visible: minimized,
-                      readonly: readonly,
-                      namespace,
-                  }).mount(root)
+                      new TeleBoxCollector({
+                          visible: minimized,
+                          readonly: readonly,
+                          namespace,
+                      }).mount(root)
         );
-        this._collector.subscribe((collector) => {
+        collector$.subscribe((collector) => {
             if (collector) {
-                collector.setVisible(this.minimized);
-                collector.setReadonly(this.readonly);
+                collector.setVisible(minimized$.value);
+                collector.setReadonly(readonly$.value);
                 this._sideEffect.add(() => {
                     collector.onClick = () => {
-                        if (!this.readonly) {
-                            this.setMinimized(false);
+                        if (!readonly$.value) {
+                            minimized$.setValue(false);
                         }
                     };
                     return () => collector.destroy();
                 }, "collect-onClick");
             }
         });
-        this._readonly.subscribe((readonly) =>
-            this.collector?.setReadonly(readonly)
+        readonly$.subscribe((readonly) =>
+            collector$.value?.setReadonly(readonly)
         );
 
-        this._minimized.subscribe((minimized, skipUpdate) => {
-            this.collector?.setVisible(minimized);
+        minimized$.subscribe((minimized, _, skipUpdate) => {
+            collector$.value?.setVisible(minimized);
 
             if (minimized) {
-                if (this.collector?.$collector) {
+                if (collector$.value?.$collector) {
                     const { x, y, width, height } =
-                        this.collector.$collector.getBoundingClientRect();
+                        collector$.value.$collector.getBoundingClientRect();
                     const rootRect = this.root.getBoundingClientRect();
                     this.boxes.forEach((box) => {
                         box.setCollectorRect(
@@ -155,7 +171,7 @@ export class TeleBoxManager {
         });
 
         const checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
-            if (this.readonly) {
+            if (readonly$.value) {
                 return;
             }
 
@@ -194,20 +210,20 @@ export class TeleBoxManager {
         );
 
         this.maxTitleBar = new MaxTitleBar({
-            readonly: this.readonly,
+            readonly: readonly$.value,
             namespace: this.namespace,
-            state: this.state,
+            state: state$.value,
             boxes: this.boxes,
             focusedBox: this._focusedBox,
-            containerRect: this.containerRect,
+            containerRect: containerRect$.value,
             onEvent: (event): void => {
                 switch (event.type) {
                     case TELE_BOX_DELEGATE_EVENT.Maximize: {
-                        this.setMaximized(!this.maximized);
+                        maximized$.setValue(!maximized$.value);
                         break;
                     }
                     case TELE_BOX_DELEGATE_EVENT.Minimize: {
-                        this.setMinimized(true);
+                        minimized$.setValue(true);
                         break;
                     }
                     case TELE_BOX_EVENT.Close: {
@@ -225,9 +241,22 @@ export class TeleBoxManager {
                 }
             },
         });
-        this._readonly.subscribe((readonly) =>
+        readonly$.subscribe((readonly) =>
             this.maxTitleBar.setReadonly(readonly)
         );
+
+        const valConfig: ValConfig = {
+            containerRect: containerRect$,
+            collector: collector$,
+            readonly: readonly$,
+            fence: fence$,
+            minimized: minimized$,
+            maximized: maximized$,
+        };
+
+        withValueEnhancer(this, valConfig);
+
+        this._state$ = state$;
 
         this.root.appendChild(this.maxTitleBar.render());
     }
@@ -242,75 +271,31 @@ export class TeleBoxManager {
 
     public zIndex: number;
 
-    protected _collector: Val<TeleBoxCollector | null>;
-
-    public get collector(): TeleBoxCollector | null {
-        return this._collector.value;
-    }
-
-    public setCollector(collector: TeleBoxCollector): void {
-        this._collector.setValue(collector);
-    }
-
-    protected _readonly: Val<boolean, boolean>;
-
-    /** Is box readonly */
-    public get readonly(): boolean {
-        return this._readonly.value;
-    }
-
-    public setReadonly(readonly: boolean, skipUpdate = false): this {
-        this._readonly.setValue(readonly, skipUpdate);
-        return this;
-    }
-
-    protected _minimized: Val<boolean, boolean>;
-
-    public get minimized(): boolean {
-        return this._minimized.value;
-    }
-
-    public setMinimized(minimized: boolean, skipUpdate = false): this {
-        this._minimized.setValue(minimized, skipUpdate);
-        return this;
-    }
-
-    protected _maximized: Val<boolean, boolean>;
-
-    public get maximized(): boolean {
-        return this._maximized.value;
-    }
-
-    public setMaximized(maximized: boolean, skipUpdate = false): this {
-        this._maximized.setValue(maximized, skipUpdate);
-        return this;
-    }
-
-    protected _state: Val<TeleBoxState, boolean>;
+    public _state$: Val<TeleBoxState, boolean>;
 
     public get state(): TeleBoxState {
-        return this._state.value;
+        return this._state$.value;
     }
 
-    protected _fence: Val<boolean, boolean>;
-
-    public get fence(): boolean {
-        return this._fence.value;
-    }
-
-    public setFence(fence: boolean, skipUpdate = false): this {
-        this._fence.setValue(fence, skipUpdate);
-        return this;
-    }
-
-    protected _containerRect: Val<TeleBoxRect, boolean>;
-
-    public get containerRect(): TeleBoxRect {
-        return this._containerRect.value;
-    }
-
-    public setContainerRect(rect: TeleBoxRect, skipUpdate = false): this {
-        this._containerRect.setValue(rect, skipUpdate);
+    /** @deprecated use setMaximized and setMinimized instead */
+    public setState(state: TeleBoxState, skipUpdate = false): this {
+        switch (state) {
+            case TELE_BOX_STATE.Maximized: {
+                this.setMinimized(false, skipUpdate);
+                this.setMaximized(true, skipUpdate);
+                break;
+            }
+            case TELE_BOX_STATE.Minimized: {
+                this.setMinimized(true, skipUpdate);
+                this.setMaximized(false, skipUpdate);
+                break;
+            }
+            default: {
+                this.setMinimized(false, skipUpdate);
+                this.setMaximized(false, skipUpdate);
+                break;
+            }
+        }
         return this;
     }
 
@@ -449,28 +434,6 @@ export class TeleBoxManager {
                 value.destroy();
             }
         });
-    }
-
-    /** @deprecated use setMaximized and setMinimized instead */
-    public setState(state: TeleBoxState, skipUpdate = false): this {
-        switch (state) {
-            case TELE_BOX_STATE.Maximized: {
-                this.setMinimized(false, skipUpdate);
-                this.setMaximized(true, skipUpdate);
-                break;
-            }
-            case TELE_BOX_STATE.Minimized: {
-                this.setMinimized(true, skipUpdate);
-                this.setMaximized(false, skipUpdate);
-                break;
-            }
-            default: {
-                this.setMinimized(false, skipUpdate);
-                this.setMaximized(false, skipUpdate);
-                break;
-            }
-        }
-        return this;
     }
 
     public wrapClassName(className: string): string {
