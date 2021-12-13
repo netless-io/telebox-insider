@@ -385,11 +385,11 @@ export class TeleBoxManager {
             const box = boxes[0];
             this.focusBox({ focus: false, box });
             box.destroy();
-            if (this.boxes.length <= 0) {
-                this.setMaximized(false);
-                this.setMinimized(false);
-            }
             if (!skipUpdate) {
+                if (this.boxes.length <= 0) {
+                    this.setMaximized(false);
+                    this.setMinimized(false);
+                }
                 this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, boxes);
             }
             return box;
@@ -412,11 +412,11 @@ export class TeleBoxManager {
         const boxes = this.boxes.splice(0, this.boxes.length);
         this.maxTitleBar.setBoxes(this.boxes);
         boxes.forEach((box) => box.destroy());
-        if (this.boxes.length <= 0) {
-            this.setMaximized(false);
-            this.setMinimized(false);
-        }
         if (!skipUpdate) {
+            if (this.boxes.length <= 0) {
+                this.setMaximized(false);
+                this.setMinimized(false);
+            }
             this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, boxes);
         }
         return boxes;
