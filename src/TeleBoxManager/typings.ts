@@ -1,4 +1,5 @@
 import type EventEmitter from "eventemitter3";
+import { TeleBoxColorScheme } from "..";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
 import type { TeleBoxConfig } from "../TeleBox/typings";
 import type { TeleBoxCollector } from "../TeleBoxCollector";
@@ -7,6 +8,7 @@ import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 export interface TeleBoxManagerConfig
     extends Pick<
         TeleBoxConfig,
+        | "prefersColorScheme"
         | "fence"
         | "containerRect"
         | "maximized"
@@ -67,6 +69,8 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     intrinsic_move: [ReadonlyTeleBox];
     intrinsic_resize: [ReadonlyTeleBox];
     visual_resize: [ReadonlyTeleBox];
+    prefers_color_scheme: [TeleBoxColorScheme];
+    dark_mode: [boolean];
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;

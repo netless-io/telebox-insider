@@ -17,6 +17,12 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
     const [teleBox] = useState(() => new TeleBox(props));
 
     useUpdateEffect(() => {
+        if (props.prefersColorScheme != null) {
+            teleBox.setPrefersColorScheme(props.prefersColorScheme);
+        }
+    }, [teleBox, props.prefersColorScheme]);
+
+    useUpdateEffect(() => {
         if (props.minWidth != null) {
             teleBox.setMinWidth(props.minWidth);
         }

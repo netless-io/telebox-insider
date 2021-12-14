@@ -71,3 +71,15 @@
 .#{$namespace}-titlebar-icon-close {
     background: center / cover no-repeat url("./icons/close.svg");
 }
+
+.#{$namespace}-color-scheme-dark {
+    .#{$namespace}-title {
+        color: #e9e9e9;
+    }
+
+    .#{$namespace}-titlebar {
+        color: #e9e9e9;
+        background: #43434d;
+        border-bottom: none;
+    }
+}

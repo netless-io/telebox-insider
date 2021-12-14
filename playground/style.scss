@@ -14,8 +14,13 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
+    background: #fff;
     border: 0;
+}
+
+.content {
+    height: 1000px;
+    padding: 16px;
 }
 
 .btns {

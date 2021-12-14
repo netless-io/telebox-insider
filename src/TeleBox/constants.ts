@@ -1,3 +1,9 @@
+export enum TELE_BOX_COLOR_SCHEME {
+    Light = "light",
+    Dark = "dark",
+    Auto = "auto",
+}
+
 export enum TELE_BOX_STATE {
     Normal = "normal",
     Minimized = "minimized",
@@ -5,6 +11,8 @@ export enum TELE_BOX_STATE {
 }
 
 export enum TELE_BOX_EVENT {
+    DarkMode = "dark_mode",
+    PrefersColorScheme = "prefers_color_scheme",
     Close = "close",
     Focus = "focus",
     Blur = "blur",

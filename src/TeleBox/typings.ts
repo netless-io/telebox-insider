@@ -6,7 +6,10 @@ import type {
     TELE_BOX_DELEGATE_EVENT,
     TELE_BOX_RESIZE_HANDLE,
     TELE_BOX_STATE,
+    TELE_BOX_COLOR_SCHEME,
 } from "./constants";
+
+export type TeleBoxColorScheme = `${TELE_BOX_COLOR_SCHEME}`;
 
 export type TeleBoxCoord = { x: number; y: number };
 
@@ -26,6 +29,10 @@ export interface TeleBoxConfig {
     readonly id?: string;
     /** Box title. Default empty. */
     readonly title?: string;
+    /** Prefers Box color scheme. Default light. */
+    readonly prefersColorScheme?: TeleBoxColorScheme;
+    /** Actual Box Dark Mode */
+    readonly darkMode?: boolean;
     /** Box visible. Default true. */
     readonly visible?: boolean;
     /** Box width relative to root element. 0~1. Default 0.5. */
@@ -79,6 +86,8 @@ export interface TeleBoxConfig {
 type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
 
 export type TeleBoxEventConfig = CheckTeleBoxConfig<{
+    dark_mode: boolean;
+    prefers_color_scheme: TeleBoxColorScheme;
     close: void;
     focus: void;
     blur: void;

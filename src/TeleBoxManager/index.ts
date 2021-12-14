@@ -17,7 +17,11 @@ import type {
     TeleBoxManagerUpdateConfig,
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
-import { TELE_BOX_DELEGATE_EVENT } from "..";
+import {
+    TeleBoxColorScheme,
+    TELE_BOX_COLOR_SCHEME,
+    TELE_BOX_DELEGATE_EVENT,
+} from "..";
 import { SideEffectManager } from "side-effect-manager";
 import {
     createSideEffectBinder,
@@ -30,6 +34,7 @@ export * from "./typings";
 export * from "./constants";
 
 type ValConfig = {
+    prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
     containerRect: Val<TeleBoxRect, boolean>;
     collector: Val<TeleBoxCollector | null>;
     readonly: Val<boolean, boolean>;
@@ -42,6 +47,7 @@ export interface TeleBoxManager extends ValEnhancedResult<ValConfig> {}
 export class TeleBoxManager {
     public constructor({
         root = document.body,
+        prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
         minimized = false,
         maximized = false,
         fence = true,
@@ -62,6 +68,43 @@ export class TeleBoxManager {
         this.root = root;
         this.namespace = namespace;
         this.zIndex = zIndex;
+
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+        const prefersDark$ = createVal(prefersDark.matches);
+        this._sideEffect.add(() => {
+            const handler = (evt: MediaQueryListEvent): void => {
+                prefersDark$.setValue(evt.matches);
+            };
+            prefersDark.addEventListener("change", handler);
+            return () => prefersDark.removeEventListener("change", handler);
+        });
+
+        const prefersColorScheme$ = createVal(prefersColorScheme);
+        prefersColorScheme$.reaction((prefersColorScheme, _, skipUpdate) => {
+            this.boxes.forEach((box) =>
+                box.setPrefersColorScheme(prefersColorScheme, skipUpdate)
+            );
+            if (!skipUpdate) {
+                this.events.emit(
+                    TELE_BOX_MANAGER_EVENT.PrefersColorScheme,
+                    prefersColorScheme
+                );
+            }
+        });
+
+        this._darkMode$ = combine(
+            [prefersDark$, prefersColorScheme$],
+            ([prefersDark, prefersColorScheme]) =>
+                prefersColorScheme === "auto"
+                    ? prefersDark
+                    : prefersColorScheme === "dark"
+        );
+        this._darkMode$.reaction((darkMode, _, skipUpdate) => {
+            this.boxes.forEach((box) => box.setDarkMode(darkMode, skipUpdate));
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
+            }
+        });
 
         const readonly$ = createVal(readonly);
         readonly$.reaction((readonly, _, skipUpdate) => {
@@ -246,6 +289,7 @@ export class TeleBoxManager {
         );
 
         const valConfig: ValConfig = {
+            prefersColorScheme: prefersColorScheme$,
             containerRect: containerRect$,
             collector: collector$,
             readonly: readonly$,
@@ -270,6 +314,12 @@ export class TeleBoxManager {
     public readonly namespace: string;
 
     public zIndex: number;
+
+    public _darkMode$: Val<boolean, boolean>;
+
+    public get darkMode(): boolean {
+        return this._darkMode$.value;
+    }
 
     public _state$: Val<TeleBoxState, boolean>;
 
@@ -614,6 +664,8 @@ export class TeleBoxManager {
             y,
             width,
             height,
+            darkMode: this.darkMode,
+            prefersColorScheme: this.prefersColorScheme,
             maximized: this.maximized,
             minimized: this.minimized,
             fence: this.fence,

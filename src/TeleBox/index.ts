@@ -26,6 +26,7 @@ import {
     TELE_BOX_STATE,
     TELE_BOX_RESIZE_HANDLE,
     TELE_BOX_DELEGATE_EVENT,
+    TELE_BOX_COLOR_SCHEME,
 } from "./constants";
 import type {
     TeleBoxConfig,
@@ -36,12 +37,15 @@ import type {
     TeleBoxDelegateEvents,
     TeleBoxCoord,
     TeleBoxSize,
+    TeleBoxColorScheme,
 } from "./typings";
 
 export * from "./constants";
 export * from "./typings";
 
 type ValConfig = {
+    prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
+    darkMode: Val<boolean, boolean>;
     containerRect: Val<TeleBoxRect, boolean>;
     collectorRect: Val<TeleBoxRect | undefined, boolean>;
     /** Box title. Default empty. */
@@ -74,6 +78,8 @@ export class TeleBox {
     public constructor({
         id = genUniqueKey(),
         title = getBoxDefaultName(),
+        prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
+        darkMode,
         visible = true,
         width = 0.5,
         height = 0.5,
@@ -111,6 +117,58 @@ export class TeleBox {
         this.namespace = namespace;
         this.events = new EventEmitter();
         this._delegateEvents = new EventEmitter();
+
+        const prefersColorScheme$ = createVal<TeleBoxColorScheme, boolean>(
+            prefersColorScheme
+        );
+        prefersColorScheme$.reaction((prefersColorScheme, _, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(
+                    TELE_BOX_EVENT.PrefersColorScheme,
+                    prefersColorScheme
+                );
+            }
+        });
+
+        const darkMode$ = createVal(Boolean(darkMode));
+
+        if (darkMode == null) {
+            prefersColorScheme$.subscribe(
+                (prefersColorScheme, _, skipUpdate) => {
+                    this._sideEffect.add(() => {
+                        if (prefersColorScheme === "auto") {
+                            const prefersDark = window.matchMedia(
+                                "(prefers-color-scheme: dark)"
+                            );
+                            darkMode$.setValue(prefersDark.matches, skipUpdate);
+                            const handler = (
+                                evt: MediaQueryListEvent
+                            ): void => {
+                                darkMode$.setValue(evt.matches, skipUpdate);
+                            };
+                            prefersDark.addEventListener("change", handler);
+                            return () =>
+                                prefersDark.removeEventListener(
+                                    "change",
+                                    handler
+                                );
+                        } else {
+                            darkMode$.setValue(
+                                prefersColorScheme === "dark",
+                                skipUpdate
+                            );
+                            return () => {};
+                        }
+                    }, "prefers-color-scheme");
+                }
+            );
+        }
+
+        darkMode$.reaction((darkMode, _, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.DarkMode, darkMode);
+            }
+        });
 
         const containerRect$ = createVal(containerRect, shallowequal);
         const collectorRect$ = createVal(collectorRect, shallowequal);
@@ -354,6 +412,8 @@ export class TeleBox {
         const $userStyles$ = createVal(styles);
 
         const valConfig: ValConfig = {
+            prefersColorScheme: prefersColorScheme$,
+            darkMode: darkMode$,
             containerRect: containerRect$,
             collectorRect: collectorRect$,
             title: title$,
@@ -416,6 +476,10 @@ export class TeleBox {
     public _visualSize$: Val<TeleBoxSize, boolean>;
     public _coord$: Val<TeleBoxCoord, boolean>;
     public _intrinsicCoord$: Val<TeleBoxCoord, boolean>;
+
+    public get darkMode(): boolean {
+        return this._darkMode$.value;
+    }
 
     public _state$: Val<TeleBoxState, boolean>;
 
@@ -735,6 +799,13 @@ export class TeleBox {
         bindClassName(this.$box, this._draggable$, "no-drag", isFalsy);
         bindClassName(this.$box, this._resizable$, "no-resize", isFalsy);
         bindClassName(this.$box, this._focus$, "blur", isFalsy);
+        bindClassName(this.$box, this._darkMode$, "color-scheme-dark");
+        bindClassName(
+            this.$box,
+            this._darkMode$,
+            "color-scheme-light",
+            isFalsy
+        );
 
         this._renderSideEffect.add(() => {
             const minimizedClassName = this.wrapClassName("minimized");

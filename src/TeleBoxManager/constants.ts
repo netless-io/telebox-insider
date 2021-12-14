@@ -10,4 +10,6 @@ export enum TELE_BOX_MANAGER_EVENT {
     IntrinsicMove = "intrinsic_move",
     IntrinsicResize = "intrinsic_resize",
     VisualResize = "visual_resize",
+    PrefersColorScheme = "prefers_color_scheme",
+    DarkMode = "dark_mode",
 }
