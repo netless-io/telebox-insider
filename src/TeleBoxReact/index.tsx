@@ -53,6 +53,18 @@ export const TeleBoxReact: FC<TeleBoxReactProps> = (props) => {
     }, [teleBox, props.visible]);
 
     useUpdateEffect(() => {
+        if (props.minimized != null) {
+            teleBox.setMinimized(props.minimized, true);
+        }
+    }, [teleBox, props.minimized]);
+
+    useUpdateEffect(() => {
+        if (props.maximized != null) {
+            teleBox.setMaximized(props.maximized, true);
+        }
+    }, [teleBox, props.maximized]);
+
+    useUpdateEffect(() => {
         if (props.state != null) {
             teleBox.setState(props.state, true);
         }
