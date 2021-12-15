@@ -8,6 +8,7 @@ import { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
 export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title" | "readonly">;
 
 export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
+    darkMode: boolean;
     boxes: MaxTitleBarTeleBox[];
     containerRect: TeleBoxRect;
     focusedBox?: MaxTitleBarTeleBox;
@@ -20,6 +21,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         this.boxes = config.boxes;
         this.focusedBox = config.focusedBox;
         this.containerRect = config.containerRect;
+        this.darkMode = config.darkMode;
     }
 
     public focusBox(box?: MaxTitleBarTeleBox): void {
@@ -89,6 +91,22 @@ export class MaxTitleBar extends DefaultTitleBar {
         }
     }
 
+    public setDarkMode(darkMode: boolean): void {
+        if (darkMode !== this.darkMode) {
+            this.darkMode = darkMode;
+            if (this.$titleBar) {
+                this.$titleBar.classList.toggle(
+                    this.wrapClassName("color-scheme-dark"),
+                    darkMode
+                );
+                this.$titleBar.classList.toggle(
+                    this.wrapClassName("color-scheme-light"),
+                    !darkMode
+                );
+            }
+        }
+    }
+
     public render(): HTMLElement {
         const $titleBar = super.render();
         const { x, y, width } = this.containerRect;
@@ -103,6 +121,11 @@ export class MaxTitleBar extends DefaultTitleBar {
         $titleBar.classList.toggle(
             this.wrapClassName("readonly"),
             this.readonly
+        );
+        $titleBar.classList.add(
+            this.wrapClassName(
+                this.darkMode ? "color-scheme-dark" : "color-scheme-light"
+            )
         );
 
         this.updateTitles();
@@ -170,6 +193,8 @@ export class MaxTitleBar extends DefaultTitleBar {
 
         return this.$titles;
     }
+
+    protected darkMode: boolean;
 
     protected $titles: HTMLElement | undefined;
 

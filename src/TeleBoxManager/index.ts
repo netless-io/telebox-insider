@@ -253,6 +253,7 @@ export class TeleBoxManager {
         );
 
         this.maxTitleBar = new MaxTitleBar({
+            darkMode: this.darkMode,
             readonly: readonly$.value,
             namespace: this.namespace,
             state: state$.value,
@@ -287,6 +288,9 @@ export class TeleBoxManager {
         readonly$.subscribe((readonly) =>
             this.maxTitleBar.setReadonly(readonly)
         );
+        this._darkMode$.subscribe((darkMode) => {
+            this.maxTitleBar.setDarkMode(darkMode);
+        });
 
         const valConfig: ValConfig = {
             prefersColorScheme: prefersColorScheme$,
