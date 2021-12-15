@@ -18,11 +18,9 @@
     cursor: pointer;
     user-select: none;
     pointer-events: none;
-}
-
-.#{$namespace}-collector-icon {
-    width: 18px;
-    height: 16px;
+    background-repeat: no-repeat;
+    background-size: 18px 16px;
+    background-position: center;
 }
 
 .#{$namespace}-collector-visible {
@@ -32,4 +30,12 @@
 
 .#{$namespace}-collector-readonly {
     cursor: not-allowed;
+}
+
+.#{$namespace}-color-scheme-dark {
+    color-scheme: dark;
+
+    &.#{$namespace}-collector {
+        background-color: #43434d;
+    }
 }

@@ -166,6 +166,7 @@ export class TeleBoxManager {
             if (collector) {
                 collector.setVisible(minimized$.value);
                 collector.setReadonly(readonly$.value);
+                collector.setDarkMode(this._darkMode$.value);
                 this._sideEffect.add(() => {
                     collector.onClick = () => {
                         if (!readonly$.value) {
@@ -179,6 +180,9 @@ export class TeleBoxManager {
         readonly$.subscribe((readonly) =>
             collector$.value?.setReadonly(readonly)
         );
+        this._darkMode$.subscribe((darkMode) => {
+            collector$.value?.setDarkMode(darkMode);
+        });
 
         minimized$.subscribe((minimized, _, skipUpdate) => {
             collector$.value?.setVisible(minimized);

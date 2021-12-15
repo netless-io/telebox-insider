@@ -5,6 +5,7 @@ import { TeleStyles } from "../typings";
 export interface TeleBoxCollectorConfig {
     visible?: boolean;
     readonly?: boolean;
+    darkMode?: boolean;
     namespace?: string;
     styles?: TeleStyles;
     onClick?: () => void;
@@ -14,12 +15,14 @@ export class TeleBoxCollector {
     public constructor({
         visible = true,
         readonly = false,
+        darkMode = false,
         namespace = "telebox",
         styles = {},
         onClick,
     }: TeleBoxCollectorConfig = {}) {
-        this._visible = Boolean(visible);
-        this._readonly = Boolean(readonly);
+        this._visible = visible;
+        this._readonly = readonly;
+        this._darkMode = darkMode;
         this.namespace = namespace;
         this.styles = styles;
         this.onClick = onClick;
@@ -35,6 +38,10 @@ export class TeleBoxCollector {
 
     public get readonly(): boolean {
         return this._readonly;
+    }
+
+    public get darkMode(): boolean {
+        return this._darkMode;
     }
 
     public onClick: (() => void) | undefined;
@@ -85,6 +92,23 @@ export class TeleBoxCollector {
         return this;
     }
 
+    public setDarkMode(darkMode: boolean): this {
+        if (this._darkMode !== darkMode) {
+            this._darkMode = darkMode;
+            if (this.$collector) {
+                this.$collector.classList.toggle(
+                    this.wrapClassName("color-scheme-dark"),
+                    darkMode
+                );
+                this.$collector.classList.toggle(
+                    this.wrapClassName("color-scheme-light"),
+                    !darkMode
+                );
+            }
+        }
+        return this;
+    }
+
     public setStyles(styles: TeleStyles): this {
         Object.assign(this.styles, styles);
         if (this.$collector) {
@@ -103,6 +127,7 @@ export class TeleBoxCollector {
         if (!this.$collector) {
             this.$collector = document.createElement("button");
             this.$collector.className = this.wrapClassName("collector");
+            this.$collector.style.backgroundImage = `url('${collectorSVG}')`;
             this.$collector.addEventListener(
                 "click",
                 this.handleCollectorClick
@@ -120,12 +145,11 @@ export class TeleBoxCollector {
                 );
             }
 
-            const $icon = document.createElement("img");
-            $icon.draggable = false;
-            $icon.className = this.wrapClassName("collector-icon");
-            $icon.src = collectorSVG;
-
-            this.$collector.appendChild($icon);
+            this.$collector.classList.add(
+                this.wrapClassName(
+                    this._darkMode ? "color-scheme-dark" : "color-scheme-light"
+                )
+            );
 
             this.setStyles(this.styles);
         }
@@ -152,6 +176,8 @@ export class TeleBoxCollector {
     protected _visible: boolean;
 
     protected _readonly: boolean;
+
+    protected _darkMode: boolean;
 
     protected handleCollectorClick = (): void => {
         if (!this._readonly && this.onClick) {
