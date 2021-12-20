@@ -140,24 +140,28 @@ export class TeleBox {
                             const prefersDark = window.matchMedia(
                                 "(prefers-color-scheme: dark)"
                             );
-                            darkMode$.setValue(prefersDark.matches, skipUpdate);
-                            const handler = (
-                                evt: MediaQueryListEvent
-                            ): void => {
-                                darkMode$.setValue(evt.matches, skipUpdate);
-                            };
-                            prefersDark.addEventListener("change", handler);
-                            return () =>
-                                prefersDark.removeEventListener(
-                                    "change",
-                                    handler
+                            if (prefersDark) {
+                                darkMode$.setValue(
+                                    prefersDark.matches,
+                                    skipUpdate
                                 );
+                                const handler = (
+                                    evt: MediaQueryListEvent
+                                ): void => {
+                                    darkMode$.setValue(evt.matches, skipUpdate);
+                                };
+                                prefersDark.addListener(handler);
+                                return () =>
+                                    prefersDark.removeListener(handler);
+                            } else {
+                                return noop;
+                            }
                         } else {
                             darkMode$.setValue(
                                 prefersColorScheme === "dark",
                                 skipUpdate
                             );
-                            return () => {};
+                            return noop;
                         }
                     }, "prefers-color-scheme");
                 }
@@ -1253,6 +1257,10 @@ export class TeleBox {
     public wrapClassName(className: string): string {
         return `${this.namespace}-${className}`;
     }
+}
+
+function noop(): void {
+    return;
 }
 
 type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox

@@ -70,14 +70,18 @@ export class TeleBoxManager {
         this.zIndex = zIndex;
 
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-        const prefersDark$ = createVal(prefersDark.matches);
-        this._sideEffect.add(() => {
-            const handler = (evt: MediaQueryListEvent): void => {
-                prefersDark$.setValue(evt.matches);
-            };
-            prefersDark.addEventListener("change", handler);
-            return () => prefersDark.removeEventListener("change", handler);
-        });
+        const prefersDark$ = createVal(false);
+
+        if (prefersDark) {
+            prefersDark$.setValue(prefersDark.matches);
+            this._sideEffect.add(() => {
+                const handler = (evt: MediaQueryListEvent): void => {
+                    prefersDark$.setValue(evt.matches);
+                };
+                prefersDark.addListener(handler);
+                return () => prefersDark.removeListener(handler);
+            });
+        }
 
         const prefersColorScheme$ = createVal(prefersColorScheme);
         prefersColorScheme$.reaction((prefersColorScheme, _, skipUpdate) => {
