@@ -232,6 +232,8 @@ export class TeleBoxManager {
             }
         });
 
+        const closeBtnClassName = this.wrapClassName("titlebar-icon-close");
+
         const checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
             if (readonly$.value) {
                 return;
@@ -247,9 +249,12 @@ export class TeleBoxManager {
                 el;
                 el = el.parentElement
             ) {
+                if (el.classList && el.classList.contains(closeBtnClassName)) {
+                    return;
+                }
                 const id = el.dataset?.teleBoxID;
                 if (id) {
-                    const box = this.boxes.find((box) => box.id === id);
+                    const box = this.getBox(id);
                     if (box) {
                         this.focusBox(box);
                         return;
