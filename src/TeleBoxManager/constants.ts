@@ -1,5 +1,6 @@
 export enum TELE_BOX_MANAGER_EVENT {
     Focused = "focused",
+    Blurred = "blurred",
     Created = "created",
     Removed = "removed",
     State = "state",
@@ -10,6 +11,7 @@ export enum TELE_BOX_MANAGER_EVENT {
     IntrinsicMove = "intrinsic_move",
     IntrinsicResize = "intrinsic_resize",
     VisualResize = "visual_resize",
+    ZIndex = "z_index",
     PrefersColorScheme = "prefers_color_scheme",
     DarkMode = "dark_mode",
 }

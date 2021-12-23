@@ -34,17 +34,16 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "y"
     | "resizable"
     | "draggable"
-    | "fixRatio"
-    | "focus";
+    | "fixRatio";
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "content" | "footer" | "id"
+    TeleBoxManagerBoxConfigBaseProps | "content" | "footer" | "id" | "focus"
 >;
 
 export type TeleBoxManagerQueryConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "id"
+    TeleBoxManagerBoxConfigBaseProps | "id" | "focus"
 >;
 
 export type TeleBoxManagerUpdateConfig = Pick<
@@ -57,8 +56,8 @@ type CheckTeleBoxManagerConfig<
 > = T;
 
 export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
-    /** current focused box and last focused box */
-    focused: [ReadonlyTeleBox | undefined, ReadonlyTeleBox | undefined];
+    focused: [ReadonlyTeleBox | undefined];
+    blurred: [ReadonlyTeleBox | undefined];
     created: [ReadonlyTeleBox];
     removed: [ReadonlyTeleBox[]];
     state: [TeleBoxState];
@@ -69,6 +68,7 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
     intrinsic_move: [ReadonlyTeleBox];
     intrinsic_resize: [ReadonlyTeleBox];
     visual_resize: [ReadonlyTeleBox];
+    z_index: [ReadonlyTeleBox];
     prefers_color_scheme: [TeleBoxColorScheme];
     dark_mode: [boolean];
 }>;

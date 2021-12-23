@@ -197,7 +197,13 @@ export class TeleBox {
         const draggable$ = createVal(draggable);
         const fence$ = createVal(fence);
         const fixRatio$ = createVal(fixRatio);
+
         const zIndex$ = createVal(zIndex);
+        zIndex$.reaction((zIndex, _, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.ZIndex, zIndex);
+            }
+        });
 
         const focus$ = createVal(focus);
         focus$.reaction((focus, _, skipUpdate) => {
