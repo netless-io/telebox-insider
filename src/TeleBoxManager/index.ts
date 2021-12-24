@@ -59,7 +59,6 @@ export class TeleBoxManager {
         },
         collector,
         namespace = "telebox",
-        zIndex = 100,
         readonly = false,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
@@ -67,7 +66,6 @@ export class TeleBoxManager {
 
         this.root = root;
         this.namespace = namespace;
-        this.zIndex = zIndex;
 
         this.boxes$ = createVal<TeleBox[]>([]);
         this.topBox$ = this.boxes$.derive((boxes) => {
@@ -346,8 +344,6 @@ export class TeleBoxManager {
 
     public readonly namespace: string;
 
-    public zIndex: number;
-
     public _darkMode$: Val<boolean, boolean>;
 
     public get darkMode(): boolean {
@@ -387,7 +383,7 @@ export class TeleBoxManager {
         smartPosition = true
     ): ReadonlyTeleBox {
         const box = new TeleBox({
-            zIndex: this.zIndex,
+            zIndex: this.topBox ? this.topBox.zIndex + 1 : 100,
             ...(smartPosition ? this.smartPosition(config) : config),
             darkMode: this.darkMode,
             prefersColorScheme: this.prefersColorScheme,
@@ -696,15 +692,13 @@ export class TeleBoxManager {
     }
 
     protected makeBoxTop(box: TeleBox, skipUpdate = false): void {
-        if (box !== this.topBox) {
-            const maxIndex = this.boxes.reduce(
-                (max, box) => Math.max(max, box.zIndex),
-                0
-            );
-            box.setZIndex(maxIndex + 1, skipUpdate);
-            this.topBox$.setValue(box);
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
+        if (this.topBox) {
+            if (box !== this.topBox) {
+                box.setZIndex(this.topBox.zIndex + 1, skipUpdate);
+                this.topBox$.setValue(box);
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
+                }
             }
         }
     }

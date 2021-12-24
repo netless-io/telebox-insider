@@ -14,7 +14,6 @@ export interface TeleBoxManagerConfig
         | "maximized"
         | "minimized"
         | "namespace"
-        | "zIndex"
         | "readonly"
     > {
     /** Element to mount boxes. */
