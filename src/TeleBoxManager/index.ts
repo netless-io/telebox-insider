@@ -643,6 +643,9 @@ export class TeleBoxManager {
         if (config.fixRatio != null) {
             box.setFixRatio(config.fixRatio, skipUpdate);
         }
+        if (config.zIndex != null) {
+            box.setZIndex(config.zIndex);
+        }
         if (config.content != null) {
             box.mountContent(config.content);
         }
