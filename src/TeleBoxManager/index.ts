@@ -473,18 +473,18 @@ export class TeleBoxManager {
         const index = this.getBoxIndex(boxOrID);
         if (index >= 0) {
             const boxes = this.boxes.slice();
-            const deletedBox = boxes.splice(index, 1)[0];
+            const deletedBoxes = boxes.splice(index, 1);
             this.boxes$.setValue(boxes);
             this.focusTopBox();
-            deletedBox.destroy();
+            deletedBoxes.forEach((box) => box.destroy);
             if (!skipUpdate) {
                 if (this.boxes.length <= 0) {
                     this.setMaximized(false);
                     this.setMinimized(false);
                 }
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, boxes);
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, deletedBoxes);
             }
-            return deletedBox;
+            return deletedBoxes[0];
         }
         return;
     }
