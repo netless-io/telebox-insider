@@ -25,10 +25,6 @@ export class MaxTitleBar extends DefaultTitleBar {
     }
 
     public focusBox(box?: MaxTitleBarTeleBox): void {
-        if (!box) {
-            box = this.boxes[this.boxes.length - 1];
-        }
-
         if (this.focusedBox && this.focusedBox === box) {
             return;
         }
@@ -200,7 +196,7 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     protected boxes: MaxTitleBarTeleBox[];
 
-    protected focusedBox: MaxTitleBarTeleBox | undefined;
+    public focusedBox: MaxTitleBarTeleBox | undefined;
 
     protected containerRect: TeleBoxRect;
 }

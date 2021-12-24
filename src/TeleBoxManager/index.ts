@@ -309,9 +309,6 @@ export class TeleBoxManager {
         this._darkMode$.subscribe((darkMode) => {
             this.maxTitleBar.setDarkMode(darkMode);
         });
-        this.topBox$.subscribe((topBox) => {
-            this.maxTitleBar.focusBox(topBox);
-        });
         this.boxes$.reaction((boxes) => {
             this.maxTitleBar.setBoxes(boxes);
         });
@@ -555,6 +552,7 @@ export class TeleBoxManager {
                     this.blurBox(box, skipUpdate);
                 }
             });
+            this.maxTitleBar.focusBox(targetBox);
         }
     }
 
@@ -566,11 +564,30 @@ export class TeleBoxManager {
 
     public blurBox(boxOrID: string | TeleBox, skipUpdate = false): void {
         const targetBox = this.getBox(boxOrID);
-        if (targetBox && targetBox.focus) {
-            targetBox.setFocus(false, skipUpdate);
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Blurred, targetBox);
+        if (targetBox) {
+            if (targetBox.focus) {
+                targetBox.setFocus(false, skipUpdate);
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.Blurred, targetBox);
+                }
             }
+            if (this.maxTitleBar.focusedBox === targetBox) {
+                this.maxTitleBar.focusBox();
+            }
+        }
+    }
+
+    public blurAll(skipUpdate = false): void {
+        this.boxes.forEach((box) => {
+            if (box.focus) {
+                box.setFocus(false, skipUpdate);
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.Blurred, box);
+                }
+            }
+        });
+        if (this.maxTitleBar.focusedBox) {
+            this.maxTitleBar.focusBox();
         }
     }
 

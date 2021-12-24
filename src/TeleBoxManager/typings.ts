@@ -34,7 +34,8 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "y"
     | "resizable"
     | "draggable"
-    | "fixRatio";
+    | "fixRatio"
+    | "zIndex";
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
