@@ -427,6 +427,11 @@ export class TeleBoxManager {
         box.events.on(TELE_BOX_EVENT.VisualResize, () => {
             this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
         });
+        box.events.on(TELE_BOX_EVENT.ZIndex, () => {
+            if (this.topBox && box.zIndex > this.topBox.zIndex) {
+                this.topBox$.setValue(box);
+            }
+        });
         this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
 
         return box;
