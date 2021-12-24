@@ -476,7 +476,7 @@ export class TeleBoxManager {
             const deletedBoxes = boxes.splice(index, 1);
             this.boxes$.setValue(boxes);
             this.focusTopBox();
-            deletedBoxes.forEach((box) => box.destroy);
+            deletedBoxes.forEach((box) => box.destroy());
             if (!skipUpdate) {
                 if (this.boxes.length <= 0) {
                     this.setMaximized(false);
