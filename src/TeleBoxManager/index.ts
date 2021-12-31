@@ -267,6 +267,7 @@ export class TeleBoxManager {
                     const box = this.getBox(id);
                     if (box) {
                         this.focusBox(box);
+                        this.makeBoxTop(box);
                         return;
                     }
                 }
@@ -305,6 +306,7 @@ export class TeleBoxManager {
                     }
                     case TELE_BOX_EVENT.Close: {
                         this.removeTopBox();
+                        this.focusTopBox();
                         break;
                     }
                     default: {
@@ -413,6 +415,9 @@ export class TeleBoxManager {
 
         if (box.focus) {
             this.focusBox(box);
+            if (smartPosition) {
+                this.makeBoxTop(box);
+            }
         }
 
         this.boxes$.setValue([...this.boxes, box]);
@@ -425,6 +430,7 @@ export class TeleBoxManager {
         });
         box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Close, () => {
             this.remove(box);
+            this.focusTopBox();
         });
         box.events.on(TELE_BOX_EVENT.Move, () => {
             this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
@@ -494,7 +500,6 @@ export class TeleBoxManager {
             const boxes = this.boxes.slice();
             const deletedBoxes = boxes.splice(index, 1);
             this.boxes$.setValue(boxes);
-            this.focusTopBox();
             deletedBoxes.forEach((box) => box.destroy());
             if (!skipUpdate) {
                 if (this.boxes.length <= 0) {
@@ -556,7 +561,6 @@ export class TeleBoxManager {
                         focusChanged = true;
                         targetBox.setFocus(true, skipUpdate);
                     }
-                    this.makeBoxTop(targetBox, skipUpdate);
                     if (focusChanged && !skipUpdate) {
                         this.events.emit(
                             TELE_BOX_MANAGER_EVENT.Focused,
