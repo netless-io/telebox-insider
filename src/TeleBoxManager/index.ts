@@ -37,6 +37,7 @@ type ValConfig = {
     prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
     containerRect: Val<TeleBoxRect, boolean>;
     collector: Val<TeleBoxCollector | null>;
+    collectorRect: Val<TeleBoxRect | undefined>;
     readonly: Val<boolean, boolean>;
     minimized: Val<boolean, boolean>;
     maximized: Val<boolean, boolean>;
@@ -197,25 +198,36 @@ export class TeleBoxManager {
             collector$.value?.setDarkMode(darkMode);
         });
 
+        const calcCollectorRect = (): TeleBoxRect | undefined => {
+            if (collector$.value?.$collector) {
+                const { x, y, width, height } =
+                    collector$.value.$collector.getBoundingClientRect();
+                const rootRect = this.root.getBoundingClientRect();
+                return {
+                    x: x - rootRect.x,
+                    y: y - rootRect.y,
+                    width,
+                    height,
+                };
+            }
+            return;
+        };
+
+        const collectorRect$ = createVal(
+            minimized$.value ? calcCollectorRect() : void 0
+        );
+        collectorRect$.subscribe((collectorRect, _, skipUpdate) => {
+            this.boxes.forEach((box) => {
+                box.setCollectorRect(collectorRect, skipUpdate);
+            });
+        });
+
         minimized$.subscribe((minimized, _, skipUpdate) => {
             collector$.value?.setVisible(minimized);
 
             if (minimized) {
                 if (collector$.value?.$collector) {
-                    const { x, y, width, height } =
-                        collector$.value.$collector.getBoundingClientRect();
-                    const rootRect = this.root.getBoundingClientRect();
-                    this.boxes.forEach((box) => {
-                        box.setCollectorRect(
-                            {
-                                x: x - rootRect.x,
-                                y: y - rootRect.y,
-                                width,
-                                height,
-                            },
-                            true
-                        );
-                    });
+                    collectorRect$.setValue(calcCollectorRect());
                 } else if (import.meta.env.DEV) {
                     console.warn("No collector for minimized boxes.");
                 }
@@ -315,6 +327,7 @@ export class TeleBoxManager {
             prefersColorScheme: prefersColorScheme$,
             containerRect: containerRect$,
             collector: collector$,
+            collectorRect: collectorRect$,
             readonly: readonly$,
             fence: fence$,
             minimized: minimized$,
@@ -393,6 +406,7 @@ export class TeleBoxManager {
             namespace: this.namespace,
             containerRect: this.containerRect,
             readonly: this.readonly,
+            collectorRect: this.collectorRect,
         });
 
         box.mount(this.root);
