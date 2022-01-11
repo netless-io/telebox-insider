@@ -935,7 +935,7 @@ export class TeleBox {
                 }
                 last$userStyles = $userStyles;
                 if ($userStyles) {
-                    $content.appendChild($userStyles);
+                    $contentWrap.appendChild($userStyles);
                 }
             });
         });
