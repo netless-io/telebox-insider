@@ -49,6 +49,8 @@ const manager = new TeleBoxManager({
     }).mount(board),
 });
 
+(window as any).manager = manager;
+
 createBtn("Create").addEventListener("click", () => {
     const title = faker.datatype.boolean()
         ? faker.commerce.productName()
