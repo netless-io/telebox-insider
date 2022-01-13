@@ -432,24 +432,37 @@ export class TeleBoxManager {
             this.remove(box);
             this.focusTopBox();
         });
-        box.events.on(TELE_BOX_EVENT.Move, () => {
-            this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
+        box._coord$.reaction((_, __, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
+            }
         });
-        box.events.on(TELE_BOX_EVENT.Resize, () => {
-            this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
+        box._size$.reaction((_, __, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
+            }
         });
-        box.events.on(TELE_BOX_EVENT.IntrinsicMove, () => {
-            this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
+        box._intrinsicCoord$.reaction((_, __, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
+            }
         });
-        box.events.on(TELE_BOX_EVENT.IntrinsicResize, () => {
-            this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicResize, box);
+        box._intrinsicSize$.reaction((_, __, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicResize, box);
+            }
         });
-        box.events.on(TELE_BOX_EVENT.VisualResize, () => {
-            this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
+        box._visualSize$.reaction((_, __, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
+            }
         });
-        box.events.on(TELE_BOX_EVENT.ZIndex, () => {
+        box._zIndex$.reaction((_, __, skipUpdate) => {
             if (this.topBox && box.zIndex > this.topBox.zIndex) {
                 this.topBox$.setValue(box);
+            }
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
             }
         });
         this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
@@ -658,16 +671,16 @@ export class TeleBoxManager {
             box.setMinWidth(config.minWidth, skipUpdate);
         }
         if (config.resizable != null) {
-            box.setResizable(config.resizable);
+            box.setResizable(config.resizable, skipUpdate);
         }
         if (config.draggable != null) {
-            box.setDraggable(config.draggable);
+            box.setDraggable(config.draggable, skipUpdate);
         }
         if (config.fixRatio != null) {
             box.setFixRatio(config.fixRatio, skipUpdate);
         }
         if (config.zIndex != null) {
-            box.setZIndex(config.zIndex);
+            box.setZIndex(config.zIndex, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);
@@ -722,9 +735,6 @@ export class TeleBoxManager {
             if (box !== this.topBox) {
                 box.setZIndex(this.topBox.zIndex + 1, skipUpdate);
                 this.topBox$.setValue(box);
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
-                }
             }
         }
     }
