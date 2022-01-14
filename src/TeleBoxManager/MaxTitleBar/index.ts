@@ -105,6 +105,13 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     public render(): HTMLElement {
         const $titleBar = super.render();
+        if ($titleBar.firstElementChild?.nextElementSibling) {
+            $titleBar.insertBefore(
+                this.$dragArea,
+                $titleBar.firstElementChild.nextElementSibling
+            );
+        }
+
         const { x, y, width } = this.containerRect;
         $titleBar.style.transform = `translate(${x}px, ${y}px)`;
         $titleBar.style.width = width + "px";

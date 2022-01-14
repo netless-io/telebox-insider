@@ -9,11 +9,21 @@
     background: #fff;
     user-select: none;
     border-bottom: 1px solid #eeeef7;
+    touch-action: manipulation;
+}
+
+.#{$namespace}-title-area {
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
 }
 
 .#{$namespace}-title {
     overflow: hidden;
-    margin: 0 24px 0 0;
+    margin: 0;
     padding: 0;
     font-size: 14px;
     font-weight: 400;
@@ -22,6 +32,16 @@
     word-break: keep-all;
     text-overflow: ellipsis;
     color: #191919;
+}
+
+.#{$namespace}-drag-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    z-index: 10;
 }
 
 .#{$namespace}-titlebar-btns {
