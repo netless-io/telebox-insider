@@ -458,8 +458,11 @@ export class TeleBoxManager {
             }
         });
         box._zIndex$.reaction((_, __, skipUpdate) => {
-            if (this.topBox && box.zIndex > this.topBox.zIndex) {
-                this.topBox$.setValue(box);
+            if (this.boxes.length > 0) {
+                const topBox = this.boxes.reduce((topBox, box) =>
+                    topBox.zIndex > box.zIndex ? topBox : box
+                );
+                this.topBox$.setValue(topBox);
             }
             if (!skipUpdate) {
                 this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
@@ -734,7 +737,6 @@ export class TeleBoxManager {
         if (this.topBox) {
             if (box !== this.topBox) {
                 box.setZIndex(this.topBox.zIndex + 1, skipUpdate);
-                this.topBox$.setValue(box);
             }
         }
     }
