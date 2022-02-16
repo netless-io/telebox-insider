@@ -21,6 +21,7 @@
     background-repeat: no-repeat;
     background-size: 18px 16px;
     background-position: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .#{$namespace}-collector-visible {
