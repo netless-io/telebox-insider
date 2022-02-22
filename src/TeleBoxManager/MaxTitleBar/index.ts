@@ -105,12 +105,6 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     public render(): HTMLElement {
         const $titleBar = super.render();
-        if ($titleBar.firstElementChild?.nextElementSibling) {
-            $titleBar.insertBefore(
-                this.$dragArea,
-                $titleBar.firstElementChild.nextElementSibling
-            );
-        }
 
         const { x, y, width } = this.containerRect;
         $titleBar.style.transform = `translate(${x}px, ${y}px)`;
@@ -131,6 +125,10 @@ export class MaxTitleBar extends DefaultTitleBar {
             )
         );
 
+        const $titlesArea = document.createElement("div");
+        $titlesArea.classList.add(this.wrapClassName("titles-area"));
+        $titleBar.insertBefore($titlesArea, $titleBar.firstElementChild);
+
         this.updateTitles();
 
         return $titleBar;
@@ -145,14 +143,12 @@ export class MaxTitleBar extends DefaultTitleBar {
 
     public updateTitles(): void {
         if (this.$titleBar && this.state === TELE_BOX_STATE.Maximized) {
+            this.$titleBar.classList.toggle(
+                this.wrapClassName("max-titlebar-single-title"),
+                this.boxes.length === 1
+            );
             if (this.boxes.length === 1) {
-                if (this.$title) {
-                    this.$title.textContent = this.boxes[0].title;
-                    this.$titleBar.replaceChild(
-                        this.$title,
-                        this.$titleBar.firstElementChild as HTMLElement
-                    );
-                }
+                this.setTitle(this.boxes[0].title);
             } else {
                 this.$titleBar.replaceChild(
                     this.renderTitles(),

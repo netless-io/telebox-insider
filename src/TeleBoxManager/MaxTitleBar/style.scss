@@ -16,32 +16,22 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     z-index: $base-z-index * 500;
     user-select: none;
 
-    .#{$namespace}-drag-area {
-        height: 100%;
-        min-width: 16px;
-        position: static;
-        margin: 0;
-        flex-grow: 1;
-        flex-shrink: 0;
+    .#{$namespace}-title {
+        display: none;
+    }
+
+    &.#{$namespace}-max-titlebar-single-title {
+        .#{$namespace}-titles {
+            display: none;
+        }
+        .#{$namespace}-title {
+            display: block;
+        }
     }
 }
 
 .#{$namespace}-max-titlebar-maximized {
     display: flex;
-
-    // .#{$namespace}-titlebar-btns {
-    //     &::before {
-    //         content: "";
-    //         position: absolute;
-    //         z-index: $base-z-index * 300;
-    //         top: 0;
-    //         height: 100%;
-    //         width: 50px;
-    //         transform: translateX(-100%);
-    //         background: linear-gradient(to left, #fff, rgba(0, 0, 0, 0));
-    //         pointer-events: none;
-    //     }
-    // }
 }
 
 .#{$namespace}-titles {

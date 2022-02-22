@@ -250,8 +250,8 @@ export class DefaultTitleBar implements TeleTitleBar {
         const now = Date.now();
         if (now - this.lastTitleBarClick.timestamp <= 500) {
             if (
-                Math.abs(ev.clientX - this.lastTitleBarClick.clientX) <= 3 &&
-                Math.abs(ev.clientY - this.lastTitleBarClick.clientY) <= 3
+                Math.abs(ev.clientX - this.lastTitleBarClick.clientX) <= 5 &&
+                Math.abs(ev.clientY - this.lastTitleBarClick.clientY) <= 5
             ) {
                 // double click
                 if (this.onEvent) {
@@ -291,8 +291,8 @@ export class DefaultTitleBar implements TeleTitleBar {
 
         if (now - this.lastTitleBarTouch.timestamp <= 500) {
             if (
-                Math.abs(clientX - this.lastTitleBarTouch.clientX) <= 3 &&
-                Math.abs(clientY - this.lastTitleBarTouch.clientY) <= 3
+                Math.abs(clientX - this.lastTitleBarTouch.clientX) <= 10 &&
+                Math.abs(clientY - this.lastTitleBarTouch.clientY) <= 10
             ) {
                 // double click
                 if (this.onEvent) {
