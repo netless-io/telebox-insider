@@ -1,6 +1,6 @@
 {
     "name": "@netless/telebox-insider",
-    "version": "0.2.24",
+    "version": "0.2.25",
     "private": false,
     "description": "Window widget for Whiteboard",
     "license": "MIT",
@@ -24,7 +24,7 @@
         "storybook": "start-storybook -p 6006 --no-version-updates",
         "build-storybook": "build-storybook && node scripts/move-storybook.js",
         "deploy-storybook": "yarn run build-storybook && node scripts/deploy-storybook.js",
-        "cleanup": "rimraf ./build"
+        "cleanup": "rimraf ./dist"
     },
     "devDependencies": {
         "@babel/plugin-proposal-class-properties": "^7.13.0",
