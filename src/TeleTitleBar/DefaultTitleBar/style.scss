@@ -1,6 +1,9 @@
 @import "../../scss/variables.scss";
+@import "../../scss/mixins.scss";
 
 .#{$namespace}-titlebar {
+    @include no-user-select;
+
     box-sizing: border-box;
     height: 26px;
     display: flex;
@@ -22,6 +25,8 @@
 }
 
 .#{$namespace}-title {
+    @include no-user-select;
+
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -53,6 +58,8 @@
 }
 
 .#{$namespace}-titlebar-btn {
+    @include no-user-select;
+
     width: 22px;
     height: 22px;
     padding: 0;

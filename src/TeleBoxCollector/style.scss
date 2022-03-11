@@ -1,6 +1,9 @@
 @import "../scss/variables.scss";
+@import "../scss/mixins.scss";
 
 .#{$namespace}-collector {
+    @include no-user-select;
+
     visibility: hidden;
     display: block;
     position: absolute;

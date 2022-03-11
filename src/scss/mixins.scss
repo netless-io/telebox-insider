@@ -1,0 +1,7 @@
+@mixin no-user-select {
+    user-select: none;
+    // touch device
+    -webkit-touch-callout: none;
+    // iOS Safari
+    -webkit-user-select: none;
+}
