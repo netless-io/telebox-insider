@@ -24,7 +24,8 @@ import {
 } from "..";
 import { SideEffectManager } from "side-effect-manager";
 import {
-    createSideEffectBinder,
+    combine,
+    ReadonlyVal,
     Val,
     ValEnhancedResult,
     withValueEnhancer,
@@ -63,24 +64,27 @@ export class TeleBoxManager {
         readonly = false,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
-        const { combine, createVal } = createSideEffectBinder(this._sideEffect);
 
         this.root = root;
         this.namespace = namespace;
 
-        this.boxes$ = createVal<TeleBox[]>([]);
-        this.topBox$ = this.boxes$.derive((boxes) => {
-            if (boxes.length > 0) {
-                const topBox = boxes.reduce((topBox, box) =>
-                    topBox.zIndex > box.zIndex ? topBox : box
-                );
-                return topBox;
-            }
-            return;
-        });
+        this.boxes$ = new Val<TeleBox[]>([]);
+        this.topBox$ = new Val<TeleBox | undefined>(undefined);
+        this._sideEffect.addDisposer(
+            this.boxes$.subscribe((boxes) => {
+                if (boxes.length > 0) {
+                    const topBox = boxes.reduce((topBox, box) =>
+                        topBox.zIndex > box.zIndex ? topBox : box
+                    );
+                    this.topBox$.setValue(topBox);
+                } else {
+                    this.topBox$.setValue(undefined);
+                }
+            })
+        );
 
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-        const prefersDark$ = createVal(false);
+        const prefersDark$ = new Val(false);
 
         if (prefersDark) {
             prefersDark$.setValue(prefersDark.matches);
@@ -88,23 +92,25 @@ export class TeleBoxManager {
                 const handler = (evt: MediaQueryListEvent): void => {
                     prefersDark$.setValue(evt.matches);
                 };
-                prefersDark.addListener(handler);
-                return () => prefersDark.removeListener(handler);
+                prefersDark.addEventListener("change", handler);
+                return () => prefersDark.removeEventListener("change", handler);
             });
         }
 
-        const prefersColorScheme$ = createVal(prefersColorScheme);
-        prefersColorScheme$.reaction((prefersColorScheme, _, skipUpdate) => {
-            this.boxes.forEach((box) =>
-                box.setPrefersColorScheme(prefersColorScheme, skipUpdate)
-            );
-            if (!skipUpdate) {
-                this.events.emit(
-                    TELE_BOX_MANAGER_EVENT.PrefersColorScheme,
-                    prefersColorScheme
+        const prefersColorScheme$ = new Val(prefersColorScheme);
+        this._sideEffect.addDisposer(
+            prefersColorScheme$.reaction((prefersColorScheme, skipUpdate) => {
+                this.boxes.forEach((box) =>
+                    box.setPrefersColorScheme(prefersColorScheme, skipUpdate)
                 );
-            }
-        });
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.PrefersColorScheme,
+                        prefersColorScheme
+                    );
+                }
+            })
+        );
 
         this._darkMode$ = combine(
             [prefersDark$, prefersColorScheme$],
@@ -113,29 +119,42 @@ export class TeleBoxManager {
                     ? prefersDark
                     : prefersColorScheme === "dark"
         );
-        this._darkMode$.reaction((darkMode, _, skipUpdate) => {
-            this.boxes.forEach((box) => box.setDarkMode(darkMode, skipUpdate));
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
-            }
-        });
+        this._sideEffect.addDisposer(
+            this._darkMode$.reaction((darkMode, skipUpdate) => {
+                this.boxes.forEach((box) =>
+                    box.setDarkMode(darkMode, skipUpdate)
+                );
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
+                }
+            })
+        );
 
-        const readonly$ = createVal(readonly);
-        readonly$.reaction((readonly, _, skipUpdate) => {
-            this.boxes.forEach((box) => box.setReadonly(readonly, skipUpdate));
-        });
+        const readonly$ = new Val(readonly);
+        this._sideEffect.addDisposer(
+            readonly$.reaction((readonly, skipUpdate) => {
+                this.boxes.forEach((box) =>
+                    box.setReadonly(readonly, skipUpdate)
+                );
+            })
+        );
 
-        const minimized$ = createVal(minimized);
+        const minimized$ = new Val(minimized);
 
-        const maximized$ = createVal(maximized);
-        maximized$.reaction((maximized, _, skipUpdate) => {
-            this.boxes.forEach((box) =>
-                box.setMaximized(maximized, skipUpdate)
-            );
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Maximized, maximized);
-            }
-        });
+        const maximized$ = new Val(maximized);
+        this._sideEffect.addDisposer(
+            maximized$.reaction((maximized, skipUpdate) => {
+                this.boxes.forEach((box) =>
+                    box.setMaximized(maximized, skipUpdate)
+                );
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.Maximized,
+                        maximized
+                    );
+                }
+            })
+        );
 
         const state$ = combine(
             [minimized$, maximized$],
@@ -146,57 +165,71 @@ export class TeleBoxManager {
                     ? TELE_BOX_STATE.Maximized
                     : TELE_BOX_STATE.Normal
         );
-        state$.reaction((state, _, skipUpdate) => {
-            this.maxTitleBar.setState(state);
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
-            }
-        });
+        this._sideEffect.addDisposer(
+            state$.reaction((state, skipUpdate) => {
+                this.maxTitleBar.setState(state);
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
+                }
+            })
+        );
 
-        const fence$ = createVal(fence);
-        fence$.subscribe((fence, _, skipUpdate) => {
-            this.boxes.forEach((box) => box.setFence(fence, skipUpdate));
-        });
+        const fence$ = new Val(fence);
+        this._sideEffect.addDisposer(
+            fence$.subscribe((fence, skipUpdate) => {
+                this.boxes.forEach((box) => box.setFence(fence, skipUpdate));
+            })
+        );
 
-        const containerRect$ = createVal(containerRect, shallowequal);
-        containerRect$.reaction((containerRect, _, skipUpdate) => {
-            this.boxes.forEach((box) =>
-                box.setContainerRect(containerRect, skipUpdate)
-            );
-            this.maxTitleBar.setContainerRect(containerRect);
+        const containerRect$ = new Val(containerRect, {
+            compare: shallowequal,
         });
+        this._sideEffect.addDisposer(
+            containerRect$.reaction((containerRect, skipUpdate) => {
+                this.boxes.forEach((box) =>
+                    box.setContainerRect(containerRect, skipUpdate)
+                );
+                this.maxTitleBar.setContainerRect(containerRect);
+            })
+        );
 
-        const collector$ = createVal(
+        const collector$ = new Val(
             collector === null
                 ? null
                 : collector ||
-                      new TeleBoxCollector({
-                          visible: minimized,
-                          readonly: readonly,
-                          namespace,
-                      }).mount(root)
+                  new TeleBoxCollector({
+                      visible: minimized,
+                      readonly: readonly,
+                      namespace,
+                  }).mount(root)
         );
-        collector$.subscribe((collector) => {
-            if (collector) {
-                collector.setVisible(minimized$.value);
-                collector.setReadonly(readonly$.value);
-                collector.setDarkMode(this._darkMode$.value);
-                this._sideEffect.add(() => {
-                    collector.onClick = () => {
-                        if (!readonly$.value) {
-                            minimized$.setValue(false);
-                        }
-                    };
-                    return () => collector.destroy();
-                }, "collect-onClick");
-            }
-        });
-        readonly$.subscribe((readonly) =>
-            collector$.value?.setReadonly(readonly)
+        this._sideEffect.addDisposer(
+            collector$.subscribe((collector) => {
+                if (collector) {
+                    collector.setVisible(minimized$.value);
+                    collector.setReadonly(readonly$.value);
+                    collector.setDarkMode(this._darkMode$.value);
+                    this._sideEffect.add(() => {
+                        collector.onClick = () => {
+                            if (!readonly$.value) {
+                                minimized$.setValue(false);
+                            }
+                        };
+                        return () => collector.destroy();
+                    }, "collect-onClick");
+                }
+            })
         );
-        this._darkMode$.subscribe((darkMode) => {
-            collector$.value?.setDarkMode(darkMode);
-        });
+        this._sideEffect.addDisposer(
+            readonly$.subscribe((readonly) =>
+                collector$.value?.setReadonly(readonly)
+            )
+        );
+        this._sideEffect.addDisposer(
+            this._darkMode$.subscribe((darkMode) => {
+                collector$.value?.setDarkMode(darkMode);
+            })
+        );
 
         const calcCollectorRect = (): TeleBoxRect | undefined => {
             if (collector$.value?.$collector) {
@@ -213,34 +246,41 @@ export class TeleBoxManager {
             return;
         };
 
-        const collectorRect$ = createVal(
+        const collectorRect$ = new Val(
             minimized$.value ? calcCollectorRect() : void 0
         );
-        collectorRect$.subscribe((collectorRect, _, skipUpdate) => {
-            this.boxes.forEach((box) => {
-                box.setCollectorRect(collectorRect, skipUpdate);
-            });
-        });
+        this._sideEffect.addDisposer(
+            collectorRect$.subscribe((collectorRect, skipUpdate) => {
+                this.boxes.forEach((box) => {
+                    box.setCollectorRect(collectorRect, skipUpdate);
+                });
+            })
+        );
 
-        minimized$.subscribe((minimized, _, skipUpdate) => {
-            collector$.value?.setVisible(minimized);
+        this._sideEffect.addDisposer(
+            minimized$.subscribe((minimized, skipUpdate) => {
+                collector$.value?.setVisible(minimized);
 
-            if (minimized) {
-                if (collector$.value?.$collector) {
-                    collectorRect$.setValue(calcCollectorRect());
-                } else if (import.meta.env.DEV) {
-                    console.warn("No collector for minimized boxes.");
+                if (minimized) {
+                    if (collector$.value?.$collector) {
+                        collectorRect$.setValue(calcCollectorRect());
+                    } else if (import.meta.env.DEV) {
+                        console.warn("No collector for minimized boxes.");
+                    }
                 }
-            }
 
-            this.boxes.forEach((box) =>
-                box.setMinimized(minimized, skipUpdate)
-            );
+                this.boxes.forEach((box) =>
+                    box.setMinimized(minimized, skipUpdate)
+                );
 
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Minimized, minimized);
-            }
-        });
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.Minimized,
+                        minimized
+                    );
+                }
+            })
+        );
 
         const closeBtnClassName = this.wrapClassName("titlebar-icon-close");
 
@@ -315,15 +355,21 @@ export class TeleBoxManager {
                 }
             },
         });
-        readonly$.subscribe((readonly) =>
-            this.maxTitleBar.setReadonly(readonly)
+        this._sideEffect.addDisposer(
+            readonly$.subscribe((readonly) =>
+                this.maxTitleBar.setReadonly(readonly)
+            )
         );
-        this._darkMode$.subscribe((darkMode) => {
-            this.maxTitleBar.setDarkMode(darkMode);
-        });
-        this.boxes$.reaction((boxes) => {
-            this.maxTitleBar.setBoxes(boxes);
-        });
+        this._sideEffect.addDisposer(
+            this._darkMode$.subscribe((darkMode) => {
+                this.maxTitleBar.setDarkMode(darkMode);
+            })
+        );
+        this._sideEffect.addDisposer(
+            this.boxes$.reaction((boxes) => {
+                this.maxTitleBar.setBoxes(boxes);
+            })
+        );
 
         const valConfig: ValConfig = {
             prefersColorScheme: prefersColorScheme$,
@@ -359,13 +405,13 @@ export class TeleBoxManager {
 
     public readonly namespace: string;
 
-    public _darkMode$: Val<boolean, boolean>;
+    public _darkMode$: ReadonlyVal<boolean, boolean>;
 
     public get darkMode(): boolean {
         return this._darkMode$.value;
     }
 
-    public _state$: Val<TeleBoxState, boolean>;
+    public _state$: ReadonlyVal<TeleBoxState, boolean>;
 
     public get state(): TeleBoxState {
         return this._state$.value;
@@ -432,42 +478,57 @@ export class TeleBoxManager {
             this.remove(box);
             this.focusTopBox();
         });
-        box._coord$.reaction((_, __, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
-            }
-        });
-        box._size$.reaction((_, __, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
-            }
-        });
-        box._intrinsicCoord$.reaction((_, __, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
-            }
-        });
-        box._intrinsicSize$.reaction((_, __, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicResize, box);
-            }
-        });
-        box._visualSize$.reaction((_, __, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
-            }
-        });
-        box._zIndex$.reaction((_, __, skipUpdate) => {
-            if (this.boxes.length > 0) {
-                const topBox = this.boxes.reduce((topBox, box) =>
-                    topBox.zIndex > box.zIndex ? topBox : box
-                );
-                this.topBox$.setValue(topBox);
-            }
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
-            }
-        });
+        this._sideEffect.addDisposer(
+            box._coord$.reaction((_, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
+                }
+            })
+        );
+        this._sideEffect.addDisposer(
+            box._size$.reaction((_, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
+                }
+            })
+        );
+        this._sideEffect.addDisposer(
+            box._intrinsicCoord$.reaction((_, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
+                }
+            })
+        );
+        this._sideEffect.addDisposer(
+            box._intrinsicSize$.reaction((_, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.IntrinsicResize,
+                        box
+                    );
+                }
+            })
+        );
+        this._sideEffect.addDisposer(
+            box._visualSize$.reaction((_, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
+                }
+            })
+        );
+        this._sideEffect.addDisposer(
+            box._zIndex$.reaction((_, skipUpdate) => {
+                if (this.boxes.length > 0) {
+                    const topBox = this.boxes.reduce((topBox, box) =>
+                        topBox.zIndex > box.zIndex ? topBox : box
+                    );
+                    this.topBox$.setValue(topBox);
+                }
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
+                }
+            })
+        );
         this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
 
         return box;

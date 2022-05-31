@@ -9546,10 +9546,10 @@ side-channel@^1.0.4:
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
 
-side-effect-manager@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-0.1.5.tgz#d9b205e4317b60f90876f6ad498a1ac7e038c7d7"
-  integrity sha512-aAEXMS+9qW7rY2cwq4S6UjW3IBO/ZLWRI0sH1oGJ1eDE7YBFR1TW950qffnpx/0hByusAOVbu2zjThk9Vcjs+Q==
+side-effect-manager@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-1.0.0.tgz#de67cd9aea9bdf220ec6118e93f243e8c1dcdcd4"
+  integrity sha512-tOAr9RzC9J4T8+lon+JLpXSYPJZfvXU/+HwDzR42rjXyL479lnxOuIOoD9GpiA9eg4Xz/xhdQ2+lGTDMTWtTUw==
 
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.3"
@@ -10611,12 +10611,10 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-value-enhancer@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-0.0.8.tgz#1e19655b678ddc3d93de61170e486e7f5b8e6f04"
-  integrity sha512-ba8Rcyp9ItqlLWoyZVqHGaEdY1tqP1mcbRhlOrCnIrDxdl8rKNH1Rq45syo4IMYNSkwC2oV9xBWcV9dmL14aQg==
-  dependencies:
-    side-effect-manager "^0.1.5"
+value-enhancer@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-1.0.4.tgz#a80ee0c6fd3ad1445c11af16a52f89f74aca6222"
+  integrity sha512-EyKc3qBpEplFhcJkCRQiQ32KvzyuJE9g8ZTxfXBZUfK6akznJNyO5jmwy1MRQOlXuwMs98v//bqtTfbLNKcygA==
 
 vary@~1.1.2:
   version "1.1.2"

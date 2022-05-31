@@ -5,10 +5,10 @@ import styler from "stylefire";
 import shallowequal from "shallowequal";
 import { SideEffectManager } from "side-effect-manager";
 import {
-    createSideEffectBinder,
+    combine,
+    ReadonlyVal,
     Val,
     ValEnhancedResult,
-    ValSideEffectBinder,
     withValueEnhancer,
 } from "value-enhancer";
 import { DefaultTitleBar, TeleTitleBar } from "../TeleTitleBar";
@@ -110,123 +110,146 @@ export class TeleBox {
         collectorRect,
     }: TeleBoxConfig = {}) {
         this._sideEffect = new SideEffectManager();
-        this._valSideEffectBinder = createSideEffectBinder(this._sideEffect);
-        const { combine, createVal } = this._valSideEffectBinder;
 
         this.id = id;
         this.namespace = namespace;
         this.events = new EventEmitter();
         this._delegateEvents = new EventEmitter();
 
-        const prefersColorScheme$ = createVal<TeleBoxColorScheme, boolean>(
+        const prefersColorScheme$ = new Val<TeleBoxColorScheme, boolean>(
             prefersColorScheme
         );
-        prefersColorScheme$.reaction((prefersColorScheme, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(
-                    TELE_BOX_EVENT.PrefersColorScheme,
-                    prefersColorScheme
-                );
-            }
-        });
+        this._sideEffect.addDisposer(
+            prefersColorScheme$.reaction((prefersColorScheme, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_EVENT.PrefersColorScheme,
+                        prefersColorScheme
+                    );
+                }
+            })
+        );
 
-        const darkMode$ = createVal(Boolean(darkMode));
+        const darkMode$ = new Val(Boolean(darkMode));
 
         if (darkMode == null) {
-            prefersColorScheme$.subscribe(
-                (prefersColorScheme, _, skipUpdate) => {
-                    this._sideEffect.add(() => {
-                        if (prefersColorScheme === "auto") {
-                            const prefersDark = window.matchMedia(
-                                "(prefers-color-scheme: dark)"
-                            );
-                            if (prefersDark) {
+            this._sideEffect.addDisposer(
+                prefersColorScheme$.subscribe(
+                    (prefersColorScheme, skipUpdate) => {
+                        this._sideEffect.add(() => {
+                            if (prefersColorScheme === "auto") {
+                                const prefersDark = window.matchMedia(
+                                    "(prefers-color-scheme: dark)"
+                                );
+                                if (prefersDark) {
+                                    darkMode$.setValue(
+                                        prefersDark.matches,
+                                        skipUpdate
+                                    );
+                                    const handler = (
+                                        evt: MediaQueryListEvent
+                                    ): void => {
+                                        darkMode$.setValue(
+                                            evt.matches,
+                                            skipUpdate
+                                        );
+                                    };
+                                    prefersDark.addListener(handler);
+                                    return () =>
+                                        prefersDark.removeListener(handler);
+                                } else {
+                                    return noop;
+                                }
+                            } else {
                                 darkMode$.setValue(
-                                    prefersDark.matches,
+                                    prefersColorScheme === "dark",
                                     skipUpdate
                                 );
-                                const handler = (
-                                    evt: MediaQueryListEvent
-                                ): void => {
-                                    darkMode$.setValue(evt.matches, skipUpdate);
-                                };
-                                prefersDark.addListener(handler);
-                                return () =>
-                                    prefersDark.removeListener(handler);
-                            } else {
                                 return noop;
                             }
-                        } else {
-                            darkMode$.setValue(
-                                prefersColorScheme === "dark",
-                                skipUpdate
-                            );
-                            return noop;
-                        }
-                    }, "prefers-color-scheme");
-                }
+                        }, "prefers-color-scheme");
+                    }
+                )
             );
         }
 
-        darkMode$.reaction((darkMode, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.DarkMode, darkMode);
-            }
+        this._sideEffect.addDisposer(
+            darkMode$.reaction((darkMode, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.DarkMode, darkMode);
+                }
+            })
+        );
+
+        const containerRect$ = new Val(containerRect, {
+            compare: shallowequal,
+        });
+        const collectorRect$ = new Val(collectorRect, {
+            compare: shallowequal,
         });
 
-        const containerRect$ = createVal(containerRect, shallowequal);
-        const collectorRect$ = createVal(collectorRect, shallowequal);
+        const title$ = new Val(title);
 
-        const title$ = createVal(title);
+        const visible$ = new Val(visible);
+        this._sideEffect.addDisposer(
+            visible$.reaction((visible, skipUpdate) => {
+                if (!skipUpdate && !visible) {
+                    this.events.emit(TELE_BOX_EVENT.Close);
+                }
+            })
+        );
 
-        const visible$ = createVal(visible);
-        visible$.reaction((visible, _, skipUpdate) => {
-            if (!skipUpdate && !visible) {
-                this.events.emit(TELE_BOX_EVENT.Close);
-            }
-        });
+        const readonly$ = new Val(readonly);
+        this._sideEffect.addDisposer(
+            readonly$.reaction((readonly, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.Readonly, readonly);
+                }
+            })
+        );
 
-        const readonly$ = createVal(readonly);
-        readonly$.reaction((readonly, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.Readonly, readonly);
-            }
-        });
+        const resizable$ = new Val(resizable);
+        const draggable$ = new Val(draggable);
+        const fence$ = new Val(fence);
+        const fixRatio$ = new Val(fixRatio);
 
-        const resizable$ = createVal(resizable);
-        const draggable$ = createVal(draggable);
-        const fence$ = createVal(fence);
-        const fixRatio$ = createVal(fixRatio);
+        const zIndex$ = new Val(zIndex);
+        this._sideEffect.addDisposer(
+            zIndex$.reaction((zIndex, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.ZIndex, zIndex);
+                }
+            })
+        );
 
-        const zIndex$ = createVal(zIndex);
-        zIndex$.reaction((zIndex, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.ZIndex, zIndex);
-            }
-        });
+        const focus$ = new Val(focus);
+        this._sideEffect.addDisposer(
+            focus$.reaction((focus, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(
+                        focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
+                    );
+                }
+            })
+        );
 
-        const focus$ = createVal(focus);
-        focus$.reaction((focus, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(
-                    focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
-                );
-            }
-        });
+        const minimized$ = new Val(minimized);
+        this._sideEffect.addDisposer(
+            minimized$.reaction((minimized, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.Minimized, minimized);
+                }
+            })
+        );
 
-        const minimized$ = createVal(minimized);
-        minimized$.reaction((minimized, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.Minimized, minimized);
-            }
-        });
-
-        const maximized$ = createVal(maximized);
-        maximized$.reaction((maximized, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.Maximized, maximized);
-            }
-        });
+        const maximized$ = new Val(maximized);
+        this._sideEffect.addDisposer(
+            maximized$.reaction((maximized, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.Maximized, maximized);
+                }
+            })
+        );
 
         const state$ = combine(
             [minimized$, maximized$],
@@ -237,41 +260,47 @@ export class TeleBox {
                     ? TELE_BOX_STATE.Maximized
                     : TELE_BOX_STATE.Normal
         );
-        state$.reaction((state, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.State, state);
-            }
-        });
+        this._sideEffect.addDisposer(
+            state$.reaction((state, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.State, state);
+                }
+            })
+        );
 
-        const minSize$ = createVal(
+        const minSize$ = new Val(
             {
                 width: clamp(minWidth, 0, 1),
                 height: clamp(minHeight, 0, 1),
             },
-            shallowequal
+            { compare: shallowequal }
         );
 
-        const intrinsicSize$ = createVal(
+        const intrinsicSize$ = new Val(
             {
                 width: clamp(width, minSize$.value.width, 1),
                 height: clamp(height, minSize$.value.height, 1),
             },
-            shallowequal
+            { compare: shallowequal }
         );
-        minSize$.reaction((minSize, _, skipUpdate) => {
-            intrinsicSize$.setValue(
-                {
-                    width: clamp(width, minSize.width, 1),
-                    height: clamp(height, minSize.height, 1),
-                },
-                skipUpdate
-            );
-        });
-        intrinsicSize$.reaction((size, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.IntrinsicResize, size);
-            }
-        });
+        this._sideEffect.addDisposer(
+            minSize$.reaction((minSize, skipUpdate) => {
+                intrinsicSize$.setValue(
+                    {
+                        width: clamp(width, minSize.width, 1),
+                        height: clamp(height, minSize.height, 1),
+                    },
+                    skipUpdate
+                );
+            })
+        );
+        this._sideEffect.addDisposer(
+            intrinsicSize$.reaction((size, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.IntrinsicResize, size);
+                }
+            })
+        );
 
         const size$ = combine(
             [intrinsicSize$, maximized$],
@@ -281,13 +310,15 @@ export class TeleBox {
                 }
                 return intrinsicSize;
             },
-            shallowequal
+            { compare: shallowequal }
         );
-        size$.reaction((size, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.Resize, size);
-            }
-        });
+        this._sideEffect.addDisposer(
+            size$.reaction((size, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.Resize, size);
+                }
+            })
+        );
 
         const visualSize$ = combine(
             [size$, minimized$, containerRect$, collectorRect$],
@@ -306,23 +337,27 @@ export class TeleBox {
                 }
                 return size;
             },
-            shallowequal
+            { compare: shallowequal }
         );
-        visualSize$.reaction((size, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.VisualResize, size);
-            }
-        });
+        this._sideEffect.addDisposer(
+            visualSize$.reaction((size, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.VisualResize, size);
+                }
+            })
+        );
 
-        const intrinsicCoord$ = createVal(
+        const intrinsicCoord$ = new Val(
             { x: clamp(x, 0, 1), y: clamp(y, 0, 1) },
-            shallowequal
+            { compare: shallowequal }
         );
-        intrinsicCoord$.reaction((coord, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.IntrinsicMove, coord);
-            }
-        });
+        this._sideEffect.addDisposer(
+            intrinsicCoord$.reaction((coord, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.IntrinsicMove, coord);
+                }
+            })
+        );
 
         const coord$ = combine(
             [
@@ -370,13 +405,15 @@ export class TeleBox {
                 }
                 return intrinsicCoord;
             },
-            shallowequal
+            { compare: shallowequal }
         );
-        coord$.reaction((coord, _, skipUpdate) => {
-            if (!skipUpdate) {
-                this.events.emit(TELE_BOX_EVENT.Move, coord);
-            }
-        });
+        this._sideEffect.addDisposer(
+            coord$.reaction((coord, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_EVENT.Move, coord);
+                }
+            })
+        );
 
         this.titleBar =
             titleBar ||
@@ -413,13 +450,15 @@ export class TeleBox {
                     }
                 },
             });
-        readonly$.reaction((readonly) => {
-            this.titleBar.setReadonly(readonly);
-        });
+        this._sideEffect.addDisposer(
+            readonly$.reaction((readonly) => {
+                this.titleBar.setReadonly(readonly);
+            })
+        );
 
-        const $userContent$ = createVal(content);
-        const $userFooter$ = createVal(footer);
-        const $userStyles$ = createVal(styles);
+        const $userContent$ = new Val(content);
+        const $userFooter$ = new Val(footer);
+        const $userStyles$ = new Val(styles);
 
         const valConfig: ValConfig = {
             prefersColorScheme: prefersColorScheme$,
@@ -476,22 +515,20 @@ export class TeleBox {
 
     protected _sideEffect: SideEffectManager;
 
-    protected _valSideEffectBinder: ValSideEffectBinder;
-
     public titleBar: TeleTitleBar;
 
     public _minSize$: Val<TeleBoxSize, boolean>;
-    public _size$: Val<TeleBoxSize, boolean>;
+    public _size$: ReadonlyVal<TeleBoxSize, boolean>;
     public _intrinsicSize$: Val<TeleBoxSize, boolean>;
-    public _visualSize$: Val<TeleBoxSize, boolean>;
-    public _coord$: Val<TeleBoxCoord, boolean>;
+    public _visualSize$: ReadonlyVal<TeleBoxSize, boolean>;
+    public _coord$: ReadonlyVal<TeleBoxCoord, boolean>;
     public _intrinsicCoord$: Val<TeleBoxCoord, boolean>;
 
     public get darkMode(): boolean {
         return this._darkMode$.value;
     }
 
-    public _state$: Val<TeleBoxState, boolean>;
+    public _state$: ReadonlyVal<TeleBoxState, boolean>;
 
     public get state(): TeleBoxState {
         return this._state$.value;
@@ -847,13 +884,13 @@ export class TeleBox {
             });
         });
 
-        this._renderSideEffect.add(() =>
+        this._renderSideEffect.addDisposer(
             this._visible$.subscribe((visible) => {
                 this.$box.style.display = visible ? "block" : "none";
             })
         );
 
-        this._renderSideEffect.add(() =>
+        this._renderSideEffect.addDisposer(
             this._zIndex$.subscribe((zIndex) => {
                 this.$box.style.zIndex = String(zIndex);
             })
@@ -875,8 +912,8 @@ export class TeleBox {
             translateY - 10
         }px)`;
 
-        this._valSideEffectBinder
-            .combine(
+        this._sideEffect.addDisposer(
+            combine(
                 [
                     this._coord$,
                     this._size$,
@@ -902,11 +939,11 @@ export class TeleBox {
                                 : 1,
                     };
                 },
-                shallowequal
-            )
-            .subscribe((styles) => {
+                { compare: shallowequal }
+            ).subscribe((styles) => {
                 boxStyler.set(styles);
-            });
+            })
+        );
 
         boxStyler.set({ x: translateX, y: translateY });
 
