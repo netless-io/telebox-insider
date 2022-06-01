@@ -1,12 +1,12 @@
+/* eslint-env node */
+
 module.exports = {
     extends: [
         "eslint:recommended",
-        "plugin:react/recommended",
-        "react-app",
         "plugin:jsx-a11y/recommended",
         "plugin:@netless/recommended",
     ],
-    plugins: ["jsx-a11y", "react", "prettier"],
+    plugins: ["jsx-a11y", "prettier"],
     parserOptions: {
         project: "./tsconfig.lint.json",
         ecmaVersion: 2018,
@@ -111,62 +111,13 @@ module.exports = {
         ],
         "no-with": "warn",
         "no-whitespace-before-property": "warn",
-        "react-hooks/exhaustive-deps": "warn",
         "require-yield": "warn",
         "rest-spread-spacing": ["warn", "never"],
         strict: ["warn", "never"],
         "unicode-bom": ["warn", "never"],
         "use-isnan": "warn",
         "valid-typeof": "warn",
-        "no-restricted-properties": [
-            "error",
-            {
-                object: "require",
-                property: "ensure",
-                message:
-                    "Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting",
-            },
-            {
-                object: "System",
-                property: "import",
-                message:
-                    "Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting",
-            },
-        ],
         "getter-return": "warn",
-
-        // https://github.com/benmosher/eslint-plugin-import/tree/master/docs/rules
-        "import/first": "error",
-        "import/no-amd": "error",
-        "import/no-anonymous-default-export": "warn",
-        "import/no-webpack-loader-syntax": "error",
-
-        // https://github.com/yannickcr/eslint-plugin-react/tree/master/docs/rules
-        "react/forbid-foreign-prop-types": ["warn", { allowInPropTypes: true }],
-        "react/jsx-no-comment-textnodes": "warn",
-        "react/jsx-no-duplicate-props": "warn",
-        "react/jsx-no-target-blank": "warn",
-        "react/jsx-no-undef": "error",
-        "react/jsx-pascal-case": [
-            "warn",
-            {
-                allowAllCaps: true,
-                ignore: [],
-            },
-        ],
-        "react/jsx-uses-react": "warn",
-        "react/jsx-uses-vars": "warn",
-        "react/no-danger-with-children": "warn",
-        // Disabled because of undesirable warnings
-        // See https://github.com/facebook/create-react-app/issues/5204 for
-        // blockers until its re-enabled
-        // 'react/no-deprecated': 'warn',
-        "react/no-direct-mutation-state": "warn",
-        "react/no-is-mounted": "warn",
-        "react/no-typos": "error",
-        "react/react-in-jsx-scope": "error",
-        "react/require-render-return": "error",
-        "react/style-prop-object": "warn",
 
         // https://github.com/evcohen/eslint-plugin-jsx-a11y/tree/master/docs/rules
         "jsx-a11y/alt-text": "off",
@@ -188,17 +139,6 @@ module.exports = {
         "jsx-a11y/media-has-caption": "off",
         "jsx-a11y/anchor-is-valid": "off",
 
-        // https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
-        "react-hooks/rules-of-hooks": "error",
-
-        // https://github.com/gajus/eslint-plugin-flowtype
-        "flowtype/define-flow-type": "warn",
-        "flowtype/require-valid-file-annotation": "warn",
-        "flowtype/use-flow-type": "warn",
-
-        // custom
-        "react/jsx-key": "off",
-        "react/prop-types": "off",
         "jsx-a11y/click-events-have-key-events": "off",
         "jsx-a11y/no-static-element-interactions": "off",
         "jsx-a11y/mouse-events-have-key-events": "off",

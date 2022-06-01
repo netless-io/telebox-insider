@@ -1,4 +1,4 @@
-/* eslint-disable import/no-anonymous-default-export */
+/* eslint-env node */
 import path from "path";
 
 export default ({ command, mode }) => {
@@ -12,9 +12,6 @@ export default ({ command, mode }) => {
             },
             outDir: "dist",
             sourcemap: isProd,
-            rollupOptions: {
-                external: ["react"],
-            },
             minify: isProd,
         },
     };
