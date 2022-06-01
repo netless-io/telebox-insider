@@ -1,6 +1,6 @@
 import "./style.scss";
 import collectorSVG from "./icons/collector.svg";
-import { TeleStyles } from "../typings";
+import type { TeleStyles } from "../typings";
 
 export interface TeleBoxCollectorConfig {
     visible?: boolean;

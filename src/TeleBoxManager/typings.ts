@@ -1,5 +1,5 @@
 import type EventEmitter from "eventemitter3";
-import { TeleBoxColorScheme } from "..";
+import type { TeleBoxColorScheme } from "..";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
 import type { TeleBoxConfig } from "../TeleBox/typings";
 import type { TeleBoxCollector } from "../TeleBoxCollector";

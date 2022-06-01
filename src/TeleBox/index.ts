@@ -4,14 +4,10 @@ import EventEmitter from "eventemitter3";
 import styler from "stylefire";
 import shallowequal from "shallowequal";
 import { SideEffectManager } from "side-effect-manager";
-import {
-    combine,
-    ReadonlyVal,
-    Val,
-    ValEnhancedResult,
-    withValueEnhancer,
-} from "value-enhancer";
-import { DefaultTitleBar, TeleTitleBar } from "../TeleTitleBar";
+import type { ReadonlyVal, ValEnhancedResult } from "value-enhancer";
+import { combine, Val, withValueEnhancer } from "value-enhancer";
+import type { TeleTitleBar } from "../TeleTitleBar";
+import { DefaultTitleBar } from "../TeleTitleBar";
 import {
     clamp,
     flattenEvent,
@@ -1307,7 +1303,8 @@ function noop(): void {
 }
 
 type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox
-    ? TeleBox[K] extends Function
+    ? // eslint-disable-next-line @typescript-eslint/ban-types
+      TeleBox[K] extends Function
         ? never
         : K
     : never;

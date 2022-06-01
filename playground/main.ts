@@ -1,15 +1,11 @@
 import "./style.scss";
 
 import faker from "faker";
-import {
-    TeleBoxCollector,
-    TeleBoxColorScheme,
-    TeleBoxManager,
-    TeleBoxRect,
-} from "../src";
+import type { TeleBoxColorScheme, TeleBoxRect } from "../src";
+import { TeleBoxCollector, TeleBoxManager } from "../src";
 
-const btns = document.querySelector(".btns")!;
-const board = document.querySelector<HTMLDivElement>(".board")!;
+const btns = document.querySelector(".btns") as HTMLDivElement;
+const board = document.querySelector(".board") as HTMLDivElement;
 
 const createBtn = (title: string): HTMLButtonElement => {
     const btn = document.createElement("button");

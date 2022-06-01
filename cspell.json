@@ -1,0 +1,22 @@
+{
+    "language": "en",
+    "ignorePaths": [
+        "**/coverage/**",
+        "**/node_modules/**",
+        "**/dist/**",
+        "cspell.config.js",
+        "pnpm-lock.yaml",
+        "CHANGELOG.md"
+    ],
+    "words": [
+        "autohiding",
+        "btns",
+        "callout",
+        "Classname",
+        "CRIMX",
+        "minlength",
+        "overscroll",
+        "pnpm",
+        "vite"
+    ]
+}

@@ -1,7 +1,8 @@
 /* eslint-env node */
 import path from "path";
+import { defineConfig } from "vite";
 
-export default ({ command, mode }) => {
+export default defineConfig(({ mode }) => {
     const isProd = mode === "production";
 
     return {
@@ -15,4 +16,4 @@ export default ({ command, mode }) => {
             minify: isProd,
         },
     };
-};
+});

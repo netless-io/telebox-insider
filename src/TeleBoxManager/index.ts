@@ -6,7 +6,8 @@ import type {
     TeleBoxState,
 } from "../TeleBox/typings";
 import { TeleBoxCollector } from "../TeleBoxCollector";
-import { ReadonlyTeleBox, TeleBox } from "../TeleBox";
+import type { ReadonlyTeleBox } from "../TeleBox";
+import { TeleBox } from "../TeleBox";
 import { TELE_BOX_EVENT, TELE_BOX_STATE } from "../TeleBox/constants";
 import { TELE_BOX_MANAGER_EVENT } from "./constants";
 import type {
@@ -17,19 +18,11 @@ import type {
     TeleBoxManagerUpdateConfig,
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
-import {
-    TeleBoxColorScheme,
-    TELE_BOX_COLOR_SCHEME,
-    TELE_BOX_DELEGATE_EVENT,
-} from "..";
+import type { TeleBoxColorScheme } from "..";
+import { TELE_BOX_COLOR_SCHEME, TELE_BOX_DELEGATE_EVENT } from "..";
 import { SideEffectManager } from "side-effect-manager";
-import {
-    combine,
-    ReadonlyVal,
-    Val,
-    ValEnhancedResult,
-    withValueEnhancer,
-} from "value-enhancer";
+import type { ReadonlyVal, ValEnhancedResult } from "value-enhancer";
+import { combine, Val, withValueEnhancer } from "value-enhancer";
 
 export * from "./typings";
 export * from "./constants";

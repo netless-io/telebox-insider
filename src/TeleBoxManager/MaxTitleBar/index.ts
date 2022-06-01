@@ -1,9 +1,10 @@
 import "./style.scss";
 
 import type { TeleBox } from "../../TeleBox";
-import { DefaultTitleBar, DefaultTitleBarConfig } from "../../TeleTitleBar";
+import type { DefaultTitleBarConfig } from "../../TeleTitleBar";
+import { DefaultTitleBar } from "../../TeleTitleBar";
 import { TELE_BOX_STATE } from "../../TeleBox/constants";
-import { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
+import type { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
 
 export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title" | "readonly">;
 
