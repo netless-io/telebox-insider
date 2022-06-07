@@ -1,8 +1,8 @@
 import "./style.scss";
 
 import faker from "faker";
-import type { TeleBoxColorScheme, TeleBoxRect } from "../src";
-import { TeleBoxCollector, TeleBoxManager } from "../src";
+import type { TeleBoxColorScheme } from "../src";
+import { TeleBoxManager } from "../src";
 
 const btns = document.querySelector(".btns") as HTMLDivElement;
 const board = document.querySelector(".board") as HTMLDivElement;
@@ -30,19 +30,16 @@ const createSelector = (
     return sel;
 };
 
-setBoardRect();
-
 const manager = new TeleBoxManager({
     fence: false,
     root: board,
-    containerRect: getBoardRect(),
-    collector: new TeleBoxCollector({
-        styles: {
-            position: "absolute",
-            bottom: "10px",
-            right: "50px",
-        },
-    }).mount(board),
+    stageRatio: 9 / 16,
+});
+
+manager.collector.setStyles({
+    position: "absolute",
+    bottom: "10px",
+    right: "50px",
 });
 
 (window as any).manager = manager;
@@ -94,25 +91,3 @@ createSelector("light", [
 });
 
 manager.events.on("state", (state) => console.log("state", state));
-
-window.addEventListener("resize", () => {
-    setBoardRect();
-    manager.setContainerRect(getBoardRect());
-});
-
-function getBoardRect(): TeleBoxRect {
-    const { width, height } = board.getBoundingClientRect();
-    return { width, height, x: 0, y: 0 };
-}
-
-function setBoardRect(): void {
-    const { innerWidth, innerHeight } = window;
-    let width = innerWidth;
-    let height = (innerWidth * 9) / 16;
-    if (height > innerHeight) {
-        width = (innerHeight * 16) / 9;
-        height = innerHeight;
-    }
-    board.style.width = width + "px";
-    board.style.height = height + "px";
-}

@@ -1,10 +1,6 @@
-import EventEmitter from "eventemitter3";
 import shallowequal from "shallowequal";
-import type {
-    TeleBoxConfig,
-    TeleBoxRect,
-    TeleBoxState,
-} from "../TeleBox/typings";
+import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
+import type { TeleBoxRect, TeleBoxState } from "../TeleBox/typings";
 import { TeleBoxCollector } from "../TeleBoxCollector";
 import type { ReadonlyTeleBox } from "../TeleBox";
 import { TeleBox } from "../TeleBox";
@@ -13,7 +9,7 @@ import { TELE_BOX_MANAGER_EVENT } from "./constants";
 import type {
     TeleBoxManagerConfig,
     TeleBoxManagerCreateConfig,
-    TeleBoxManagerEvents,
+    TeleBoxManagerEventConfig,
     TeleBoxManagerQueryConfig,
     TeleBoxManagerUpdateConfig,
 } from "./typings";
@@ -21,23 +17,40 @@ import { MaxTitleBar } from "./MaxTitleBar";
 import type { TeleBoxColorScheme } from "..";
 import { TELE_BOX_COLOR_SCHEME, TELE_BOX_DELEGATE_EVENT } from "..";
 import { SideEffectManager } from "side-effect-manager";
-import type { ReadonlyVal, ValEnhancedResult } from "value-enhancer";
+import type {
+    ReadonlyVal,
+    ValEnhancedResult,
+    ReadonlyValEnhancedResult,
+} from "value-enhancer";
+import { withReadonlyValueEnhancer } from "value-enhancer";
 import { combine, Val, withValueEnhancer } from "value-enhancer";
+import Emittery from "emittery";
 
 export * from "./typings";
 export * from "./constants";
 
+const ResizeObserver = window.ResizeObserver || ResizeObserverPolyfill;
+
+type ReadonlyValConfig = {
+    darkMode: ReadonlyVal<boolean, boolean>;
+    state: ReadonlyVal<TeleBoxState, boolean>;
+    rootRect: Val<TeleBoxRect>;
+    stageRect: ReadonlyVal<TeleBoxRect>;
+};
+
 type ValConfig = {
     prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
-    containerRect: Val<TeleBoxRect, boolean>;
-    collector: Val<TeleBoxCollector | null>;
-    collectorRect: Val<TeleBoxRect | undefined>;
     readonly: Val<boolean, boolean>;
     minimized: Val<boolean, boolean>;
     maximized: Val<boolean, boolean>;
     fence: Val<boolean, boolean>;
+    stageRatio: Val<number, boolean>;
 };
-export interface TeleBoxManager extends ValEnhancedResult<ValConfig> {}
+
+type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
+    ReadonlyValEnhancedResult<ReadonlyValConfig>;
+
+export interface TeleBoxManager extends CombinedValEnhancedResult {}
 
 export class TeleBoxManager {
     public constructor({
@@ -46,20 +59,89 @@ export class TeleBoxManager {
         minimized = false,
         maximized = false,
         fence = true,
-        containerRect = {
-            x: 0,
-            y: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
-        },
         collector,
         namespace = "telebox",
         readonly = false,
+        stageRatio = -1,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
         this.root = root;
         this.namespace = namespace;
+
+        const readonly$ = new Val(readonly);
+        const minimized$ = new Val(minimized);
+        const maximized$ = new Val(maximized);
+        const fence$ = new Val(fence);
+        const stageRatio$ = new Val(stageRatio);
+
+        const rootRect$ = new Val<TeleBoxRect>(
+            {
+                x: 0,
+                y: 0,
+                width: window.innerWidth,
+                height: window.innerHeight,
+            },
+            { compare: shallowequal }
+        );
+        this._sideEffect.add(() => {
+            const observer = new ResizeObserver((entries) => {
+                this._sideEffect.setTimeout(
+                    // debounce
+                    () => {
+                        const rect = entries[0]?.contentRect;
+                        if (rect) {
+                            rootRect$.setValue({
+                                x: 0,
+                                y: 0,
+                                width: rect.width,
+                                height: rect.height,
+                            });
+                        }
+                    },
+                    50,
+                    "root-resize-observer"
+                );
+            });
+            observer.observe(root);
+            return () => observer.disconnect();
+        });
+
+        const stageRect$ = combine(
+            [rootRect$, stageRatio$],
+            ([rootRect, stageRatio]): TeleBoxRect => {
+                if (
+                    stageRatio <= 0 ||
+                    rootRect.width <= 0 ||
+                    rootRect.height <= 0
+                ) {
+                    return rootRect;
+                }
+
+                const preferredHeight = rootRect.width * stageRatio;
+                if (preferredHeight === rootRect.height) {
+                    return rootRect;
+                }
+
+                if (preferredHeight < rootRect.height) {
+                    return {
+                        x: 0,
+                        y: (rootRect.height - preferredHeight) / 2,
+                        width: rootRect.width,
+                        height: preferredHeight,
+                    };
+                }
+
+                const preferredWidth = rootRect.height / stageRatio;
+                return {
+                    x: (rootRect.width - preferredWidth) / 2,
+                    y: 0,
+                    width: preferredWidth,
+                    height: rootRect.height,
+                };
+            },
+            { compare: shallowequal }
+        );
 
         this.boxes$ = new Val<TeleBox[]>([]);
         this.topBox$ = new Val<TeleBox | undefined>(undefined);
@@ -76,26 +158,25 @@ export class TeleBoxManager {
             })
         );
 
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+        const prefersDarkMatch = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        );
         const prefersDark$ = new Val(false);
-
-        if (prefersDark) {
-            prefersDark$.setValue(prefersDark.matches);
+        if (prefersDarkMatch) {
+            prefersDark$.setValue(prefersDarkMatch.matches);
             this._sideEffect.add(() => {
                 const handler = (evt: MediaQueryListEvent): void => {
                     prefersDark$.setValue(evt.matches);
                 };
-                prefersDark.addEventListener("change", handler);
-                return () => prefersDark.removeEventListener("change", handler);
+                prefersDarkMatch.addEventListener("change", handler);
+                return () =>
+                    prefersDarkMatch.removeEventListener("change", handler);
             });
         }
 
         const prefersColorScheme$ = new Val(prefersColorScheme);
         this._sideEffect.addDisposer(
             prefersColorScheme$.reaction((prefersColorScheme, skipUpdate) => {
-                this.boxes.forEach((box) =>
-                    box.setPrefersColorScheme(prefersColorScheme, skipUpdate)
-                );
                 if (!skipUpdate) {
                     this.events.emit(
                         TELE_BOX_MANAGER_EVENT.PrefersColorScheme,
@@ -105,48 +186,12 @@ export class TeleBoxManager {
             })
         );
 
-        this._darkMode$ = combine(
+        const darkMode$ = combine(
             [prefersDark$, prefersColorScheme$],
             ([prefersDark, prefersColorScheme]) =>
                 prefersColorScheme === "auto"
                     ? prefersDark
                     : prefersColorScheme === "dark"
-        );
-        this._sideEffect.addDisposer(
-            this._darkMode$.reaction((darkMode, skipUpdate) => {
-                this.boxes.forEach((box) =>
-                    box.setDarkMode(darkMode, skipUpdate)
-                );
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
-                }
-            })
-        );
-
-        const readonly$ = new Val(readonly);
-        this._sideEffect.addDisposer(
-            readonly$.reaction((readonly, skipUpdate) => {
-                this.boxes.forEach((box) =>
-                    box.setReadonly(readonly, skipUpdate)
-                );
-            })
-        );
-
-        const minimized$ = new Val(minimized);
-
-        const maximized$ = new Val(maximized);
-        this._sideEffect.addDisposer(
-            maximized$.reaction((maximized, skipUpdate) => {
-                this.boxes.forEach((box) =>
-                    box.setMaximized(maximized, skipUpdate)
-                );
-                if (!skipUpdate) {
-                    this.events.emit(
-                        TELE_BOX_MANAGER_EVENT.Maximized,
-                        maximized
-                    );
-                }
-            })
         );
 
         const state$ = combine(
@@ -158,122 +203,37 @@ export class TeleBoxManager {
                     ? TELE_BOX_STATE.Maximized
                     : TELE_BOX_STATE.Normal
         );
-        this._sideEffect.addDisposer(
-            state$.reaction((state, skipUpdate) => {
-                this.maxTitleBar.setState(state);
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
-                }
-            })
-        );
 
-        const fence$ = new Val(fence);
-        this._sideEffect.addDisposer(
-            fence$.subscribe((fence, skipUpdate) => {
-                this.boxes.forEach((box) => box.setFence(fence, skipUpdate));
-            })
-        );
+        this.collector =
+            collector ??
+            new TeleBoxCollector({
+                minimized$: minimized$,
+                readonly$: readonly$,
+                darkMode$: darkMode$,
+                namespace,
+                root,
+                rootRect$,
+            });
 
-        const containerRect$ = new Val(containerRect, {
-            compare: shallowequal,
-        });
-        this._sideEffect.addDisposer(
-            containerRect$.reaction((containerRect, skipUpdate) => {
-                this.boxes.forEach((box) =>
-                    box.setContainerRect(containerRect, skipUpdate)
-                );
-                this.maxTitleBar.setContainerRect(containerRect);
-            })
-        );
-
-        const collector$ = new Val(
-            collector === null
-                ? null
-                : collector ||
-                  new TeleBoxCollector({
-                      visible: minimized,
-                      readonly: readonly,
-                      namespace,
-                  }).mount(root)
-        );
-        this._sideEffect.addDisposer(
-            collector$.subscribe((collector) => {
-                if (collector) {
-                    collector.setVisible(minimized$.value);
-                    collector.setReadonly(readonly$.value);
-                    collector.setDarkMode(this._darkMode$.value);
-                    this._sideEffect.add(() => {
-                        collector.onClick = () => {
-                            if (!readonly$.value) {
-                                minimized$.setValue(false);
-                            }
-                        };
-                        return () => collector.destroy();
-                    }, "collect-onClick");
-                }
-            })
-        );
-        this._sideEffect.addDisposer(
-            readonly$.subscribe((readonly) =>
-                collector$.value?.setReadonly(readonly)
-            )
-        );
-        this._sideEffect.addDisposer(
-            this._darkMode$.subscribe((darkMode) => {
-                collector$.value?.setDarkMode(darkMode);
-            })
-        );
-
-        const calcCollectorRect = (): TeleBoxRect | undefined => {
-            if (collector$.value?.$collector) {
-                const { x, y, width, height } =
-                    collector$.value.$collector.getBoundingClientRect();
-                const rootRect = this.root.getBoundingClientRect();
-                return {
-                    x: x - rootRect.x,
-                    y: y - rootRect.y,
-                    width,
-                    height,
-                };
-            }
-            return;
+        const readonlyValConfig: ReadonlyValConfig = {
+            darkMode: darkMode$,
+            state: state$,
+            rootRect: rootRect$,
+            stageRect: stageRect$,
         };
 
-        const collectorRect$ = new Val(
-            minimized$.value ? calcCollectorRect() : void 0
-        );
-        this._sideEffect.addDisposer(
-            collectorRect$.subscribe((collectorRect, skipUpdate) => {
-                this.boxes.forEach((box) => {
-                    box.setCollectorRect(collectorRect, skipUpdate);
-                });
-            })
-        );
+        withReadonlyValueEnhancer(this, readonlyValConfig);
 
-        this._sideEffect.addDisposer(
-            minimized$.subscribe((minimized, skipUpdate) => {
-                collector$.value?.setVisible(minimized);
+        const valConfig: ValConfig = {
+            prefersColorScheme: prefersColorScheme$,
+            readonly: readonly$,
+            fence: fence$,
+            minimized: minimized$,
+            maximized: maximized$,
+            stageRatio: stageRatio$,
+        };
 
-                if (minimized) {
-                    if (collector$.value?.$collector) {
-                        collectorRect$.setValue(calcCollectorRect());
-                    } else if (import.meta.env.DEV) {
-                        console.warn("No collector for minimized boxes.");
-                    }
-                }
-
-                this.boxes.forEach((box) =>
-                    box.setMinimized(minimized, skipUpdate)
-                );
-
-                if (!skipUpdate) {
-                    this.events.emit(
-                        TELE_BOX_MANAGER_EVENT.Minimized,
-                        minimized
-                    );
-                }
-            })
-        );
+        withValueEnhancer(this, valConfig);
 
         const closeBtnClassName = this.wrapClassName("titlebar-icon-close");
 
@@ -320,13 +280,13 @@ export class TeleBoxManager {
             true
         );
 
-        this.maxTitleBar = new MaxTitleBar({
-            darkMode: this.darkMode,
-            readonly: readonly$.value,
+        this.titleBar = new MaxTitleBar({
             namespace: this.namespace,
-            state: state$.value,
-            boxes: this.boxes$.value,
-            containerRect: containerRect$.value,
+            boxes$: this.boxes$,
+            darkMode$: darkMode$,
+            readonly$: readonly$,
+            state$: state$,
+            rootRect$: rootRect$,
             onEvent: (event): void => {
                 switch (event.type) {
                     case TELE_BOX_DELEGATE_EVENT.Maximize: {
@@ -348,38 +308,37 @@ export class TeleBoxManager {
                 }
             },
         });
-        this._sideEffect.addDisposer(
-            readonly$.subscribe((readonly) =>
-                this.maxTitleBar.setReadonly(readonly)
-            )
-        );
-        this._sideEffect.addDisposer(
-            this._darkMode$.subscribe((darkMode) => {
-                this.maxTitleBar.setDarkMode(darkMode);
-            })
-        );
-        this._sideEffect.addDisposer(
-            this.boxes$.reaction((boxes) => {
-                this.maxTitleBar.setBoxes(boxes);
-            })
-        );
 
-        const valConfig: ValConfig = {
-            prefersColorScheme: prefersColorScheme$,
-            containerRect: containerRect$,
-            collector: collector$,
-            collectorRect: collectorRect$,
-            readonly: readonly$,
-            fence: fence$,
-            minimized: minimized$,
-            maximized: maximized$,
-        };
+        this.root.appendChild(this.titleBar.render());
 
-        withValueEnhancer(this, valConfig);
-
-        this._state$ = state$;
-
-        this.root.appendChild(this.maxTitleBar.render());
+        this._sideEffect.addDisposer([
+            state$.reaction((state, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.State, state);
+                }
+            }),
+            maximized$.reaction((maximized, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.Maximized,
+                        maximized
+                    );
+                }
+            }),
+            minimized$.reaction((minimized, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(
+                        TELE_BOX_MANAGER_EVENT.Minimized,
+                        minimized
+                    );
+                }
+            }),
+            darkMode$.reaction((darkMode, skipUpdate) => {
+                if (!skipUpdate) {
+                    this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
+                }
+            }),
+        ]);
     }
 
     public get boxes(): ReadonlyArray<TeleBox> {
@@ -390,25 +349,16 @@ export class TeleBoxManager {
         return this.topBox$.value;
     }
 
-    public readonly events = new EventEmitter() as TeleBoxManagerEvents;
+    public readonly events = new Emittery<
+        TeleBoxManagerEventConfig,
+        TeleBoxManagerEventConfig
+    >();
 
     protected _sideEffect: SideEffectManager;
 
     protected root: HTMLElement;
 
     public readonly namespace: string;
-
-    public _darkMode$: ReadonlyVal<boolean, boolean>;
-
-    public get darkMode(): boolean {
-        return this._darkMode$.value;
-    }
-
-    public _state$: ReadonlyVal<TeleBoxState, boolean>;
-
-    public get state(): TeleBoxState {
-        return this._state$.value;
-    }
 
     /** @deprecated use setMaximized and setMinimized instead */
     public setState(state: TeleBoxState, skipUpdate = false): this {
@@ -438,16 +388,16 @@ export class TeleBoxManager {
     ): ReadonlyTeleBox {
         const box = new TeleBox({
             zIndex: this.topBox ? this.topBox.zIndex + 1 : 100,
-            ...(smartPosition ? this.smartPosition(config) : config),
-            darkMode: this.darkMode,
-            prefersColorScheme: this.prefersColorScheme,
-            maximized: this.maximized,
-            minimized: this.minimized,
-            fence: this.fence,
+            ...config,
+            ...(smartPosition ? this.smartPosition(config) : {}),
+            darkMode$: this._darkMode$,
+            maximized$: this._maximized$,
+            minimized$: this._minimized$,
+            fence$: this._fence$,
             namespace: this.namespace,
-            containerRect: this.containerRect,
-            readonly: this.readonly,
-            collectorRect: this.collectorRect,
+            containerRect$: this._stageRect$,
+            readonly$: this._readonly$,
+            collectorRect$: this.collector._rect$,
         });
 
         box.mount(this.root);
@@ -461,38 +411,32 @@ export class TeleBoxManager {
 
         this.boxes$.setValue([...this.boxes, box]);
 
-        box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Maximize, () => {
-            this.setMaximized(!this.maximized);
-        });
-        box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Minimize, () => {
-            this.setMinimized(true);
-        });
-        box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Close, () => {
-            this.remove(box);
-            this.focusTopBox();
-        });
-        this._sideEffect.addDisposer(
+        this._sideEffect.addDisposer([
+            box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Maximize, () => {
+                this.setMaximized(!this.maximized);
+            }),
+            box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Minimize, () => {
+                this.setMinimized(true);
+            }),
+            box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Close, () => {
+                this.remove(box);
+                this.focusTopBox();
+            }),
             box._coord$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
                 }
-            })
-        );
-        this._sideEffect.addDisposer(
+            }),
             box._size$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
                 }
-            })
-        );
-        this._sideEffect.addDisposer(
+            }),
             box._intrinsicCoord$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
                 }
-            })
-        );
-        this._sideEffect.addDisposer(
+            }),
             box._intrinsicSize$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(
@@ -500,16 +444,12 @@ export class TeleBoxManager {
                         box
                     );
                 }
-            })
-        );
-        this._sideEffect.addDisposer(
+            }),
             box._visualSize$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
                 }
-            })
-        );
-        this._sideEffect.addDisposer(
+            }),
             box._zIndex$.reaction((_, skipUpdate) => {
                 if (this.boxes.length > 0) {
                     const topBox = this.boxes.reduce((topBox, box) =>
@@ -520,8 +460,9 @@ export class TeleBoxManager {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.ZIndex, box);
                 }
-            })
-        );
+            }),
+        ]);
+
         this.events.emit(TELE_BOX_MANAGER_EVENT.Created, box);
 
         return box;
@@ -605,16 +546,11 @@ export class TeleBoxManager {
     }
 
     public destroy(skipUpdate = false): void {
-        this.events.removeAllListeners();
+        this.events.clearListeners();
         this._sideEffect.flushAll();
         this.removeAll(skipUpdate);
-
-        Object.keys(this).forEach((key) => {
-            const value = this[key as keyof this];
-            if (value instanceof Val) {
-                value.destroy();
-            }
-        });
+        this.collector.destroy();
+        this.titleBar.destroy();
     }
 
     public wrapClassName(className: string): string {
@@ -629,7 +565,7 @@ export class TeleBoxManager {
                     let focusChanged = false;
                     if (!targetBox.focus) {
                         focusChanged = true;
-                        targetBox.setFocus(true, skipUpdate);
+                        targetBox._focus$.setValue(true, skipUpdate);
                     }
                     if (focusChanged && !skipUpdate) {
                         this.events.emit(
@@ -641,7 +577,7 @@ export class TeleBoxManager {
                     this.blurBox(box, skipUpdate);
                 }
             });
-            this.maxTitleBar.focusBox(targetBox);
+            this.titleBar.focusBox(targetBox);
         }
     }
 
@@ -655,13 +591,13 @@ export class TeleBoxManager {
         const targetBox = this.getBox(boxOrID);
         if (targetBox) {
             if (targetBox.focus) {
-                targetBox.setFocus(false, skipUpdate);
+                targetBox._focus$.setValue(false, skipUpdate);
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.Blurred, targetBox);
                 }
             }
-            if (this.maxTitleBar.focusedBox === targetBox) {
-                this.maxTitleBar.focusBox();
+            if (this.titleBar.focusedBox === targetBox) {
+                this.titleBar.focusBox();
             }
         }
     }
@@ -669,18 +605,19 @@ export class TeleBoxManager {
     public blurAll(skipUpdate = false): void {
         this.boxes.forEach((box) => {
             if (box.focus) {
-                box.setFocus(false, skipUpdate);
+                box._focus$.setValue(false, skipUpdate);
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.Blurred, box);
                 }
             }
         });
-        if (this.maxTitleBar.focusedBox) {
-            this.maxTitleBar.focusBox();
+        if (this.titleBar.focusedBox) {
+            this.titleBar.focusBox();
         }
     }
 
-    protected maxTitleBar: MaxTitleBar;
+    public collector: TeleBoxCollector;
+    public titleBar: MaxTitleBar;
 
     protected boxes$: Val<TeleBox[]>;
     protected topBox$: Val<TeleBox | undefined>;
@@ -702,42 +639,35 @@ export class TeleBoxManager {
     ): void {
         if (config.x != null || config.y != null) {
             box.move(
-                config.x == null ? box.intrinsicX : config.x,
-                config.y == null ? box.intrinsicY : config.y,
+                config.x ?? box.intrinsicX,
+                config.y ?? box.intrinsicY,
                 skipUpdate
             );
         }
         if (config.width != null || config.height != null) {
             box.resize(
-                config.width == null ? box.intrinsicWidth : config.width,
-                config.height == null ? box.intrinsicHeight : config.height,
+                config.width ?? box.intrinsicWidth,
+                config.height ?? box.intrinsicHeight,
                 skipUpdate
             );
         }
         if (config.title != null) {
-            box.setTitle(config.title);
-            this.maxTitleBar.updateTitles();
+            box._title$.setValue(config.title);
         }
         if (config.visible != null) {
-            box.setVisible(config.visible, skipUpdate);
-        }
-        if (config.minHeight != null) {
-            box.setMinHeight(config.minHeight, skipUpdate);
-        }
-        if (config.minWidth != null) {
-            box.setMinWidth(config.minWidth, skipUpdate);
+            box._visible$.setValue(config.visible, skipUpdate);
         }
         if (config.resizable != null) {
-            box.setResizable(config.resizable, skipUpdate);
+            box._resizable$.setValue(config.resizable, skipUpdate);
         }
         if (config.draggable != null) {
-            box.setDraggable(config.draggable, skipUpdate);
+            box._draggable$.setValue(config.draggable, skipUpdate);
         }
         if (config.fixRatio != null) {
-            box.setFixRatio(config.fixRatio, skipUpdate);
+            box._fixRatio$.setValue(config.fixRatio, skipUpdate);
         }
         if (config.zIndex != null) {
-            box.setZIndex(config.zIndex, skipUpdate);
+            box._zIndex$.setValue(config.zIndex, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);
@@ -745,52 +675,56 @@ export class TeleBoxManager {
         if (config.footer != null) {
             box.mountFooter(config.footer);
         }
+        if (config.minHeight != null || config.minWidth != null) {
+            box._minSize$.setValue(
+                {
+                    width: config.minWidth ?? box.minWidth,
+                    height: config.minHeight ?? box.minHeight,
+                },
+                skipUpdate
+            );
+        }
     }
 
-    protected smartPosition(config: TeleBoxConfig = {}): TeleBoxConfig {
-        let { x, y } = config;
-        const { width = 0.5, height = 0.5 } = config;
+    protected smartPosition(rect: Partial<TeleBoxRect>): TeleBoxRect {
+        let { x, y } = rect;
+        const { width = 0.5, height = 0.5 } = rect;
+        const stageRect = this.stageRect;
+        const topBox = this.topBox;
 
         if (x == null) {
             let vx = 20;
-            if (this.topBox) {
-                vx = this.topBox.intrinsicX * this.containerRect.width + 20;
+            if (topBox) {
+                vx = topBox.intrinsicX * stageRect.width + 20;
 
-                if (
-                    vx >
-                    this.containerRect.width - width * this.containerRect.width
-                ) {
+                if (vx > stageRect.width - width * stageRect.width) {
                     vx = 20;
                 }
             }
-            x = vx / this.containerRect.width;
+            x = vx / stageRect.width;
         }
 
         if (y == null) {
             let vy = 20;
 
-            if (this.topBox) {
-                vy = this.topBox.intrinsicY * this.containerRect.height + 20;
+            if (topBox) {
+                vy = topBox.intrinsicY * stageRect.height + 20;
 
-                if (
-                    vy >
-                    this.containerRect.height -
-                        height * this.containerRect.height
-                ) {
+                if (vy > stageRect.height - height * stageRect.height) {
                     vy = 20;
                 }
             }
 
-            y = vy / this.containerRect.height;
+            y = vy / stageRect.height;
         }
 
-        return { ...config, x, y, width, height };
+        return { x, y, width, height };
     }
 
     protected makeBoxTop(box: TeleBox, skipUpdate = false): void {
         if (this.topBox) {
             if (box !== this.topBox) {
-                box.setZIndex(this.topBox.zIndex + 1, skipUpdate);
+                box._zIndex$.setValue(this.topBox.zIndex + 1, skipUpdate);
             }
         }
     }

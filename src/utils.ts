@@ -15,12 +15,6 @@ export function flattenEvent(ev: MouseEvent | TouchEvent): MouseEvent | Touch {
         : (ev as MouseEvent);
 }
 
-export function genUniqueKey(): string {
-    return (
-        Date.now().toString().slice(6) + Math.random().toString().slice(2, 8)
-    );
-}
-
 export function getRandomInt(min: number, max: number): number {
     min = Math.ceil(min);
     max = Math.floor(max);

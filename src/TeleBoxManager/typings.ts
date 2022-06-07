@@ -1,25 +1,26 @@
-import type EventEmitter from "eventemitter3";
 import type { TeleBoxColorScheme } from "..";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
-import type { TeleBoxConfig } from "../TeleBox/typings";
+import type { TeleBoxConfig, TeleBoxRect } from "../TeleBox/typings";
 import type { TeleBoxCollector } from "../TeleBoxCollector";
 import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 
-export interface TeleBoxManagerConfig
-    extends Pick<
-        TeleBoxConfig,
-        | "prefersColorScheme"
-        | "fence"
-        | "containerRect"
-        | "maximized"
-        | "minimized"
-        | "namespace"
-        | "readonly"
-    > {
+export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     /** Element to mount boxes. */
     root?: HTMLElement;
+    /** Stage area height/with ratio. No ratio if <= 0. Default -1. */
+    stageRatio?: number;
     /** Where the minimized boxes go. */
     collector?: TeleBoxCollector;
+    /** Restrict box to always be within the containing area. Default true. */
+    fence?: boolean;
+    /** Prefers Box color scheme. Default light. */
+    prefersColorScheme?: TeleBoxColorScheme;
+    /** Maximize box. Default false. */
+    readonly maximized?: boolean;
+    /** Minimize box. Overwrites maximized state. Default false. */
+    readonly minimized?: boolean;
+    /** Is box readonly */
+    readonly readonly?: boolean;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
@@ -56,41 +57,21 @@ type CheckTeleBoxManagerConfig<
 > = T;
 
 export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
-    focused: [ReadonlyTeleBox | undefined];
-    blurred: [ReadonlyTeleBox | undefined];
-    created: [ReadonlyTeleBox];
-    removed: [ReadonlyTeleBox[]];
-    state: [TeleBoxState];
-    maximized: [boolean];
-    minimized: [boolean];
-    move: [ReadonlyTeleBox];
-    resize: [ReadonlyTeleBox];
-    intrinsic_move: [ReadonlyTeleBox];
-    intrinsic_resize: [ReadonlyTeleBox];
-    visual_resize: [ReadonlyTeleBox];
-    z_index: [ReadonlyTeleBox];
-    prefers_color_scheme: [TeleBoxColorScheme];
-    dark_mode: [boolean];
+    focused: ReadonlyTeleBox | undefined;
+    blurred: ReadonlyTeleBox | undefined;
+    created: ReadonlyTeleBox;
+    removed: ReadonlyTeleBox[];
+    state: TeleBoxState;
+    maximized: boolean;
+    minimized: boolean;
+    move: ReadonlyTeleBox;
+    resize: ReadonlyTeleBox;
+    intrinsic_move: ReadonlyTeleBox;
+    intrinsic_resize: ReadonlyTeleBox;
+    visual_resize: ReadonlyTeleBox;
+    z_index: ReadonlyTeleBox;
+    prefers_color_scheme: TeleBoxColorScheme;
+    dark_mode: boolean;
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;
-
-export interface TeleBoxManagerEvents
-    extends EventEmitter<TeleBoxManagerEvent> {
-    on<U extends TeleBoxManagerEvent>(
-        event: U,
-        listener: (...value: TeleBoxManagerEventConfig[U]) => void
-    ): this;
-    once<U extends TeleBoxManagerEvent>(
-        event: U,
-        listener: (...value: TeleBoxManagerEventConfig[U]) => void
-    ): this;
-    addListener<U extends TeleBoxManagerEvent>(
-        event: U,
-        listener: (...value: TeleBoxManagerEventConfig[U]) => void
-    ): this;
-    emit<U extends TeleBoxManagerEvent>(
-        event: U,
-        ...value: TeleBoxManagerEventConfig[U]
-    ): boolean;
-}

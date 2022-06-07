@@ -1,187 +1,165 @@
 import "./style.scss";
 import collectorSVG from "./icons/collector.svg";
 import type { TeleStyles } from "../typings";
+import type {
+    ReadonlyVal,
+    ReadonlyValEnhancedResult,
+    ValEnhancedResult,
+} from "value-enhancer";
+import { withValueEnhancer } from "value-enhancer";
+import { combine } from "value-enhancer";
+import { Val } from "value-enhancer";
+import { withReadonlyValueEnhancer } from "value-enhancer";
+import { SideEffectManager } from "side-effect-manager";
+import type { TeleBoxRect } from "../TeleBox/typings";
 
 export interface TeleBoxCollectorConfig {
-    visible?: boolean;
-    readonly?: boolean;
-    darkMode?: boolean;
     namespace?: string;
     styles?: TeleStyles;
-    onClick?: () => void;
+    root?: HTMLElement;
+    minimized$: Val<boolean>;
+    readonly$: ReadonlyVal<boolean>;
+    darkMode$: ReadonlyVal<boolean>;
+    rootRect$: ReadonlyVal<TeleBoxRect>;
 }
+
+type ValConfig = {
+    styles: Val<TeleStyles>;
+    root: Val<HTMLElement | undefined>;
+    el: Val<HTMLElement>;
+};
+
+type ReadonlyValConfig = {
+    rect: ReadonlyVal<TeleBoxRect | undefined>;
+    visible: ReadonlyVal<boolean>;
+};
+
+type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
+    ReadonlyValEnhancedResult<ReadonlyValConfig>;
+
+export interface TeleBoxCollector extends CombinedValEnhancedResult {}
 
 export class TeleBoxCollector {
     public constructor({
-        visible = true,
-        readonly = false,
-        darkMode = false,
+        minimized$,
+        readonly$,
+        darkMode$,
+        rootRect$,
         namespace = "telebox",
         styles = {},
-        onClick,
-    }: TeleBoxCollectorConfig = {}) {
-        this._visible = visible;
-        this._readonly = readonly;
-        this._darkMode = darkMode;
+        root,
+    }: TeleBoxCollectorConfig) {
         this.namespace = namespace;
-        this.styles = styles;
-        this.onClick = onClick;
-    }
 
-    public readonly styles: TeleStyles;
+        const rect$ = new Val<TeleBoxRect | undefined>(void 0);
+        const visible$ = minimized$;
+        const styles$ = new Val(styles);
+        const root$ = new Val(root);
+        const el$ = new Val<HTMLElement>(document.createElement("button"));
+
+        const valConfig: ValConfig = {
+            styles: styles$,
+            root: root$,
+            el: el$,
+        };
+
+        withValueEnhancer(this, valConfig);
+
+        const readonlyValConfig: ReadonlyValConfig = {
+            rect: rect$,
+            visible: visible$,
+        };
+
+        withReadonlyValueEnhancer(this, readonlyValConfig);
+
+        el$.value.className = this.wrapClassName("collector");
+        el$.value.style.backgroundImage = `url('${collectorSVG}')`;
+
+        this._sideEffect.addDisposer(
+            el$.subscribe(($collector) => {
+                this._sideEffect.addEventListener(
+                    $collector,
+                    "click",
+                    () => {
+                        if (!readonly$.value) {
+                            minimized$.setValue(false);
+                        }
+                    },
+                    {},
+                    "telebox-collector-click"
+                );
+
+                this._sideEffect.addDisposer(
+                    [
+                        visible$.subscribe((visible) => {
+                            $collector.classList.toggle(
+                                this.wrapClassName("collector-visible"),
+                                visible
+                            );
+                        }),
+                        readonly$.subscribe((readonly) => {
+                            $collector.classList.toggle(
+                                this.wrapClassName("collector-readonly"),
+                                readonly
+                            );
+                        }),
+                        darkMode$.subscribe((darkMode) => {
+                            $collector.classList.toggle(
+                                this.wrapClassName("color-scheme-dark"),
+                                darkMode
+                            );
+                            $collector.classList.toggle(
+                                this.wrapClassName("color-scheme-light"),
+                                !darkMode
+                            );
+                        }),
+                        styles$.subscribe((styles) => {
+                            Object.keys(styles).forEach((key) => {
+                                const value = styles[
+                                    key as keyof TeleStyles
+                                ] as string;
+                                if (value != null) {
+                                    $collector.style[key as keyof TeleStyles] =
+                                        value;
+                                }
+                            });
+                        }),
+                        root$.subscribe((root) => {
+                            if (root) {
+                                root.appendChild($collector);
+                            }
+                        }),
+                        // Place after $collector appended to the DOM so that rect calc works
+                        combine([minimized$, rootRect$, root$]).subscribe(
+                            ([minimized, rootRect, root]) => {
+                                if (minimized && root) {
+                                    const { x, y, width, height } =
+                                        $collector.getBoundingClientRect();
+                                    rect$.setValue({
+                                        x: x - rootRect.x,
+                                        y: y - rootRect.y,
+                                        width,
+                                        height,
+                                    });
+                                }
+                            }
+                        ),
+                    ],
+                    "telebox-collector-el"
+                );
+            })
+        );
+    }
 
     public readonly namespace: string;
 
-    public get visible(): boolean {
-        return this._visible;
-    }
-
-    public get readonly(): boolean {
-        return this._readonly;
-    }
-
-    public get darkMode(): boolean {
-        return this._darkMode;
-    }
-
-    public onClick: (() => void) | undefined;
-
-    public $collector: HTMLElement | undefined;
-
-    /**
-     * Mount collector to a root element.
-     */
-    public mount(root: HTMLElement): this {
-        root.appendChild(this.render());
-        return this;
-    }
-
-    /**
-     * Unmount collector from the root element.
-     */
-    public unmount(): this {
-        if (this.$collector) {
-            this.$collector.remove();
-        }
-        return this;
-    }
-
-    public setVisible(visible: boolean): this {
-        if (this._visible !== visible) {
-            this._visible = visible;
-            if (this.$collector) {
-                this.$collector.classList.toggle(
-                    this.wrapClassName("collector-visible"),
-                    visible
-                );
-            }
-        }
-        return this;
-    }
-
-    public setReadonly(readonly: boolean): this {
-        if (this._readonly !== readonly) {
-            this._readonly = readonly;
-            if (this.$collector) {
-                this.$collector.classList.toggle(
-                    this.wrapClassName("collector-readonly"),
-                    readonly
-                );
-            }
-        }
-        return this;
-    }
-
-    public setDarkMode(darkMode: boolean): this {
-        if (this._darkMode !== darkMode) {
-            this._darkMode = darkMode;
-            if (this.$collector) {
-                this.$collector.classList.toggle(
-                    this.wrapClassName("color-scheme-dark"),
-                    darkMode
-                );
-                this.$collector.classList.toggle(
-                    this.wrapClassName("color-scheme-light"),
-                    !darkMode
-                );
-            }
-        }
-        return this;
-    }
-
-    public setStyles(styles: TeleStyles): this {
-        Object.assign(this.styles, styles);
-        if (this.$collector) {
-            const $collector = this.$collector;
-            Object.keys(styles).forEach((key) => {
-                const value = styles[key as keyof TeleStyles] as string;
-                if (value != null) {
-                    $collector.style[key as keyof TeleStyles] = value;
-                }
-            });
-        }
-        return this;
-    }
-
-    public render(): HTMLElement {
-        if (!this.$collector) {
-            this.$collector = document.createElement("button");
-            this.$collector.className = this.wrapClassName("collector");
-            this.$collector.style.backgroundImage = `url('${collectorSVG}')`;
-            this.$collector.addEventListener(
-                "click",
-                this.handleCollectorClick
-            );
-
-            if (this._visible) {
-                this.$collector.classList.add(
-                    this.wrapClassName("collector-visible")
-                );
-            }
-
-            if (this._readonly) {
-                this.$collector.classList.add(
-                    this.wrapClassName("collector-readonly")
-                );
-            }
-
-            this.$collector.classList.add(
-                this.wrapClassName(
-                    this._darkMode ? "color-scheme-dark" : "color-scheme-light"
-                )
-            );
-
-            this.setStyles(this.styles);
-        }
-
-        return this.$collector;
-    }
+    protected readonly _sideEffect = new SideEffectManager();
 
     public destroy(): void {
-        if (this.$collector) {
-            this.$collector.removeEventListener(
-                "click",
-                this.handleCollectorClick
-            );
-            this.$collector.remove();
-            this.$collector = void 0;
-        }
-        this.onClick = void 0;
+        this._sideEffect.flushAll();
     }
 
     public wrapClassName(className: string): string {
         return `${this.namespace}-${className}`;
     }
-
-    protected _visible: boolean;
-
-    protected _readonly: boolean;
-
-    protected _darkMode: boolean;
-
-    protected handleCollectorClick = (): void => {
-        if (!this._readonly && this.onClick) {
-            this.onClick();
-        }
-    };
 }

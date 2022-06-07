@@ -1,3 +1,4 @@
+import type { ReadonlyVal } from "value-enhancer";
 import type { TeleBoxDelegateEventConfig, TeleBoxState } from "../TeleBox";
 
 export type TeleTitleBarEvent<U = keyof TeleBoxDelegateEventConfig> =
@@ -8,22 +9,15 @@ export type TeleTitleBarEvent<U = keyof TeleBoxDelegateEventConfig> =
         : never;
 
 export interface TeleTitleBarConfig {
-    readonly?: boolean;
+    readonly$: ReadonlyVal<boolean, boolean>;
     title?: string;
-    state?: TeleBoxState;
+    state$: ReadonlyVal<TeleBoxState, boolean>;
     namespace?: string;
     onEvent?: (event: TeleTitleBarEvent) => void;
     onDragStart?: (event: MouseEvent | TouchEvent) => void;
 }
 
 export interface TeleTitleBar {
-    setTitle(title: string): void;
-
-    setState(state: TeleBoxState): void;
-
-    setReadonly(readonly: boolean): void;
-
     render(): HTMLElement;
-
     destroy(): void;
 }

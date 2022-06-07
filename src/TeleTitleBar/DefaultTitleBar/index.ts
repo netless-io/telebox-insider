@@ -14,6 +14,7 @@ import type {
     TeleTitleBarEvent,
 } from "../typings";
 import { preventEvent } from "../../utils";
+import { Val } from "value-enhancer";
 
 export type DefaultTitleBarButton = TeleTitleBarEvent & {
     readonly iconClassName: string;
@@ -26,20 +27,20 @@ export interface DefaultTitleBarConfig extends TeleTitleBarConfig {
 
 export class DefaultTitleBar implements TeleTitleBar {
     public constructor({
-        readonly = false,
-        title,
+        readonly$,
+        state$,
+        title = "",
         buttons,
         onEvent,
         onDragStart,
         namespace = "telebox",
-        state = TELE_BOX_STATE.Normal,
-    }: DefaultTitleBarConfig = {}) {
-        this.readonly = readonly;
+    }: DefaultTitleBarConfig) {
+        this.readonly$ = readonly$;
+        this.state$ = state$;
+        this.title$ = new Val(title);
         this.onEvent = onEvent;
         this.onDragStart = onDragStart;
         this.namespace = namespace;
-        this.title = title;
-        this.state = state;
 
         this.buttons = buttons || [
             {
@@ -64,37 +65,14 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public $titleBar: HTMLElement | undefined;
 
-    public $title: HTMLElement | undefined;
-
     public $dragArea: HTMLElement;
 
+    public get title(): string {
+        return this.title$.value;
+    }
+
     public setTitle(title: string): void {
-        this.title = title;
-        if (this.$title) {
-            this.$title.textContent = title;
-            this.$title.title = title;
-        }
-    }
-
-    public setState(state: TeleBoxState): void {
-        if (this.state !== state) {
-            this.state = state;
-
-            this.buttons.forEach((btn, i) => {
-                if (btn.isActive) {
-                    this.$btns[i].classList.toggle(
-                        "is-active",
-                        btn.isActive(state)
-                    );
-                }
-            });
-        }
-    }
-
-    public setReadonly(readonly: boolean): void {
-        if (this.readonly !== readonly) {
-            this.readonly = readonly;
-        }
+        this.title$.setValue(title);
     }
 
     public render(): HTMLElement {
@@ -106,21 +84,17 @@ export class DefaultTitleBar implements TeleTitleBar {
             $titleArea.className = this.wrapClassName("title-area");
             $titleArea.dataset.teleBoxHandle = TeleBoxDragHandleType;
 
-            this.$title = document.createElement("h1");
-            this.$title.className = this.wrapClassName("title");
-            this.$title.dataset.teleBoxHandle = TeleBoxDragHandleType;
-            if (this.title) {
-                this.$title.textContent = this.title;
-                this.$title.title = this.title;
-            }
+            const $title = document.createElement("h1");
+            $title.className = this.wrapClassName("title");
+            $title.dataset.teleBoxHandle = TeleBoxDragHandleType;
 
-            $titleArea.appendChild(this.$title);
+            $titleArea.appendChild($title);
             $titleArea.appendChild(this.$dragArea);
 
             const $buttonsContainer = document.createElement("div");
             $buttonsContainer.className = this.wrapClassName("titlebar-btns");
 
-            this.buttons.forEach(({ iconClassName, isActive }, i) => {
+            this.buttons.forEach(({ iconClassName }, i) => {
                 const teleTitleBarBtnIndex = String(i);
 
                 const $btn = document.createElement("button");
@@ -129,21 +103,36 @@ export class DefaultTitleBar implements TeleTitleBar {
                 )} ${iconClassName}`;
                 $btn.dataset.teleTitleBarBtnIndex = teleTitleBarBtnIndex;
                 $btn.dataset.teleTitleBarNoDblClick = "true";
-
-                if (isActive) {
-                    $btn.classList.toggle("is-active", isActive(this.state));
-                }
-
-                this.$btns.push($btn);
-
                 $buttonsContainer.appendChild($btn);
             });
+
+            this.sideEffect.addDisposer(
+                this.title$.subscribe((title) => {
+                    $title.textContent = title;
+                    $title.title = title;
+                }),
+                "render-title"
+            );
+
+            this.sideEffect.addDisposer(
+                this.state$.subscribe((state) => {
+                    this.buttons.forEach((btn, i) => {
+                        if (btn.isActive) {
+                            $buttonsContainer.children[i]?.classList.toggle(
+                                "is-active",
+                                btn.isActive(state)
+                            );
+                        }
+                    });
+                }),
+                "render-state-btns"
+            );
 
             this.sideEffect.addEventListener(
                 $buttonsContainer,
                 "click",
                 (ev) => {
-                    if (this.readonly) {
+                    if (this.readonly$.value) {
                         return;
                     }
                     const target = ev.target as HTMLElement;
@@ -163,7 +152,9 @@ export class DefaultTitleBar implements TeleTitleBar {
                             } as TeleTitleBarEvent);
                         }
                     }
-                }
+                },
+                {},
+                "render-btns-container-click"
             );
 
             this.$titleBar.appendChild($titleArea);
@@ -203,8 +194,6 @@ export class DefaultTitleBar implements TeleTitleBar {
         this.sideEffect.flushAll();
         if (this.$titleBar) {
             this.$titleBar = void 0;
-            this.$title = void 0;
-            this.$btns.length = 0;
             this.onDragStart = void 0;
             this.onEvent = void 0;
         }
@@ -214,15 +203,13 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public onDragStart?: TeleTitleBarConfig["onDragStart"];
 
-    protected readonly: boolean;
+    protected readonly$: TeleTitleBarConfig["readonly$"];
 
-    protected title?: string;
+    protected title$: Val<string>;
 
     protected buttons: ReadonlyArray<DefaultTitleBarButton>;
 
-    protected state: TeleBoxState;
-
-    protected $btns: HTMLButtonElement[] = [];
+    protected state$: TeleTitleBarConfig["state$"];
 
     protected sideEffect = new SideEffectManager();
 
@@ -233,7 +220,7 @@ export class DefaultTitleBar implements TeleTitleBar {
     };
 
     protected handleTitleBarClick = (ev: MouseEvent): void => {
-        if (this.readonly) {
+        if (this.readonly$.value) {
             return;
         }
 
@@ -273,7 +260,7 @@ export class DefaultTitleBar implements TeleTitleBar {
     };
 
     protected handleTitleBarTouch = (ev: TouchEvent): void => {
-        if (this.readonly) {
+        if (this.readonly$.value) {
             return;
         }
 

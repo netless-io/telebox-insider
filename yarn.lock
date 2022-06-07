@@ -213,6 +213,11 @@
   resolved "https://registry.npmjs.org/@humanwhocodes/object-schema/-/object-schema-1.2.0.tgz"
   integrity sha512-wdppn25U8z/2yiaT6YGquE6X8sSv7hNMWSXYSSU1jGv/yd6XqjXgTDJ8KP4NgjTXfJ3GbRjeeb8RTV7a/VpM+w==
 
+"@juggle/resize-observer@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
+  integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
+
 "@netless/eslint-plugin@^1.1.2":
   version "1.1.4"
   resolved "https://registry.npmjs.org/@netless/eslint-plugin/-/eslint-plugin-1.1.4.tgz"
@@ -795,6 +800,11 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
+emittery@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/emittery/-/emittery-0.11.0.tgz#eb5f756a200d3431de2c6e850cb2d8afd97a03b9"
+  integrity sha512-S/7tzL6v5i+4iJd627Nhv9cLFIo5weAIlGccqJFpnBoDB8U1TF2k5tez4J/QNuxyyhWuFqHg1L84Kd3m7iXg6g==
+
 emoji-regex@^8.0.0:
   version "8.0.0"
   resolved "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz"
@@ -1053,11 +1063,6 @@ esutils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.npmjs.org/esutils/-/esutils-2.0.3.tgz"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
-
-eventemitter3@^4.0.7:
-  version "4.0.7"
-  resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-4.0.7.tgz"
-  integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
 execa@^4.1.0:
   version "4.1.0"
@@ -2184,10 +2189,10 @@ side-channel@^1.0.4:
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
 
-side-effect-manager@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-1.0.0.tgz#de67cd9aea9bdf220ec6118e93f243e8c1dcdcd4"
-  integrity sha512-tOAr9RzC9J4T8+lon+JLpXSYPJZfvXU/+HwDzR42rjXyL479lnxOuIOoD9GpiA9eg4Xz/xhdQ2+lGTDMTWtTUw==
+side-effect-manager@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-1.1.0.tgz#9bbb3d6fb7254c2c47ffe1f941f1bb931946a588"
+  integrity sha512-Gqy1tsBBYcKclLPIGDxMQiZJLM8CGdGg/DM3a5/8ic2x2A19rVUhVk/+Mt5RwNbpaNKmBPO/wxxzAnY2myQVTg==
 
 signal-exit@^3.0.2:
   version "3.0.3"
@@ -2431,10 +2436,10 @@ v8-compile-cache@^2.0.3:
   resolved "https://registry.npmjs.org/v8-compile-cache/-/v8-compile-cache-2.3.0.tgz"
   integrity sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==
 
-value-enhancer@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-1.0.4.tgz#a80ee0c6fd3ad1445c11af16a52f89f74aca6222"
-  integrity sha512-EyKc3qBpEplFhcJkCRQiQ32KvzyuJE9g8ZTxfXBZUfK6akznJNyO5jmwy1MRQOlXuwMs98v//bqtTfbLNKcygA==
+value-enhancer@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-1.1.1.tgz#051d99023a433e1a2722daa06f1e537a3b0bbe98"
+  integrity sha512-GdmQY+xvMCetOzMFoKQLf+2Kwgsbg0B/bB7Dvua+A9R55RYmprOc5felVsIMPsj2Quu5paLqE1c0VN4dfT2zqA==
 
 vite@^2.4.4:
   version "2.4.4"

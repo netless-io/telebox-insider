@@ -1,17 +1,16 @@
 import "./style.scss";
 
-import EventEmitter from "eventemitter3";
+import Emittery from "emittery";
 import styler from "stylefire";
 import shallowequal from "shallowequal";
-import { SideEffectManager } from "side-effect-manager";
-import type { ReadonlyVal, ValEnhancedResult } from "value-enhancer";
-import { combine, Val, withValueEnhancer } from "value-enhancer";
+import { genUID, SideEffectManager } from "side-effect-manager";
+import type { ReadonlyVal, ReadonlyValEnhancedResult } from "value-enhancer";
+import { combine, Val, withReadonlyValueEnhancer } from "value-enhancer";
 import type { TeleTitleBar } from "../TeleTitleBar";
 import { DefaultTitleBar } from "../TeleTitleBar";
 import {
     clamp,
     flattenEvent,
-    genUniqueKey,
     getBoxDefaultName,
     isFalsy,
     isTruthy,
@@ -21,61 +20,60 @@ import {
     TELE_BOX_EVENT,
     TELE_BOX_STATE,
     TELE_BOX_RESIZE_HANDLE,
-    TELE_BOX_DELEGATE_EVENT,
-    TELE_BOX_COLOR_SCHEME,
 } from "./constants";
 import type {
     TeleBoxConfig,
-    TeleBoxRect,
-    TeleBoxEvents,
     TeleBoxHandleType,
     TeleBoxState,
-    TeleBoxDelegateEvents,
     TeleBoxCoord,
     TeleBoxSize,
-    TeleBoxColorScheme,
+    TeleBoxEventConfig,
+    TeleBoxEvent,
+    TeleBoxDelegateEventConfig,
 } from "./typings";
 
 export * from "./constants";
 export * from "./typings";
 
-type ValConfig = {
-    prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
-    darkMode: Val<boolean, boolean>;
-    containerRect: Val<TeleBoxRect, boolean>;
-    collectorRect: Val<TeleBoxRect | undefined, boolean>;
-    /** Box title. Default empty. */
-    title: Val<string, boolean>;
-    /** Is box visible */
-    visible: Val<boolean, boolean>;
-    /** Is box readonly */
-    readonly: Val<boolean, boolean>;
-    /** Able to resize box window */
-    resizable: Val<boolean, boolean>;
-    /** Able to drag box window */
-    draggable: Val<boolean, boolean>;
-    /** Restrict box to always be within the containing area. */
-    fence: Val<boolean, boolean>;
-    /** Fixed width/height ratio for box window. */
-    fixRatio: Val<boolean, boolean>;
-    focus: Val<boolean, boolean>;
-    zIndex: Val<number, boolean>;
-    /** Is box minimized. Default false. */
-    minimized: Val<boolean, boolean>;
-    /** Is box maximized. Default false. */
-    maximized: Val<boolean, boolean>;
-    $userContent: Val<HTMLElement | undefined>;
-    $userFooter: Val<HTMLElement | undefined>;
-    $userStyles: Val<HTMLStyleElement | undefined>;
+type RequiredTeleBoxConfig = Required<TeleBoxConfig>;
+
+type ReadonlyValConfig = {
+    darkMode: RequiredTeleBoxConfig["darkMode$"];
+    fence: RequiredTeleBoxConfig["fence$"];
+    minimized: RequiredTeleBoxConfig["minimized$"];
+    maximized: RequiredTeleBoxConfig["maximized$"];
+    readonly: RequiredTeleBoxConfig["readonly$"];
+    containerRect: RequiredTeleBoxConfig["containerRect$"];
+    collectorRect: RequiredTeleBoxConfig["collectorRect$"];
+
+    title: Val<RequiredTeleBoxConfig["title"], boolean>;
+    visible: Val<RequiredTeleBoxConfig["visible"], boolean>;
+    resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
+    draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
+    fixRatio: Val<RequiredTeleBoxConfig["fixRatio"], boolean>;
+    zIndex: Val<Required<RequiredTeleBoxConfig>["zIndex"], boolean>;
+    focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
+
+    $userContent: Val<TeleBoxConfig["content"], boolean>;
+    $userFooter: Val<TeleBoxConfig["footer"], boolean>;
+    $userStyles: Val<TeleBoxConfig["styles"], boolean>;
+
+    state: ReadonlyVal<TeleBoxState, boolean>;
+    minSize: Val<TeleBoxSize, boolean>;
+    intrinsicSize: Val<TeleBoxSize, boolean>;
+    size: ReadonlyVal<TeleBoxSize, boolean>;
+    visualSize: ReadonlyVal<TeleBoxSize, boolean>;
+    intrinsicCoord: Val<TeleBoxCoord, boolean>;
+    coord: ReadonlyVal<TeleBoxCoord, boolean>;
 };
-export interface TeleBox extends ValEnhancedResult<ValConfig> {}
+
+export interface TeleBox extends ReadonlyValEnhancedResult<ReadonlyValConfig> {}
 
 export class TeleBox {
     public constructor({
-        id = genUniqueKey(),
+        id = genUID(),
         title = getBoxDefaultName(),
-        prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
-        darkMode,
+        namespace = "telebox",
         visible = true,
         width = 0.5,
         height = 0.5,
@@ -83,169 +81,38 @@ export class TeleBox {
         minHeight = 0,
         x = 0.1,
         y = 0.1,
-        minimized = false,
-        maximized = false,
-        readonly = false,
         resizable = true,
         draggable = true,
-        fence = true,
         fixRatio = false,
         focus = false,
         zIndex = 100,
-        namespace = "telebox",
         titleBar,
         content,
         footer,
         styles,
-        containerRect = {
-            x: 0,
-            y: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
-        },
-        collectorRect,
-    }: TeleBoxConfig = {}) {
+        darkMode$,
+        fence$,
+        minimized$,
+        maximized$,
+        readonly$,
+        containerRect$,
+        collectorRect$,
+    }: TeleBoxConfig) {
         this._sideEffect = new SideEffectManager();
 
         this.id = id;
         this.namespace = namespace;
-        this.events = new EventEmitter();
-        this._delegateEvents = new EventEmitter();
-
-        const prefersColorScheme$ = new Val<TeleBoxColorScheme, boolean>(
-            prefersColorScheme
-        );
-        this._sideEffect.addDisposer(
-            prefersColorScheme$.reaction((prefersColorScheme, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(
-                        TELE_BOX_EVENT.PrefersColorScheme,
-                        prefersColorScheme
-                    );
-                }
-            })
-        );
-
-        const darkMode$ = new Val(Boolean(darkMode));
-
-        if (darkMode == null) {
-            this._sideEffect.addDisposer(
-                prefersColorScheme$.subscribe(
-                    (prefersColorScheme, skipUpdate) => {
-                        this._sideEffect.add(() => {
-                            if (prefersColorScheme === "auto") {
-                                const prefersDark = window.matchMedia(
-                                    "(prefers-color-scheme: dark)"
-                                );
-                                if (prefersDark) {
-                                    darkMode$.setValue(
-                                        prefersDark.matches,
-                                        skipUpdate
-                                    );
-                                    const handler = (
-                                        evt: MediaQueryListEvent
-                                    ): void => {
-                                        darkMode$.setValue(
-                                            evt.matches,
-                                            skipUpdate
-                                        );
-                                    };
-                                    prefersDark.addListener(handler);
-                                    return () =>
-                                        prefersDark.removeListener(handler);
-                                } else {
-                                    return noop;
-                                }
-                            } else {
-                                darkMode$.setValue(
-                                    prefersColorScheme === "dark",
-                                    skipUpdate
-                                );
-                                return noop;
-                            }
-                        }, "prefers-color-scheme");
-                    }
-                )
-            );
-        }
-
-        this._sideEffect.addDisposer(
-            darkMode$.reaction((darkMode, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.DarkMode, darkMode);
-                }
-            })
-        );
-
-        const containerRect$ = new Val(containerRect, {
-            compare: shallowequal,
-        });
-        const collectorRect$ = new Val(collectorRect, {
-            compare: shallowequal,
-        });
 
         const title$ = new Val(title);
-
         const visible$ = new Val(visible);
-        this._sideEffect.addDisposer(
-            visible$.reaction((visible, skipUpdate) => {
-                if (!skipUpdate && !visible) {
-                    this.events.emit(TELE_BOX_EVENT.Close);
-                }
-            })
-        );
-
-        const readonly$ = new Val(readonly);
-        this._sideEffect.addDisposer(
-            readonly$.reaction((readonly, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.Readonly, readonly);
-                }
-            })
-        );
-
         const resizable$ = new Val(resizable);
         const draggable$ = new Val(draggable);
-        const fence$ = new Val(fence);
         const fixRatio$ = new Val(fixRatio);
-
         const zIndex$ = new Val(zIndex);
-        this._sideEffect.addDisposer(
-            zIndex$.reaction((zIndex, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.ZIndex, zIndex);
-                }
-            })
-        );
-
         const focus$ = new Val(focus);
-        this._sideEffect.addDisposer(
-            focus$.reaction((focus, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(
-                        focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
-                    );
-                }
-            })
-        );
-
-        const minimized$ = new Val(minimized);
-        this._sideEffect.addDisposer(
-            minimized$.reaction((minimized, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.Minimized, minimized);
-                }
-            })
-        );
-
-        const maximized$ = new Val(maximized);
-        this._sideEffect.addDisposer(
-            maximized$.reaction((maximized, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.Maximized, maximized);
-                }
-            })
-        );
+        const $userContent$ = new Val(content);
+        const $userFooter$ = new Val(footer);
+        const $userStyles$ = new Val(styles);
 
         const state$ = combine(
             [minimized$, maximized$],
@@ -255,13 +122,6 @@ export class TeleBox {
                     : maximized
                     ? TELE_BOX_STATE.Maximized
                     : TELE_BOX_STATE.Normal
-        );
-        this._sideEffect.addDisposer(
-            state$.reaction((state, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.State, state);
-                }
-            })
         );
 
         const minSize$ = new Val(
@@ -279,7 +139,9 @@ export class TeleBox {
             },
             { compare: shallowequal }
         );
+
         this._sideEffect.addDisposer(
+            // check intrinsicSize overflow
             minSize$.reaction((minSize, skipUpdate) => {
                 intrinsicSize$.setValue(
                     {
@@ -288,13 +150,6 @@ export class TeleBox {
                     },
                     skipUpdate
                 );
-            })
-        );
-        this._sideEffect.addDisposer(
-            intrinsicSize$.reaction((size, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.IntrinsicResize, size);
-                }
             })
         );
 
@@ -307,13 +162,6 @@ export class TeleBox {
                 return intrinsicSize;
             },
             { compare: shallowequal }
-        );
-        this._sideEffect.addDisposer(
-            size$.reaction((size, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.Resize, size);
-                }
-            })
         );
 
         const visualSize$ = combine(
@@ -335,24 +183,10 @@ export class TeleBox {
             },
             { compare: shallowequal }
         );
-        this._sideEffect.addDisposer(
-            visualSize$.reaction((size, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.VisualResize, size);
-                }
-            })
-        );
 
         const intrinsicCoord$ = new Val(
             { x: clamp(x, 0, 1), y: clamp(y, 0, 1) },
             { compare: shallowequal }
-        );
-        this._sideEffect.addDisposer(
-            intrinsicCoord$.reaction((coord, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.IntrinsicMove, coord);
-                }
-            })
         );
 
         const coord$ = combine(
@@ -403,10 +237,78 @@ export class TeleBox {
             },
             { compare: shallowequal }
         );
+
+        const readonlyValConfig: ReadonlyValConfig = {
+            darkMode: darkMode$,
+            fence: fence$,
+            minimized: minimized$,
+            maximized: maximized$,
+            readonly: readonly$,
+            containerRect: containerRect$,
+            collectorRect: collectorRect$,
+
+            title: title$,
+            visible: visible$,
+            resizable: resizable$,
+            draggable: draggable$,
+            fixRatio: fixRatio$,
+            zIndex: zIndex$,
+            focus: focus$,
+
+            $userContent: $userContent$,
+            $userFooter: $userFooter$,
+            $userStyles: $userStyles$,
+
+            state: state$,
+            minSize: minSize$,
+            intrinsicSize: intrinsicSize$,
+            size: size$,
+            visualSize: visualSize$,
+            intrinsicCoord: intrinsicCoord$,
+            coord: coord$,
+        };
+
+        withReadonlyValueEnhancer(this, readonlyValConfig);
+
+        const watchValEvent = <E extends TeleBoxEvent>(
+            val: ReadonlyVal<TeleBoxEventConfig[E], boolean>,
+            event: E
+        ) => {
+            this._sideEffect.addDisposer(
+                val.reaction((v, skipUpdate) => {
+                    if (!skipUpdate) {
+                        this.events.emit<any>(event, v);
+                    }
+                })
+            );
+        };
+
+        watchValEvent(darkMode$, TELE_BOX_EVENT.DarkMode);
+        watchValEvent(readonly$, TELE_BOX_EVENT.Readonly);
+        watchValEvent(zIndex$, TELE_BOX_EVENT.ZIndex);
+        watchValEvent(minimized$, TELE_BOX_EVENT.Minimized);
+        watchValEvent(maximized$, TELE_BOX_EVENT.Maximized);
+        watchValEvent(state$, TELE_BOX_EVENT.State);
+        watchValEvent(intrinsicSize$, TELE_BOX_EVENT.IntrinsicResize);
+        watchValEvent(size$, TELE_BOX_EVENT.Resize);
+        watchValEvent(visualSize$, TELE_BOX_EVENT.VisualResize);
+        watchValEvent(intrinsicCoord$, TELE_BOX_EVENT.IntrinsicMove);
+        watchValEvent(coord$, TELE_BOX_EVENT.Move);
+
         this._sideEffect.addDisposer(
-            coord$.reaction((coord, skipUpdate) => {
+            visible$.reaction((visible, skipUpdate) => {
+                if (!skipUpdate && !visible) {
+                    this.events.emit(TELE_BOX_EVENT.Close);
+                }
+            })
+        );
+
+        this._sideEffect.addDisposer(
+            focus$.reaction((focus, skipUpdate) => {
                 if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_EVENT.Move, coord);
+                    this.events.emit(
+                        focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
+                    );
                 }
             })
         );
@@ -414,80 +316,15 @@ export class TeleBox {
         this.titleBar =
             titleBar ||
             new DefaultTitleBar({
-                readonly: readonly$.value,
+                readonly$: readonly$,
+                state$: state$,
                 title: title$.value,
                 namespace: this.namespace,
                 onDragStart: (event) => this._handleTrackStart?.(event),
-                onEvent: (event): void => {
-                    if (this._delegateEvents.listeners.length > 0) {
-                        this._delegateEvents.emit(event.type);
-                    } else {
-                        switch (event.type) {
-                            case TELE_BOX_DELEGATE_EVENT.Maximize: {
-                                maximized$.setValue(!maximized$.value);
-                                break;
-                            }
-                            case TELE_BOX_DELEGATE_EVENT.Minimize: {
-                                minimized$.setValue(true);
-                                break;
-                            }
-                            case TELE_BOX_DELEGATE_EVENT.Close: {
-                                visible$.setValue(false);
-                                break;
-                            }
-                            default: {
-                                console.error(
-                                    "Unsupported titleBar event:",
-                                    event
-                                );
-                                break;
-                            }
-                        }
-                    }
-                },
+                onEvent: (event) => this._delegateEvents.emit(event.type),
             });
-        this._sideEffect.addDisposer(
-            readonly$.reaction((readonly) => {
-                this.titleBar.setReadonly(readonly);
-            })
-        );
 
-        const $userContent$ = new Val(content);
-        const $userFooter$ = new Val(footer);
-        const $userStyles$ = new Val(styles);
-
-        const valConfig: ValConfig = {
-            prefersColorScheme: prefersColorScheme$,
-            darkMode: darkMode$,
-            containerRect: containerRect$,
-            collectorRect: collectorRect$,
-            title: title$,
-            visible: visible$,
-            readonly: readonly$,
-            resizable: resizable$,
-            draggable: draggable$,
-            fence: fence$,
-            fixRatio: fixRatio$,
-            focus: focus$,
-            zIndex: zIndex$,
-            minimized: minimized$,
-            maximized: maximized$,
-            $userContent: $userContent$,
-            $userFooter: $userFooter$,
-            $userStyles: $userStyles$,
-        };
-
-        withValueEnhancer(this, valConfig);
-
-        this._state$ = state$;
-        this._minSize$ = minSize$;
-        this._size$ = size$;
-        this._intrinsicSize$ = intrinsicSize$;
-        this._visualSize$ = visualSize$;
-        this._coord$ = coord$;
-        this._intrinsicCoord$ = intrinsicCoord$;
-
-        if (this.fixRatio) {
+        if (fixRatio) {
             this.transform(
                 coord$.value.x,
                 coord$.value.y,
@@ -505,52 +342,19 @@ export class TeleBox {
     /** ClassName Prefix. For CSS styling. Default "telebox" */
     public readonly namespace: string;
 
-    public readonly events: TeleBoxEvents;
+    public readonly events = new Emittery<
+        TeleBoxEventConfig,
+        TeleBoxEventConfig
+    >();
 
-    public readonly _delegateEvents: TeleBoxDelegateEvents;
+    public readonly _delegateEvents = new Emittery<
+        TeleBoxDelegateEventConfig,
+        TeleBoxDelegateEventConfig
+    >();
 
     protected _sideEffect: SideEffectManager;
 
     public titleBar: TeleTitleBar;
-
-    public _minSize$: Val<TeleBoxSize, boolean>;
-    public _size$: ReadonlyVal<TeleBoxSize, boolean>;
-    public _intrinsicSize$: Val<TeleBoxSize, boolean>;
-    public _visualSize$: ReadonlyVal<TeleBoxSize, boolean>;
-    public _coord$: ReadonlyVal<TeleBoxCoord, boolean>;
-    public _intrinsicCoord$: Val<TeleBoxCoord, boolean>;
-
-    public get darkMode(): boolean {
-        return this._darkMode$.value;
-    }
-
-    public _state$: ReadonlyVal<TeleBoxState, boolean>;
-
-    public get state(): TeleBoxState {
-        return this._state$.value;
-    }
-
-    /** @deprecated use setMaximized and setMinimized instead */
-    public setState(state: TeleBoxState, skipUpdate = false): this {
-        switch (state) {
-            case TELE_BOX_STATE.Maximized: {
-                this.setMinimized(false, skipUpdate);
-                this.setMaximized(true, skipUpdate);
-                break;
-            }
-            case TELE_BOX_STATE.Minimized: {
-                this.setMinimized(true, skipUpdate);
-                this.setMaximized(false, skipUpdate);
-                break;
-            }
-            default: {
-                this.setMinimized(false, skipUpdate);
-                this.setMaximized(false, skipUpdate);
-                break;
-            }
-        }
-        return this;
-    }
 
     /** Minimum box width relative to container element. 0~1. Default 0. */
     public get minWidth(): number {
@@ -742,7 +546,7 @@ export class TeleBox {
      * Mount dom to box content.
      */
     public mountContent(content: HTMLElement): this {
-        this.set$userContent(content);
+        this._$userContent$.setValue(content);
         return this;
     }
 
@@ -750,7 +554,7 @@ export class TeleBox {
      * Unmount content from the box.
      */
     public unmountContent(): this {
-        this.set$userContent(undefined);
+        this._$userContent$.setValue(undefined);
         return this;
     }
 
@@ -758,7 +562,7 @@ export class TeleBox {
      * Mount dom to box Footer.
      */
     public mountFooter(footer: HTMLElement): this {
-        this.set$userFooter(footer);
+        this._$userFooter$.setValue(footer);
         return this;
     }
 
@@ -766,7 +570,7 @@ export class TeleBox {
      * Unmount Footer from the box.
      */
     public unmountFooter(): this {
-        this.set$userFooter(undefined);
+        this._$userFooter$.setValue(undefined);
         return this;
     }
 
@@ -782,12 +586,12 @@ export class TeleBox {
         } else {
             $styles = styles;
         }
-        this.set$userStyles($styles);
+        this._$userStyles$.setValue($styles);
         return this;
     }
 
     public unmountStyles(): this {
-        this.set$userStyles(undefined);
+        this._$userStyles$.setValue(undefined);
         return this;
     }
 
@@ -826,7 +630,7 @@ export class TeleBox {
 
         const bindClassName = <TValue>(
             el: Element,
-            val: Val<TValue, boolean>,
+            val: ReadonlyVal<TValue, boolean>,
             className: string,
             predicate: (value: TValue) => boolean = isTruthy
         ): string => {
@@ -908,7 +712,7 @@ export class TeleBox {
             translateY - 10
         }px)`;
 
-        this._sideEffect.addDisposer(
+        this._renderSideEffect.addDisposer(
             combine(
                 [
                     this._coord$,
@@ -1280,14 +1084,14 @@ export class TeleBox {
         );
     }
 
-    public destroy(): void {
+    public async destroy(): Promise<void> {
         this.$box.remove();
-        this.events.emit(TELE_BOX_EVENT.Destroyed);
-
         this._sideEffect.flushAll();
         this._renderSideEffect.flushAll();
-        this.events.removeAllListeners();
-        this._delegateEvents.removeAllListeners();
+
+        await this.events.emit(TELE_BOX_EVENT.Destroyed);
+        this.events.clearListeners();
+        this._delegateEvents.clearListeners();
     }
 
     /**
@@ -1296,10 +1100,6 @@ export class TeleBox {
     public wrapClassName(className: string): string {
         return `${this.namespace}-${className}`;
     }
-}
-
-function noop(): void {
-    return;
 }
 
 type PropKeys<K = keyof TeleBox> = K extends keyof TeleBox

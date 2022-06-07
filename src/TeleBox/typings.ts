@@ -1,4 +1,5 @@
-import type EventEmitter from "eventemitter3";
+import type Emittery from "emittery";
+import type { ReadonlyVal } from "value-enhancer";
 import type { TeleTitleBar } from "../TeleTitleBar";
 import type {
     TeleBoxDragHandleType,
@@ -29,10 +30,6 @@ export interface TeleBoxConfig {
     readonly id?: string;
     /** Box title. Default empty. */
     readonly title?: string;
-    /** Prefers Box color scheme. Default light. */
-    readonly prefersColorScheme?: TeleBoxColorScheme;
-    /** Actual Box Dark Mode */
-    readonly darkMode?: boolean;
     /** Box visible. Default true. */
     readonly visible?: boolean;
     /** Box width relative to root element. 0~1. Default 0.5. */
@@ -47,20 +44,12 @@ export interface TeleBoxConfig {
     readonly x?: number;
     /** y position relative to root element. 0~1. Default 0.1. */
     readonly y?: number;
-    /** Maximize box. Default false. */
-    readonly maximized?: boolean;
-    /** Minimize box. Overwrites maximized state. Default false. */
-    readonly minimized?: boolean;
     /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
-    /** Is box readonly */
-    readonly readonly?: boolean;
     /** Able to resize box window. Default true. */
     readonly resizable?: boolean;
     /** Able to drag box window Default true. */
     readonly draggable?: boolean;
-    /** Restrict box to always be within the containing area. Default true. */
-    readonly fence?: boolean;
     /** Fixed width/height ratio for box window. Default false. */
     readonly fixRatio?: boolean;
     /** Box focused. */
@@ -77,10 +66,20 @@ export interface TeleBoxConfig {
     readonly footer?: HTMLElement;
     /** Box content styles. */
     readonly styles?: HTMLStyleElement;
+    /** Actual Box Dark Mode */
+    readonly darkMode$: ReadonlyVal<boolean, boolean>;
+    /** Restrict box to always be within the containing area. Default true. */
+    readonly fence$: ReadonlyVal<boolean, boolean>;
+    /** Maximize box. Default false. */
+    readonly maximized$: ReadonlyVal<boolean, boolean>;
+    /** Minimize box. Overwrites maximized state. Default false. */
+    readonly minimized$: ReadonlyVal<boolean, boolean>;
+    /** Is box readonly */
+    readonly readonly$: ReadonlyVal<boolean, boolean>;
     /** Position and dimension of container */
-    readonly containerRect?: TeleBoxRect;
+    readonly containerRect$: ReadonlyVal<TeleBoxRect>;
     /** Position and dimension of collector */
-    readonly collectorRect?: TeleBoxRect;
+    readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
 }
 
 type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
@@ -88,9 +87,9 @@ type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
 export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     dark_mode: boolean;
     prefers_color_scheme: TeleBoxColorScheme;
-    close: void;
-    focus: void;
-    blur: void;
+    close: undefined;
+    focus: undefined;
+    blur: undefined;
     move: { x: number; y: number };
     resize: { width: number; height: number };
     intrinsic_move: { x: number; y: number };
@@ -101,31 +100,12 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     minimized: boolean;
     maximized: boolean;
     readonly: boolean;
-    destroyed: void;
+    destroyed: undefined;
 }>;
 
 export type TeleBoxEvent = keyof TeleBoxEventConfig;
 
-export interface TeleBoxEvents extends EventEmitter<TeleBoxEvent> {
-    on<U extends TeleBoxEvent>(
-        event: U,
-        listener: (value: TeleBoxEventConfig[U]) => void
-    ): this;
-    once<U extends TeleBoxEvent>(
-        event: U,
-        listener: (value: TeleBoxEventConfig[U]) => void
-    ): this;
-    addListener<U extends TeleBoxEvent>(
-        event: U,
-        listener: (value: TeleBoxEventConfig[U]) => void
-    ): this;
-    emit<U extends TeleBoxEvent>(
-        event: U,
-        ...value: TeleBoxEventConfig[U] extends void
-            ? []
-            : [TeleBoxEventConfig[U]]
-    ): boolean;
-}
+export type TeleBoxEvents = Emittery<TeleBoxEventConfig>;
 
 export type TeleBoxHandleType =
     | TELE_BOX_RESIZE_HANDLE
@@ -136,31 +116,11 @@ type CheckTeleBoxDelegateConfig<
 > = T;
 
 export type TeleBoxDelegateEventConfig = CheckTeleBoxDelegateConfig<{
-    close: void;
-    maximize: void;
-    minimize: void;
+    close: undefined;
+    maximize: undefined;
+    minimize: undefined;
 }>;
 
 export type TeleBoxDelegateEvent = keyof TeleBoxDelegateEventConfig;
 
-export interface TeleBoxDelegateEvents
-    extends EventEmitter<TeleBoxDelegateEvent> {
-    on<U extends TeleBoxDelegateEvent>(
-        event: U,
-        listener: (value: TeleBoxDelegateEventConfig[U]) => void
-    ): this;
-    once<U extends TeleBoxDelegateEvent>(
-        event: U,
-        listener: (value: TeleBoxDelegateEventConfig[U]) => void
-    ): this;
-    addListener<U extends TeleBoxDelegateEvent>(
-        event: U,
-        listener: (value: TeleBoxDelegateEventConfig[U]) => void
-    ): this;
-    emit<U extends TeleBoxDelegateEvent>(
-        event: U,
-        ...value: TeleBoxDelegateEventConfig[U] extends void
-            ? []
-            : [TeleBoxDelegateEventConfig[U]]
-    ): boolean;
-}
+export type TeleBoxDelegateEvents = Emittery<TeleBoxDelegateEventConfig>;
