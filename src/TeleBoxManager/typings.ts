@@ -34,7 +34,7 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "y"
     | "resizable"
     | "draggable"
-    | "fixRatio"
+    | "ratio"
     | "zIndex";
 
 export type TeleBoxManagerCreateConfig = Pick<
@@ -48,7 +48,7 @@ export type TeleBoxManagerQueryConfig = Pick<
     | "visible"
     | "resizable"
     | "draggable"
-    | "fixRatio"
+    | "ratio"
     | "zIndex"
     | "id"
     | "focus"

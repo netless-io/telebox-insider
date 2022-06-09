@@ -50,8 +50,8 @@ export interface TeleBoxConfig {
     readonly resizable?: boolean;
     /** Able to drag box window Default true. */
     readonly draggable?: boolean;
-    /** Fixed width/height ratio for box window. Default false. */
-    readonly fixRatio?: boolean;
+    /** Fixed height/width ratio for box window. No ratio limit if <= 0. Default -1. */
+    readonly ratio?: number;
     /** Box focused. */
     readonly focus?: boolean;
     /** Base z-index for box. */

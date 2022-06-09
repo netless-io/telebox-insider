@@ -51,7 +51,7 @@ type ReadonlyValConfig = {
     visible: Val<RequiredTeleBoxConfig["visible"], boolean>;
     resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
     draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
-    fixRatio: Val<RequiredTeleBoxConfig["fixRatio"], boolean>;
+    ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
     zIndex: Val<Required<RequiredTeleBoxConfig>["zIndex"], boolean>;
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
 
@@ -94,7 +94,7 @@ export class TeleBox {
         y = 0.1,
         resizable = true,
         draggable = true,
-        fixRatio = false,
+        ratio = -1,
         focus = false,
         zIndex = 100,
         titleBar,
@@ -119,7 +119,7 @@ export class TeleBox {
         const visible$ = new Val(visible);
         const resizable$ = new Val(resizable);
         const draggable$ = new Val(draggable);
-        const fixRatio$ = new Val(fixRatio);
+        const ratio$ = new Val(ratio);
         const zIndex$ = new Val(zIndex);
         const focus$ = new Val(focus);
         const $userContent$ = new Val(content);
@@ -243,7 +243,7 @@ export class TeleBox {
             visible: visible$,
             resizable: resizable$,
             draggable: draggable$,
-            fixRatio: fixRatio$,
+            ratio: ratio$,
             zIndex: zIndex$,
             focus: focus$,
 
@@ -313,7 +313,7 @@ export class TeleBox {
                 onEvent: (event) => this._delegateEvents.emit(event.type),
             });
 
-        if (fixRatio) {
+        if (ratio$.value > 0) {
             this.transform(
                 intrinsicCoord$.value.x,
                 intrinsicCoord$.value.y,
@@ -452,9 +452,9 @@ export class TeleBox {
         width = Math.max(width, this.minWidth);
         height = Math.max(height, this.minHeight);
 
-        if (this.fixRatio) {
+        if (this.ratio > 0) {
             const newHeight =
-                (intrinsicSize.height / intrinsicSize.width) * width;
+                (this.ratio * width * stageRect.width) / stageRect.height;
             if (y !== this.intrinsicY) {
                 y -= newHeight - height;
             }
@@ -789,80 +789,51 @@ export class TeleBox {
             const offsetX = pageX - trackStartPageX;
             const offsetY = pageY - trackStartPageY;
 
+            let { x: newX, y: newY } = this.pxIntrinsicCoord;
+            let { width: newWidth, height: newHeight } = this.pxIntrinsicSize;
+
             switch (trackingHandle) {
                 case TELE_BOX_RESIZE_HANDLE.North: {
-                    this.transform(
-                        this.intrinsicX,
-                        (trackStartY + offsetY - stageRect.y) /
-                            stageRect.height,
-                        this.intrinsicWidth,
-                        (trackStartHeight - offsetY) / stageRect.height
-                    );
+                    newY = trackStartY + offsetY;
+                    newHeight = trackStartHeight - offsetY;
                     break;
                 }
+                // eslint-disable-next-line no-fallthrough
                 case TELE_BOX_RESIZE_HANDLE.South: {
-                    this.transform(
-                        this.intrinsicX,
-                        this.intrinsicY,
-                        this.intrinsicWidth,
-                        (trackStartHeight + offsetY) / stageRect.height
-                    );
+                    newHeight = trackStartHeight + offsetY;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.West: {
-                    this.transform(
-                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
-                        this.intrinsicY,
-                        (trackStartWidth - offsetX) / stageRect.width,
-                        this.intrinsicHeight
-                    );
+                    newX = trackStartX + offsetX;
+                    newWidth = trackStartWidth - offsetX;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.East: {
-                    this.transform(
-                        this.intrinsicX,
-                        this.intrinsicY,
-                        (trackStartWidth + offsetX) / stageRect.width,
-                        this.intrinsicHeight
-                    );
+                    newWidth = (trackStartWidth + offsetX) / stageRect.width;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.NorthWest: {
-                    this.transform(
-                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
-                        (trackStartY + offsetY - stageRect.y) /
-                            stageRect.height,
-                        (trackStartWidth - offsetX) / stageRect.width,
-                        (trackStartHeight - offsetY) / stageRect.height
-                    );
+                    newX = trackStartX + offsetX;
+                    newY = trackStartY + offsetY;
+                    newWidth = trackStartWidth - offsetX;
+                    newHeight = trackStartHeight - offsetY;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.NorthEast: {
-                    this.transform(
-                        this.intrinsicX,
-                        (trackStartY + offsetY - stageRect.y) /
-                            stageRect.height,
-                        (trackStartWidth + offsetX) / stageRect.width,
-                        (trackStartHeight - offsetY) / stageRect.height
-                    );
+                    newY = trackStartY + offsetY;
+                    newWidth = trackStartWidth + offsetX;
+                    newHeight = trackStartHeight - offsetY;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.SouthEast: {
-                    this.transform(
-                        this.intrinsicX,
-                        this.intrinsicY,
-                        trackStartWidth + offsetX,
-                        trackStartHeight + offsetY
-                    );
+                    newWidth = trackStartWidth + offsetX;
+                    newHeight = trackStartHeight + offsetY;
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.SouthWest: {
-                    this.transform(
-                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
-                        this.intrinsicY,
-                        (trackStartWidth - offsetX) / stageRect.width,
-                        (trackStartHeight + offsetY) / stageRect.height
-                    );
+                    newX = trackStartX + offsetX;
+                    newWidth = trackStartWidth - offsetX;
+                    newHeight = trackStartHeight + offsetY;
                     break;
                 }
                 default: {
@@ -903,9 +874,16 @@ export class TeleBox {
                             (safeY - stageRect.y) / stageRect.height
                         );
                     }
-                    break;
+                    return;
                 }
             }
+
+            this.transform(
+                (newX - stageRect.x) / stageRect.width,
+                (newY - stageRect.y) / stageRect.height,
+                newWidth / stageRect.width,
+                newHeight / stageRect.height
+            );
         };
 
         const handleTrackEnd = (ev: MouseEvent | TouchEvent): void => {

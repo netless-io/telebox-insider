@@ -649,8 +649,8 @@ export class TeleBoxManager {
         if (config.draggable != null) {
             box._draggable$.setValue(config.draggable, skipUpdate);
         }
-        if (config.fixRatio != null) {
-            box._fixRatio$.setValue(config.fixRatio, skipUpdate);
+        if (config.ratio != null) {
+            box._ratio$.setValue(config.ratio, skipUpdate);
         }
         if (config.zIndex != null) {
             box._zIndex$.setValue(config.zIndex, skipUpdate);
