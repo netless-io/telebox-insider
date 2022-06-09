@@ -1,6 +1,6 @@
 import type { TeleBoxColorScheme } from "..";
 import type { ReadonlyTeleBox, TeleBoxState } from "../TeleBox";
-import type { TeleBoxConfig, TeleBoxRect } from "../TeleBox/typings";
+import type { TeleBoxConfig } from "../TeleBox/typings";
 import type { TeleBoxCollector } from "../TeleBoxCollector";
 import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 
@@ -44,7 +44,14 @@ export type TeleBoxManagerCreateConfig = Pick<
 
 export type TeleBoxManagerQueryConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "id" | "focus"
+    | "title"
+    | "visible"
+    | "resizable"
+    | "draggable"
+    | "fixRatio"
+    | "zIndex"
+    | "id"
+    | "focus"
 >;
 
 export type TeleBoxManagerUpdateConfig = Pick<

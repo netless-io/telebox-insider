@@ -390,12 +390,13 @@ export class TeleBoxManager {
             zIndex: this.topBox ? this.topBox.zIndex + 1 : 100,
             ...config,
             ...(smartPosition ? this.smartPosition(config) : {}),
+            namespace: this.namespace,
             darkMode$: this._darkMode$,
             maximized$: this._maximized$,
             minimized$: this._minimized$,
             fence$: this._fence$,
-            namespace: this.namespace,
-            containerRect$: this._stageRect$,
+            rootRect$: this._rootRect$,
+            stageRect$: this._stageRect$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
         });
@@ -422,16 +423,6 @@ export class TeleBoxManager {
                 this.remove(box);
                 this.focusTopBox();
             }),
-            box._coord$.reaction((_, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.Move, box);
-                }
-            }),
-            box._size$.reaction((_, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.Resize, box);
-                }
-            }),
             box._intrinsicCoord$.reaction((_, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.IntrinsicMove, box);
@@ -443,11 +434,6 @@ export class TeleBoxManager {
                         TELE_BOX_MANAGER_EVENT.IntrinsicResize,
                         box
                     );
-                }
-            }),
-            box._visualSize$.reaction((_, skipUpdate) => {
-                if (!skipUpdate) {
-                    this.events.emit(TELE_BOX_MANAGER_EVENT.VisualResize, box);
                 }
             }),
             box._zIndex$.reaction((_, skipUpdate) => {
@@ -686,6 +672,7 @@ export class TeleBoxManager {
         }
     }
 
+    /** Keep new boxes staggered inside stage area */
     protected smartPosition(rect: Partial<TeleBoxRect>): TeleBoxRect {
         let { x, y } = rect;
         const { width = 0.5, height = 0.5 } = rect;
@@ -693,29 +680,33 @@ export class TeleBoxManager {
         const topBox = this.topBox;
 
         if (x == null) {
-            let vx = 20;
+            let pxX = stageRect.x + 20;
             if (topBox) {
-                vx = topBox.intrinsicX * stageRect.width + 20;
-
-                if (vx > stageRect.width - width * stageRect.width) {
-                    vx = 20;
+                const pxPreferredX = topBox.pxIntrinsicCoord.x + 20;
+                const pxIntrinsicWidth = width * stageRect.width;
+                if (
+                    pxPreferredX + pxIntrinsicWidth <=
+                    stageRect.x + stageRect.width
+                ) {
+                    pxX = pxPreferredX;
                 }
             }
-            x = vx / stageRect.width;
+            x = (pxX - stageRect.x) / stageRect.width;
         }
 
         if (y == null) {
-            let vy = 20;
-
+            let pxY = stageRect.y + 20;
             if (topBox) {
-                vy = topBox.intrinsicY * stageRect.height + 20;
-
-                if (vy > stageRect.height - height * stageRect.height) {
-                    vy = 20;
+                const pxPreferredY = topBox.pxIntrinsicCoord.y + 20;
+                const pxIntrinsicHeight = height * stageRect.height;
+                if (
+                    pxPreferredY + pxIntrinsicHeight <=
+                    stageRect.y + stageRect.height
+                ) {
+                    pxY = pxPreferredY;
                 }
             }
-
-            y = vy / stageRect.height;
+            y = (pxY - stageRect.y) / stageRect.height;
         }
 
         return { x, y, width, height };

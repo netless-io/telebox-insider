@@ -43,7 +43,8 @@ type ReadonlyValConfig = {
     minimized: RequiredTeleBoxConfig["minimized$"];
     maximized: RequiredTeleBoxConfig["maximized$"];
     readonly: RequiredTeleBoxConfig["readonly$"];
-    containerRect: RequiredTeleBoxConfig["containerRect$"];
+    rootRect: RequiredTeleBoxConfig["rootRect$"];
+    stageRect: RequiredTeleBoxConfig["stageRect$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
 
     title: Val<RequiredTeleBoxConfig["title"], boolean>;
@@ -58,13 +59,23 @@ type ReadonlyValConfig = {
     $userFooter: Val<TeleBoxConfig["footer"], boolean>;
     $userStyles: Val<TeleBoxConfig["styles"], boolean>;
 
-    state: ReadonlyVal<TeleBoxState, boolean>;
     minSize: Val<TeleBoxSize, boolean>;
     intrinsicSize: Val<TeleBoxSize, boolean>;
-    size: ReadonlyVal<TeleBoxSize, boolean>;
-    visualSize: ReadonlyVal<TeleBoxSize, boolean>;
     intrinsicCoord: Val<TeleBoxCoord, boolean>;
-    coord: ReadonlyVal<TeleBoxCoord, boolean>;
+    pxIntrinsicSize: ReadonlyVal<TeleBoxSize, boolean>;
+    pxIntrinsicCoord: ReadonlyVal<TeleBoxCoord, boolean>;
+    boxStyles: ReadonlyVal<
+        {
+            x: number;
+            y: number;
+            width: string;
+            height: string;
+            scaleX: number;
+            scaleY: number;
+        },
+        boolean
+    >;
+    state: ReadonlyVal<TeleBoxState, boolean>;
 };
 
 export interface TeleBox extends ReadonlyValEnhancedResult<ReadonlyValConfig> {}
@@ -95,7 +106,8 @@ export class TeleBox {
         minimized$,
         maximized$,
         readonly$,
-        containerRect$,
+        rootRect$,
+        stageRect$,
         collectorRect$,
     }: TeleBoxConfig) {
         this._sideEffect = new SideEffectManager();
@@ -133,10 +145,7 @@ export class TeleBox {
         );
 
         const intrinsicSize$ = new Val(
-            {
-                width: clamp(width, minSize$.value.width, 1),
-                height: clamp(height, minSize$.value.height, 1),
-            },
+            { width, height },
             { compare: shallowequal }
         );
 
@@ -145,95 +154,77 @@ export class TeleBox {
             minSize$.reaction((minSize, skipUpdate) => {
                 intrinsicSize$.setValue(
                     {
-                        width: clamp(width, minSize.width, 1),
-                        height: clamp(height, minSize.height, 1),
+                        width: Math.max(width, minSize.width),
+                        height: Math.max(height, minSize.height),
                     },
                     skipUpdate
                 );
             })
         );
 
-        const size$ = combine(
-            [intrinsicSize$, maximized$],
-            ([intrinsicSize, maximized]) => {
-                if (maximized) {
-                    return { width: 1, height: 1 };
-                }
-                return intrinsicSize;
-            },
+        const intrinsicCoord$ = new Val({ x, y }, { compare: shallowequal });
+
+        const pxIntrinsicSize$ = combine(
+            [intrinsicSize$, stageRect$],
+            ([size, stageRect]) => ({
+                width: stageRect.width * size.width,
+                height: stageRect.height * size.height,
+            }),
             { compare: shallowequal }
         );
 
-        const visualSize$ = combine(
-            [size$, minimized$, containerRect$, collectorRect$],
-            ([size, minimized, containerRect, collectorRect]) => {
-                if (minimized && collectorRect) {
-                    return {
-                        width:
-                            collectorRect.width /
-                            size.width /
-                            containerRect.width,
-                        height:
-                            collectorRect.height /
-                            size.height /
-                            containerRect.height,
-                    };
-                }
-                return size;
-            },
+        const pxIntrinsicCoord$ = combine(
+            [intrinsicCoord$, stageRect$],
+            ([intrinsicCoord, stageRect]) => ({
+                x: intrinsicCoord.x * stageRect.width + stageRect.x,
+                y: intrinsicCoord.y * stageRect.height + stageRect.y,
+            }),
             { compare: shallowequal }
         );
 
-        const intrinsicCoord$ = new Val(
-            { x: clamp(x, 0, 1), y: clamp(y, 0, 1) },
-            { compare: shallowequal }
-        );
-
-        const coord$ = combine(
+        const boxStyles$ = combine(
             [
-                intrinsicCoord$,
-                intrinsicSize$,
-                containerRect$,
-                collectorRect$,
-                minimized$,
                 maximized$,
+                minimized$,
+                pxIntrinsicSize$,
+                pxIntrinsicCoord$,
+                collectorRect$,
             ],
             ([
-                intrinsicCoord,
-                intrinsicSize,
-                containerRect,
-                collectorRect,
-                minimized,
                 maximized,
+                minimized,
+                pxIntrinsicSize,
+                pxIntrinsicCoord,
+                collectorRect,
             ]) => {
                 if (minimized && collectorRect) {
-                    if (maximized) {
-                        return {
-                            x:
-                                (collectorRect.x + collectorRect.width / 2) /
-                                    containerRect.width -
-                                1 / 2,
-                            y:
-                                (collectorRect.y + collectorRect.height / 2) /
-                                    containerRect.height -
-                                1 / 2,
-                        };
-                    }
                     return {
-                        x:
-                            (collectorRect.x + collectorRect.width / 2) /
-                                containerRect.width -
-                            intrinsicSize.width / 2,
-                        y:
-                            (collectorRect.y + collectorRect.height / 2) /
-                                containerRect.height -
-                            intrinsicSize.height / 2,
+                        x: collectorRect.x + collectorRect.width / 2,
+                        y: collectorRect.y + collectorRect.height / 2,
+                        width: pxIntrinsicSize.width + "px",
+                        height: pxIntrinsicSize.height + "px",
+                        scaleX: collectorRect.width / pxIntrinsicSize.width,
+                        scaleY: collectorRect.height / pxIntrinsicSize.height,
                     };
                 }
                 if (maximized) {
-                    return { x: 0, y: 0 };
+                    return {
+                        x: 0,
+                        y: 0,
+                        width: "100%",
+                        height: "100%",
+                        scaleX: 1,
+                        scaleY: 1,
+                    };
                 }
-                return intrinsicCoord;
+                return {
+                    x: pxIntrinsicCoord.x,
+                    y: pxIntrinsicCoord.y,
+                    width: pxIntrinsicSize.width + "px",
+                    height: pxIntrinsicSize.height + "px",
+                    scaleX: 1,
+                    scaleY: 1,
+                };
             },
             { compare: shallowequal }
         );
@@ -244,7 +235,8 @@ export class TeleBox {
             minimized: minimized$,
             maximized: maximized$,
             readonly: readonly$,
-            containerRect: containerRect$,
+            rootRect: rootRect$,
+            stageRect: stageRect$,
             collectorRect: collectorRect$,
 
             title: title$,
@@ -262,10 +254,10 @@ export class TeleBox {
             state: state$,
             minSize: minSize$,
             intrinsicSize: intrinsicSize$,
-            size: size$,
-            visualSize: visualSize$,
             intrinsicCoord: intrinsicCoord$,
-            coord: coord$,
+            pxIntrinsicSize: pxIntrinsicSize$,
+            pxIntrinsicCoord: pxIntrinsicCoord$,
+            boxStyles: boxStyles$,
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig);
@@ -290,10 +282,7 @@ export class TeleBox {
         watchValEvent(maximized$, TELE_BOX_EVENT.Maximized);
         watchValEvent(state$, TELE_BOX_EVENT.State);
         watchValEvent(intrinsicSize$, TELE_BOX_EVENT.IntrinsicResize);
-        watchValEvent(size$, TELE_BOX_EVENT.Resize);
-        watchValEvent(visualSize$, TELE_BOX_EVENT.VisualResize);
         watchValEvent(intrinsicCoord$, TELE_BOX_EVENT.IntrinsicMove);
-        watchValEvent(coord$, TELE_BOX_EVENT.Move);
 
         this._sideEffect.addDisposer(
             visible$.reaction((visible, skipUpdate) => {
@@ -326,10 +315,10 @@ export class TeleBox {
 
         if (fixRatio) {
             this.transform(
-                coord$.value.x,
-                coord$.value.y,
-                size$.value.width,
-                size$.value.height,
+                intrinsicCoord$.value.x,
+                intrinsicCoord$.value.y,
+                intrinsicSize$.value.width,
+                intrinsicSize$.value.height,
                 true
             );
         }
@@ -356,18 +345,18 @@ export class TeleBox {
 
     public titleBar: TeleTitleBar;
 
-    /** Minimum box width relative to container element. 0~1. Default 0. */
+    /** Minimum box width relative to stage area. 0~1. Default 0. */
     public get minWidth(): number {
         return this._minSize$.value.width;
     }
 
-    /** Minimum box height relative to container element. 0~1. Default 0. */
+    /** Minimum box height relative to stage area. 0~1. Default 0. */
     public get minHeight(): number {
         return this._minSize$.value.height;
     }
 
     /**
-     * @param minWidth Minimum box width relative to container element. 0~1.
+     * @param minWidth Minimum box width relative to stage area. 0~1.
      * @returns this
      */
     public setMinWidth(minWidth: number, skipUpdate = false): this {
@@ -390,16 +379,6 @@ export class TeleBox {
         return this;
     }
 
-    /** Intrinsic box width relative to container element(without counting the effect of maximization or minimization). 0~1. Default 0.5. */
-    public get intrinsicWidth(): number {
-        return this._intrinsicSize$.value.width;
-    }
-
-    /** Intrinsic box height relative to container element(without counting the effect of maximization or minimization). 0~1. Default 0.5. */
-    public get intrinsicHeight(): number {
-        return this._intrinsicSize$.value.height;
-    }
-
     /**
      * Resize box.
      * @param width Box width relative to container element. 0~1.
@@ -408,38 +387,14 @@ export class TeleBox {
      * @returns this
      */
     public resize(width: number, height: number, skipUpdate = false): this {
-        this._intrinsicSize$.setValue({ width, height }, skipUpdate);
+        this._intrinsicSize$.setValue(
+            {
+                width: Math.max(width, this.minWidth),
+                height: Math.max(height, this.minHeight),
+            },
+            skipUpdate
+        );
         return this;
-    }
-
-    /** Box width relative to container element. 0~1. Default 0.5. */
-    public get width(): number {
-        return this._size$.value.width;
-    }
-
-    /** Box height relative to container element. 0~1. Default 0.5. */
-    public get height(): number {
-        return this._size$.value.height;
-    }
-
-    /** Box width in pixels. */
-    public get absoluteWidth(): number {
-        return this.width * this.containerRect.width;
-    }
-
-    /** Box height in pixels. */
-    public get absoluteHeight(): number {
-        return this.height * this.containerRect.height;
-    }
-
-    /** Actual rendered box width relative to container element. 0~1. Default 0.5. */
-    public get visualWidth(): number {
-        return this._visualSize$.value.width;
-    }
-
-    /** Actual rendered box height relative to container element. 0~1. Default 0.5. */
-    public get visualHeight(): number {
-        return this._visualSize$.value.height;
     }
 
     /** Intrinsic box x position relative to container element(without counting the effect of maximization or minimization). 0~1. Default 0.1. */
@@ -452,10 +407,20 @@ export class TeleBox {
         return this._intrinsicCoord$.value.y;
     }
 
+    /** Intrinsic box width relative to container element(without counting the effect of maximization or minimization). 0~1. Default 0.1. */
+    public get intrinsicWidth(): number {
+        return this._intrinsicSize$.value.width;
+    }
+
+    /** Intrinsic box height relative to container element(without counting the effect of maximization or minimization). 0~1. Default 0.1. */
+    public get intrinsicHeight(): number {
+        return this._intrinsicSize$.value.height;
+    }
+
     /**
      * Move box position.
-     * @param x x position relative to container element. 0~1.
-     * @param y y position relative to container element. 0~1.
+     * @param x x position relative to stage area. 0~1.
+     * @param y y position relative to stage area. 0~1.
      * @param skipUpdate Skip emitting event.
      * @returns this
      */
@@ -464,22 +429,12 @@ export class TeleBox {
         return this;
     }
 
-    /** Box x position relative to container element. 0~1. Default 0.1. */
-    public get x(): number {
-        return this._coord$.value.x;
-    }
-
-    /** Box y position relative to container element. 0~1. Default 0.1. */
-    public get y(): number {
-        return this._coord$.value.y;
-    }
-
     /**
      * Resize + Move, with respect to fixed ratio.
-     * @param x x position relative to container element. 0~1.
-     * @param y y position relative to container element. 0~1.
-     * @param width Box width relative to container element. 0~1.
-     * @param height Box height relative to container element. 0~1.
+     * @param x x position relative to stage area. 0~1.
+     * @param y y position relative to stage area. 0~1.
+     * @param width Box width relative to stage area. 0~1.
+     * @param height Box height relative to stage area. 0~1.
      * @param skipUpdate Skip emitting event.
      * @returns this
      */
@@ -490,36 +445,29 @@ export class TeleBox {
         height: number,
         skipUpdate = false
     ): this {
+        const intrinsicSize = this.intrinsicSize;
+        const stageRect = this.stageRect;
+        const rootRect = this.rootRect;
+
+        width = Math.max(width, this.minWidth);
+        height = Math.max(height, this.minHeight);
+
         if (this.fixRatio) {
             const newHeight =
-                (this.intrinsicHeight / this.intrinsicWidth) * width;
+                (intrinsicSize.height / intrinsicSize.width) * width;
             if (y !== this.intrinsicY) {
                 y -= newHeight - height;
             }
             height = newHeight;
         }
 
-        if (y < 0) {
-            y = 0;
-            if (height > this.intrinsicHeight) {
-                height = this.intrinsicHeight;
-            }
+        if (y * stageRect.height + stageRect.y < rootRect.y) {
+            y = (rootRect.y - stageRect.y) / stageRect.height;
+            height = intrinsicSize.height;
         }
 
-        this._intrinsicCoord$.setValue(
-            {
-                x: width >= this.minWidth ? x : this.intrinsicX,
-                y: height >= this.minHeight ? y : this.intrinsicY,
-            },
-            skipUpdate
-        );
-        this._intrinsicSize$.setValue(
-            {
-                width: clamp(width, this.minWidth, 1),
-                height: clamp(height, this.minHeight, 1),
-            },
-            skipUpdate
-        );
+        this._intrinsicCoord$.setValue({ x, y }, skipUpdate);
+        this._intrinsicSize$.setValue({ width, height }, skipUpdate);
 
         return this;
     }
@@ -700,52 +648,20 @@ export class TeleBox {
 
         this.$box.dataset.teleBoxID = this.id;
 
-        this.$box.style.width = this.absoluteWidth + "px";
-        this.$box.style.height = this.absoluteHeight + "px";
+        const boxStyles = this.boxStyles;
+        this.$box.style.width = boxStyles.width;
+        this.$box.style.height = boxStyles.height;
         // Add 10px offset on first frame
         // which creates a subtle moving effect
-        const translateX =
-            this.x * this.containerRect.width + this.containerRect.x;
-        const translateY =
-            this.y * this.containerRect.height + this.containerRect.y;
-        this.$box.style.transform = `translate(${translateX - 10}px,${
-            translateY - 10
+        this.$box.style.transform = `translate(${boxStyles.x - 10}px,${
+            boxStyles.y - 10
         }px)`;
 
         this._renderSideEffect.addDisposer(
-            combine(
-                [
-                    this._coord$,
-                    this._size$,
-                    this._minimized$,
-                    this._containerRect$,
-                    this._collectorRect$,
-                ],
-                ([coord, size, minimized, containerRect, collectorRect]) => {
-                    const absoluteWidth = size.width * containerRect.width;
-                    const absoluteHeight = size.height * containerRect.height;
-                    return {
-                        width: absoluteWidth,
-                        height: absoluteHeight,
-                        x: coord.x * containerRect.width,
-                        y: coord.y * containerRect.height,
-                        scaleX:
-                            minimized && collectorRect
-                                ? collectorRect.width / absoluteWidth
-                                : 1,
-                        scaleY:
-                            minimized && collectorRect
-                                ? collectorRect.height / absoluteHeight
-                                : 1,
-                    };
-                },
-                { compare: shallowequal }
-            ).subscribe((styles) => {
+            this._boxStyles$.subscribe((styles) => {
                 boxStyler.set(styles);
             })
         );
-
-        boxStyler.set({ x: translateX, y: translateY });
 
         const $boxMain = document.createElement("div");
         $boxMain.className = this.wrapClassName("box-main");
@@ -865,74 +781,76 @@ export class TeleBox {
             preventEvent(ev);
 
             let { pageX, pageY } = flattenEvent(ev);
-            if (pageY < 0) {
-                pageY = 0;
+            if (pageY < this.rootRect.y) {
+                pageY = this.rootRect.y;
             }
 
-            const offsetX =
-                (pageX - trackStartPageX) / this.containerRect.width;
-            const offsetY =
-                (pageY - trackStartPageY) / this.containerRect.height;
+            const stageRect = this.stageRect;
+            const offsetX = pageX - trackStartPageX;
+            const offsetY = pageY - trackStartPageY;
 
             switch (trackingHandle) {
                 case TELE_BOX_RESIZE_HANDLE.North: {
                     this.transform(
-                        this.x,
-                        trackStartY + offsetY,
-                        this.width,
-                        trackStartHeight - offsetY
+                        this.intrinsicX,
+                        (trackStartY + offsetY - stageRect.y) /
+                            stageRect.height,
+                        this.intrinsicWidth,
+                        (trackStartHeight - offsetY) / stageRect.height
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.South: {
                     this.transform(
-                        this.x,
-                        this.y,
-                        this.width,
-                        trackStartHeight + offsetY
+                        this.intrinsicX,
+                        this.intrinsicY,
+                        this.intrinsicWidth,
+                        (trackStartHeight + offsetY) / stageRect.height
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.West: {
                     this.transform(
-                        trackStartX + offsetX,
-                        this.y,
-                        trackStartWidth - offsetX,
-                        this.height
+                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
+                        this.intrinsicY,
+                        (trackStartWidth - offsetX) / stageRect.width,
+                        this.intrinsicHeight
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.East: {
                     this.transform(
-                        this.x,
-                        this.y,
-                        trackStartWidth + offsetX,
-                        this.height
+                        this.intrinsicX,
+                        this.intrinsicY,
+                        (trackStartWidth + offsetX) / stageRect.width,
+                        this.intrinsicHeight
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.NorthWest: {
                     this.transform(
-                        trackStartX + offsetX,
-                        trackStartY + offsetY,
-                        trackStartWidth - offsetX,
-                        trackStartHeight - offsetY
+                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
+                        (trackStartY + offsetY - stageRect.y) /
+                            stageRect.height,
+                        (trackStartWidth - offsetX) / stageRect.width,
+                        (trackStartHeight - offsetY) / stageRect.height
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.NorthEast: {
                     this.transform(
-                        this.x,
-                        trackStartY + offsetY,
-                        trackStartWidth + offsetX,
-                        trackStartHeight - offsetY
+                        this.intrinsicX,
+                        (trackStartY + offsetY - stageRect.y) /
+                            stageRect.height,
+                        (trackStartWidth + offsetX) / stageRect.width,
+                        (trackStartHeight - offsetY) / stageRect.height
                     );
                     break;
                 }
                 case TELE_BOX_RESIZE_HANDLE.SouthEast: {
                     this.transform(
-                        this.x,
-                        this.y,
+                        this.intrinsicX,
+                        this.intrinsicY,
                         trackStartWidth + offsetX,
                         trackStartHeight + offsetY
                     );
@@ -940,29 +858,49 @@ export class TeleBox {
                 }
                 case TELE_BOX_RESIZE_HANDLE.SouthWest: {
                     this.transform(
-                        trackStartX + offsetX,
-                        this.y,
-                        trackStartWidth - offsetX,
-                        trackStartHeight + offsetY
+                        (trackStartX + offsetX - stageRect.x) / stageRect.width,
+                        this.intrinsicY,
+                        (trackStartWidth - offsetX) / stageRect.width,
+                        (trackStartHeight + offsetY) / stageRect.height
                     );
                     break;
                 }
                 default: {
+                    const pxIntrinsicSize = this.pxIntrinsicSize;
                     if (this.fence) {
+                        const fencedX = clamp(
+                            trackStartX + offsetX,
+                            stageRect.x,
+                            stageRect.x +
+                                stageRect.width -
+                                pxIntrinsicSize.width
+                        );
+                        const fencedY = clamp(
+                            trackStartY + offsetY,
+                            stageRect.y,
+                            stageRect.y +
+                                stageRect.height -
+                                pxIntrinsicSize.height
+                        );
                         this.move(
-                            clamp(trackStartX + offsetX, 0, 1 - this.width),
-                            clamp(trackStartY + offsetY, 0, 1 - this.height)
+                            (fencedX - stageRect.x) / stageRect.width,
+                            (fencedY - stageRect.y) / stageRect.height
                         );
                     } else {
-                        const xOverflowOffset = 20 / this.containerRect.width;
-                        const yOverflowOffset = 20 / this.containerRect.height;
+                        const rootRect = this.rootRect;
+                        const safeX = clamp(
+                            trackStartX + offsetX,
+                            rootRect.x - pxIntrinsicSize.width + 20,
+                            rootRect.x + rootRect.width - 20
+                        );
+                        const safeY = clamp(
+                            trackStartY + offsetY,
+                            rootRect.y,
+                            rootRect.y + rootRect.height - 20
+                        );
                         this.move(
-                            clamp(
-                                trackStartX + offsetX,
-                                xOverflowOffset - this.width,
-                                1 - xOverflowOffset
-                            ),
-                            clamp(trackStartY + offsetY, 0, 1 - yOverflowOffset)
+                            (safeX - stageRect.x) / stageRect.width,
+                            (safeY - stageRect.y) / stageRect.height
                         );
                     }
                     break;
@@ -1011,10 +949,9 @@ export class TeleBox {
             if (target.dataset?.teleBoxHandle) {
                 preventEvent(ev);
 
-                trackStartX = this.x;
-                trackStartY = this.y;
-                trackStartWidth = this.width;
-                trackStartHeight = this.height;
+                ({ x: trackStartX, y: trackStartY } = this.pxIntrinsicCoord);
+                ({ width: trackStartWidth, height: trackStartHeight } =
+                    this.pxIntrinsicSize);
 
                 ({ pageX: trackStartPageX, pageY: trackStartPageY } =
                     flattenEvent(ev));

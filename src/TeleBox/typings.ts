@@ -32,17 +32,17 @@ export interface TeleBoxConfig {
     readonly title?: string;
     /** Box visible. Default true. */
     readonly visible?: boolean;
-    /** Box width relative to root element. 0~1. Default 0.5. */
+    /** Box width relative to stage area. 0~1. Default 0.5. */
     readonly width?: number;
-    /** Box height relative to root element. 0~1. Default 0.5. */
+    /** Box height relative to stage area. 0~1. Default 0.5. */
     readonly height?: number;
-    /** Minimum box width relative to root element. 0~1. Default 0. */
+    /** Minimum box width relative to stage area. 0~1. Default 0. */
     readonly minWidth?: number;
-    /** Minimum box height relative to root element. 0~1. Default 0. */
+    /** Minimum box height relative to stage area. 0~1. Default 0. */
     readonly minHeight?: number;
-    /** x position relative to root element. 0~1. Default 0.1. */
+    /** x position relative to stage area. 0~1. Default 0.1. */
     readonly x?: number;
-    /** y position relative to root element. 0~1. Default 0.1. */
+    /** y position relative to stage area. 0~1. Default 0.1. */
     readonly y?: number;
     /** The initial state of the box. Default normal. */
     readonly state?: TeleBoxState;
@@ -68,7 +68,7 @@ export interface TeleBoxConfig {
     readonly styles?: HTMLStyleElement;
     /** Actual Box Dark Mode */
     readonly darkMode$: ReadonlyVal<boolean, boolean>;
-    /** Restrict box to always be within the containing area. Default true. */
+    /** Restrict box to always be within the stage area. Default false. */
     readonly fence$: ReadonlyVal<boolean, boolean>;
     /** Maximize box. Default false. */
     readonly maximized$: ReadonlyVal<boolean, boolean>;
@@ -76,8 +76,10 @@ export interface TeleBoxConfig {
     readonly minimized$: ReadonlyVal<boolean, boolean>;
     /** Is box readonly */
     readonly readonly$: ReadonlyVal<boolean, boolean>;
-    /** Position and dimension of container */
-    readonly containerRect$: ReadonlyVal<TeleBoxRect>;
+    /** Position and dimension of root element */
+    readonly rootRect$: ReadonlyVal<TeleBoxRect>;
+    /** Position and dimension of stage area */
+    readonly stageRect$: ReadonlyVal<TeleBoxRect>;
     /** Position and dimension of collector */
     readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
 }
@@ -90,11 +92,8 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     close: undefined;
     focus: undefined;
     blur: undefined;
-    move: { x: number; y: number };
-    resize: { width: number; height: number };
     intrinsic_move: { x: number; y: number };
     intrinsic_resize: { width: number; height: number };
-    visual_resize: { width: number; height: number };
     z_index: number;
     state: TeleBoxState;
     minimized: boolean;
