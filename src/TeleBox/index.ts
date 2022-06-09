@@ -4,7 +4,12 @@ import Emittery from "emittery";
 import styler from "stylefire";
 import shallowequal from "shallowequal";
 import { genUID, SideEffectManager } from "side-effect-manager";
-import type { ReadonlyVal, ReadonlyValEnhancedResult } from "value-enhancer";
+import type {
+    ReadonlyVal,
+    ReadonlyValEnhancedResult,
+    ValEnhancedResult,
+} from "value-enhancer";
+import { withValueEnhancer } from "value-enhancer";
 import { combine, Val, withReadonlyValueEnhancer } from "value-enhancer";
 import type { TeleTitleBar } from "../TeleTitleBar";
 import { DefaultTitleBar } from "../TeleTitleBar";
@@ -37,6 +42,14 @@ export * from "./typings";
 
 type RequiredTeleBoxConfig = Required<TeleBoxConfig>;
 
+type ValConfig = {
+    title: Val<RequiredTeleBoxConfig["title"], boolean>;
+    visible: Val<RequiredTeleBoxConfig["visible"], boolean>;
+    resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
+    draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
+    ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
+};
+
 type ReadonlyValConfig = {
     darkMode: RequiredTeleBoxConfig["darkMode$"];
     fence: RequiredTeleBoxConfig["fence$"];
@@ -47,11 +60,6 @@ type ReadonlyValConfig = {
     stageRect: RequiredTeleBoxConfig["stageRect$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
 
-    title: Val<RequiredTeleBoxConfig["title"], boolean>;
-    visible: Val<RequiredTeleBoxConfig["visible"], boolean>;
-    resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
-    draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
-    ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
     zIndex: Val<Required<RequiredTeleBoxConfig>["zIndex"], boolean>;
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
 
@@ -79,7 +87,10 @@ type ReadonlyValConfig = {
     state: ReadonlyVal<TeleBoxState, boolean>;
 };
 
-export interface TeleBox extends ReadonlyValEnhancedResult<ReadonlyValConfig> {}
+type CombinedValEnhancedResult = ReadonlyValEnhancedResult<ReadonlyValConfig> &
+    ValEnhancedResult<ValConfig>;
+
+export interface TeleBox extends CombinedValEnhancedResult {}
 
 export class TeleBox {
     public constructor({
@@ -249,11 +260,6 @@ export class TeleBox {
             stageRect: stageRect$,
             collectorRect: collectorRect$,
 
-            title: title$,
-            visible: visible$,
-            resizable: resizable$,
-            draggable: draggable$,
-            ratio: ratio$,
             zIndex: zIndex$,
             focus: focus$,
 
@@ -272,6 +278,16 @@ export class TeleBox {
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig);
+
+        const valConfig: ValConfig = {
+            title: title$,
+            visible: visible$,
+            resizable: resizable$,
+            draggable: draggable$,
+            ratio: ratio$,
+        };
+
+        withValueEnhancer(this, valConfig);
 
         this.titleBar =
             titleBar ||
