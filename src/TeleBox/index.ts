@@ -62,6 +62,7 @@ type ReadonlyValConfig = {
     minSize: Val<TeleBoxSize, boolean>;
     intrinsicSize: Val<TeleBoxSize, boolean>;
     intrinsicCoord: Val<TeleBoxCoord, boolean>;
+    pxMinSize: ReadonlyVal<TeleBoxSize, boolean>;
     pxIntrinsicSize: ReadonlyVal<TeleBoxSize, boolean>;
     pxIntrinsicCoord: ReadonlyVal<TeleBoxCoord, boolean>;
     boxStyles: ReadonlyVal<
@@ -141,6 +142,15 @@ export class TeleBox {
                 width: clamp(minWidth, 0, 1),
                 height: clamp(minHeight, 0, 1),
             },
+            { compare: shallowequal }
+        );
+
+        const pxMinSize$ = combine(
+            [minSize$, stageRect$],
+            ([minSize, stageRect]) => ({
+                width: minSize.width * stageRect.width,
+                height: minSize.height * stageRect.height,
+            }),
             { compare: shallowequal }
         );
 
@@ -253,6 +263,7 @@ export class TeleBox {
 
             state: state$,
             minSize: minSize$,
+            pxMinSize: pxMinSize$,
             intrinsicSize: intrinsicSize$,
             intrinsicCoord: intrinsicCoord$,
             pxIntrinsicSize: pxIntrinsicSize$,
@@ -261,6 +272,45 @@ export class TeleBox {
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig);
+
+        this.titleBar =
+            titleBar ||
+            new DefaultTitleBar({
+                readonly$: readonly$,
+                state$: state$,
+                title: title$.value,
+                namespace: this.namespace,
+                onDragStart: (event) => this._handleTrackStart?.(event),
+                onEvent: (event) => this._delegateEvents.emit(event.type),
+            });
+
+        this._sideEffect.addDisposer(
+            ratio$.subscribe((ratio) => {
+                if (ratio > 0) {
+                    this.transform(
+                        pxIntrinsicCoord$.value.x,
+                        pxIntrinsicCoord$.value.y,
+                        pxIntrinsicSize$.value.width,
+                        pxIntrinsicSize$.value.height,
+                        true
+                    );
+                }
+            })
+        );
+
+        this._sideEffect.addDisposer(
+            fence$.subscribe((fence) => {
+                if (fence) {
+                    this.move(
+                        pxIntrinsicCoord$.value.x,
+                        pxIntrinsicCoord$.value.y,
+                        true
+                    );
+                }
+            })
+        );
+
+        this.$box = this.render();
 
         const watchValEvent = <E extends TeleBoxEvent>(
             val: ReadonlyVal<TeleBoxEventConfig[E], boolean>,
@@ -301,29 +351,6 @@ export class TeleBox {
                 }
             })
         );
-
-        this.titleBar =
-            titleBar ||
-            new DefaultTitleBar({
-                readonly$: readonly$,
-                state$: state$,
-                title: title$.value,
-                namespace: this.namespace,
-                onDragStart: (event) => this._handleTrackStart?.(event),
-                onEvent: (event) => this._delegateEvents.emit(event.type),
-            });
-
-        if (ratio$.value > 0) {
-            this.transform(
-                intrinsicCoord$.value.x,
-                intrinsicCoord$.value.y,
-                intrinsicSize$.value.width,
-                intrinsicSize$.value.height,
-                true
-            );
-        }
-
-        this.$box = this.render();
     }
 
     public readonly id: string;
@@ -419,55 +446,91 @@ export class TeleBox {
 
     /**
      * Move box position.
-     * @param x x position relative to stage area. 0~1.
-     * @param y y position relative to stage area. 0~1.
+     * @param x x position in px.
+     * @param y y position in px.
      * @param skipUpdate Skip emitting event.
      * @returns this
      */
-    public move(x: number, y: number, skipUpdate = false): this {
-        this._intrinsicCoord$.setValue({ x, y }, skipUpdate);
+    protected move(x: number, y: number, skipUpdate = false): this {
+        let safeX: number;
+        let safeY: number;
+        const stageRect = this.stageRect;
+        const pxIntrinsicSize = this.pxIntrinsicSize;
+
+        if (this.fence) {
+            safeX = clamp(
+                x,
+                stageRect.x,
+                stageRect.x + stageRect.width - pxIntrinsicSize.width
+            );
+            safeY = clamp(
+                y,
+                stageRect.y,
+                stageRect.y + stageRect.height - pxIntrinsicSize.height
+            );
+        } else {
+            const rootRect = this.rootRect;
+            safeX = clamp(
+                x,
+                rootRect.x - pxIntrinsicSize.width + 20,
+                rootRect.x + rootRect.width - 20
+            );
+            safeY = clamp(y, rootRect.y, rootRect.y + rootRect.height - 20);
+        }
+
+        this._intrinsicCoord$.setValue(
+            {
+                x: (safeX - stageRect.x) / stageRect.width,
+                y: (safeY - stageRect.y) / stageRect.height,
+            },
+            skipUpdate
+        );
         return this;
     }
 
     /**
      * Resize + Move, with respect to fixed ratio.
-     * @param x x position relative to stage area. 0~1.
-     * @param y y position relative to stage area. 0~1.
-     * @param width Box width relative to stage area. 0~1.
-     * @param height Box height relative to stage area. 0~1.
+     * @param x x position in px.
+     * @param y y position in px.
+     * @param width Box width in px.
+     * @param height Box height in px.
      * @param skipUpdate Skip emitting event.
      * @returns this
      */
-    public transform(
+    protected transform(
         x: number,
         y: number,
         width: number,
         height: number,
         skipUpdate = false
     ): this {
-        const intrinsicSize = this.intrinsicSize;
         const stageRect = this.stageRect;
         const rootRect = this.rootRect;
 
-        width = Math.max(width, this.minWidth);
-        height = Math.max(height, this.minHeight);
+        width = Math.max(width, this.pxMinSize.width);
+        height = Math.max(height, this.pxMinSize.height);
 
         if (this.ratio > 0) {
-            const newHeight =
-                (this.ratio * width * stageRect.width) / stageRect.height;
-            if (y !== this.intrinsicY) {
+            const newHeight = this.ratio * width;
+            if (y !== this.pxIntrinsicCoord.y) {
                 y -= newHeight - height;
             }
             height = newHeight;
         }
 
-        if (y * stageRect.height + stageRect.y < rootRect.y) {
-            y = (rootRect.y - stageRect.y) / stageRect.height;
-            height = intrinsicSize.height;
+        if (y < rootRect.y) {
+            y = rootRect.y;
+            height = this.pxIntrinsicSize.height;
         }
 
-        this._intrinsicCoord$.setValue({ x, y }, skipUpdate);
-        this._intrinsicSize$.setValue({ width, height }, skipUpdate);
+        this.move(x, y, skipUpdate);
+        this._intrinsicSize$.setValue(
+            {
+                width: width / stageRect.width,
+                height: height / stageRect.height,
+            },
+            skipUpdate
+        );
 
         return this;
     }
@@ -837,53 +900,12 @@ export class TeleBox {
                     break;
                 }
                 default: {
-                    const pxIntrinsicSize = this.pxIntrinsicSize;
-                    if (this.fence) {
-                        const fencedX = clamp(
-                            trackStartX + offsetX,
-                            stageRect.x,
-                            stageRect.x +
-                                stageRect.width -
-                                pxIntrinsicSize.width
-                        );
-                        const fencedY = clamp(
-                            trackStartY + offsetY,
-                            stageRect.y,
-                            stageRect.y +
-                                stageRect.height -
-                                pxIntrinsicSize.height
-                        );
-                        this.move(
-                            (fencedX - stageRect.x) / stageRect.width,
-                            (fencedY - stageRect.y) / stageRect.height
-                        );
-                    } else {
-                        const rootRect = this.rootRect;
-                        const safeX = clamp(
-                            trackStartX + offsetX,
-                            rootRect.x - pxIntrinsicSize.width + 20,
-                            rootRect.x + rootRect.width - 20
-                        );
-                        const safeY = clamp(
-                            trackStartY + offsetY,
-                            rootRect.y,
-                            rootRect.y + rootRect.height - 20
-                        );
-                        this.move(
-                            (safeX - stageRect.x) / stageRect.width,
-                            (safeY - stageRect.y) / stageRect.height
-                        );
-                    }
+                    this.move(trackStartX + offsetX, trackStartY + offsetY);
                     return;
                 }
             }
 
-            this.transform(
-                (newX - stageRect.x) / stageRect.width,
-                (newY - stageRect.y) / stageRect.height,
-                newWidth / stageRect.width,
-                newHeight / stageRect.height
-            );
+            this.transform(newX, newY, newWidth, newHeight);
         };
 
         const handleTrackEnd = (ev: MouseEvent | TouchEvent): void => {

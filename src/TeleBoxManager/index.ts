@@ -58,7 +58,7 @@ export class TeleBoxManager {
         prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
         minimized = false,
         maximized = false,
-        fence = true,
+        fence = false,
         collector,
         namespace = "telebox",
         readonly = false,
@@ -624,16 +624,20 @@ export class TeleBoxManager {
         skipUpdate = false
     ): void {
         if (config.x != null || config.y != null) {
-            box.move(
-                config.x ?? box.intrinsicX,
-                config.y ?? box.intrinsicY,
+            box._intrinsicCoord$.setValue(
+                {
+                    x: config.x ?? box.intrinsicX,
+                    y: config.y ?? box.intrinsicY,
+                },
                 skipUpdate
             );
         }
         if (config.width != null || config.height != null) {
-            box.resize(
-                config.width ?? box.intrinsicWidth,
-                config.height ?? box.intrinsicHeight,
+            box._intrinsicSize$.setValue(
+                {
+                    width: config.width ?? box.intrinsicWidth,
+                    height: config.height ?? box.intrinsicHeight,
+                },
                 skipUpdate
             );
         }

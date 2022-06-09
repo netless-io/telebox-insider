@@ -11,16 +11,16 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     stageRatio?: number;
     /** Where the minimized boxes go. */
     collector?: TeleBoxCollector;
-    /** Restrict box to always be within the containing area. Default true. */
+    /** Restrict box to always be within the stage area. Default false. */
     fence?: boolean;
     /** Prefers Box color scheme. Default light. */
     prefersColorScheme?: TeleBoxColorScheme;
     /** Maximize box. Default false. */
-    readonly maximized?: boolean;
+    maximized?: boolean;
     /** Minimize box. Overwrites maximized state. Default false. */
-    readonly minimized?: boolean;
+    minimized?: boolean;
     /** Is box readonly */
-    readonly readonly?: boolean;
+    readonly?: boolean;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
