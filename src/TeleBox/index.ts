@@ -312,7 +312,7 @@ export class TeleBox {
         );
 
         this.$box = this.render();
-        teleStage.mount(this.$content);
+        teleStage.root$.setValue(this.$content.parentElement);
 
         const watchValEvent = <E extends TeleBoxEvent>(
             val: ReadonlyVal<TeleBoxEventConfig[E], boolean>,
