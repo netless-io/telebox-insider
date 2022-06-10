@@ -109,9 +109,7 @@ export class MaxTitleBar extends DefaultTitleBar {
                                 this.wrapClassName("max-titlebar-single-title"),
                                 titles.length === 1
                             );
-                            if (titles.length === 1) {
-                                this.setTitle(titles[0].title);
-                            } else {
+                            if (titles.length !== 1) {
                                 $titleBar.replaceChild(
                                     this.renderTitles(),
                                     $titleBar.firstElementChild as HTMLElement

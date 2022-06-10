@@ -283,7 +283,7 @@ export class TeleBox {
             new DefaultTitleBar({
                 readonly$: readonly$,
                 state$: state$,
-                title: title$.value,
+                title$: title$,
                 namespace: this.namespace,
                 onDragStart: (event) => this._handleTrackStart?.(event),
                 onEvent: (event) => this._delegateEvents.emit(event.type),

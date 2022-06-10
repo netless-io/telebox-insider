@@ -10,7 +10,7 @@ export type TeleTitleBarEvent<U = keyof TeleBoxDelegateEventConfig> =
 
 export interface TeleTitleBarConfig {
     readonly$: ReadonlyVal<boolean, boolean>;
-    title?: string;
+    title$: ReadonlyVal<string, boolean>;
     state$: ReadonlyVal<TeleBoxState, boolean>;
     namespace?: string;
     onEvent?: (event: TeleTitleBarEvent) => void;

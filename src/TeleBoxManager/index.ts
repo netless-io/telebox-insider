@@ -276,6 +276,7 @@ export class TeleBoxManager {
 
         this.titleBar = new MaxTitleBar({
             namespace: this.namespace,
+            title$: derive(this.topBox$, (topBox) => topBox?.title || ""),
             boxes$: this.boxes$,
             darkMode$: darkMode$,
             readonly$: readonly$,

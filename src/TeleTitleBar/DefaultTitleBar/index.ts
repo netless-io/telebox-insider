@@ -14,7 +14,7 @@ import type {
     TeleTitleBarEvent,
 } from "../typings";
 import { preventEvent } from "../../utils";
-import { Val } from "value-enhancer";
+import type { ReadonlyVal } from "value-enhancer";
 
 export type DefaultTitleBarButton = TeleTitleBarEvent & {
     readonly iconClassName: string;
@@ -29,7 +29,7 @@ export class DefaultTitleBar implements TeleTitleBar {
     public constructor({
         readonly$,
         state$,
-        title = "",
+        title$,
         buttons,
         onEvent,
         onDragStart,
@@ -37,7 +37,7 @@ export class DefaultTitleBar implements TeleTitleBar {
     }: DefaultTitleBarConfig) {
         this.readonly$ = readonly$;
         this.state$ = state$;
-        this.title$ = new Val(title);
+        this.title$ = title$;
         this.onEvent = onEvent;
         this.onDragStart = onDragStart;
         this.namespace = namespace;
@@ -66,14 +66,6 @@ export class DefaultTitleBar implements TeleTitleBar {
     public $titleBar: HTMLElement | undefined;
 
     public $dragArea: HTMLElement;
-
-    public get title(): string {
-        return this.title$.value;
-    }
-
-    public setTitle(title: string): void {
-        this.title$.setValue(title);
-    }
 
     public render(): HTMLElement {
         if (!this.$titleBar) {
@@ -205,7 +197,7 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     protected readonly$: TeleTitleBarConfig["readonly$"];
 
-    protected title$: Val<string>;
+    protected title$: ReadonlyVal<string>;
 
     protected buttons: ReadonlyArray<DefaultTitleBarButton>;
 
