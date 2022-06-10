@@ -9,8 +9,13 @@ import type {
     ReadonlyValEnhancedResult,
     ValEnhancedResult,
 } from "value-enhancer";
-import { withValueEnhancer } from "value-enhancer";
-import { combine, Val, withReadonlyValueEnhancer } from "value-enhancer";
+import {
+    combine,
+    Val,
+    withReadonlyValueEnhancer,
+    withValueEnhancer,
+    ValManager,
+} from "value-enhancer";
 import type { TeleTitleBar } from "../TeleTitleBar";
 import { DefaultTitleBar } from "../TeleTitleBar";
 import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
@@ -55,7 +60,7 @@ type ValConfig = {
     ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
 };
 
-type ReadonlyValConfig = {
+type PropsValConfig = {
     darkMode: RequiredTeleBoxConfig["darkMode$"];
     fence: RequiredTeleBoxConfig["fence$"];
     minimized: RequiredTeleBoxConfig["minimized$"];
@@ -64,7 +69,9 @@ type ReadonlyValConfig = {
     rootRect: RequiredTeleBoxConfig["rootRect$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
+};
 
+type MyReadonlyValConfig = {
     zIndex: Val<RequiredTeleBoxConfig["zIndex"], boolean>;
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
 
@@ -85,7 +92,9 @@ type ReadonlyValConfig = {
     contentStageRect: ReadonlyVal<TeleBoxRect | null>;
 };
 
-type CombinedValEnhancedResult = ReadonlyValEnhancedResult<ReadonlyValConfig> &
+type CombinedValEnhancedResult = ReadonlyValEnhancedResult<
+    PropsValConfig & MyReadonlyValConfig
+> &
     ValEnhancedResult<ValConfig>;
 
 export interface TeleBox extends CombinedValEnhancedResult {}
@@ -128,6 +137,9 @@ export class TeleBox {
 
         this.id = id;
         this.namespace = namespace;
+
+        const valManager = new ValManager();
+        this._sideEffect.addDisposer(() => valManager.destroy());
 
         const title$ = new Val(title);
         const visible$ = new Val(visible);
@@ -236,7 +248,7 @@ export class TeleBox {
         });
         this._sideEffect.addDisposer(() => teleStage.destroy());
 
-        const readonlyValConfig: ReadonlyValConfig = {
+        const propsValConfig: PropsValConfig = {
             darkMode: darkMode$,
             fence: fence$,
             minimized: minimized$,
@@ -245,7 +257,11 @@ export class TeleBox {
             rootRect: rootRect$,
             managerStageRect: managerStageRect$,
             collectorRect: collectorRect$,
+        };
 
+        withReadonlyValueEnhancer(this, propsValConfig);
+
+        const myReadonlyValConfig: MyReadonlyValConfig = {
             zIndex: zIndex$,
             focus: focus$,
 
@@ -266,7 +282,7 @@ export class TeleBox {
             contentStageRect: teleStage.stageRect$,
         };
 
-        withReadonlyValueEnhancer(this, readonlyValConfig);
+        withReadonlyValueEnhancer(this, myReadonlyValConfig, valManager);
 
         const valConfig: ValConfig = {
             title: title$,
@@ -276,7 +292,7 @@ export class TeleBox {
             ratio: ratio$,
         };
 
-        withValueEnhancer(this, valConfig);
+        withValueEnhancer(this, valConfig, valManager);
 
         this.titleBar =
             titleBar ||

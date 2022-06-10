@@ -6,10 +6,14 @@ import type {
     ReadonlyValEnhancedResult,
     ValEnhancedResult,
 } from "value-enhancer";
-import { withValueEnhancer } from "value-enhancer";
-import { combine } from "value-enhancer";
-import { Val } from "value-enhancer";
-import { withReadonlyValueEnhancer } from "value-enhancer";
+import { derive } from "value-enhancer";
+import {
+    withValueEnhancer,
+    combine,
+    Val,
+    withReadonlyValueEnhancer,
+    ValManager,
+} from "value-enhancer";
 import { SideEffectManager } from "side-effect-manager";
 import type { TeleBoxRect } from "../TeleBox/typings";
 
@@ -25,17 +29,20 @@ export interface TeleBoxCollectorConfig {
 
 type ValConfig = {
     styles: Val<TeleStyles>;
-    el: Val<HTMLElement>;
+    $collector: Val<HTMLElement>;
 };
 
-type ReadonlyValConfig = {
+type PropsValConfig = {
+    root: TeleBoxCollectorConfig["root$"];
+};
+
+type MyReadonlyValConfig = {
     rect: ReadonlyVal<TeleBoxRect | undefined>;
     visible: ReadonlyVal<boolean>;
-    root: ReadonlyVal<HTMLElement | null>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
-    ReadonlyValEnhancedResult<ReadonlyValConfig>;
+    ReadonlyValEnhancedResult<PropsValConfig & MyReadonlyValConfig>;
 
 export interface TeleBoxCollector extends CombinedValEnhancedResult {}
 
@@ -51,25 +58,33 @@ export class TeleBoxCollector {
     }: TeleBoxCollectorConfig) {
         this.namespace = namespace;
 
+        const valManager = new ValManager();
+        this._sideEffect.addDisposer(() => valManager.destroy());
+
         const rect$ = new Val<TeleBoxRect | undefined>(void 0);
-        const visible$ = minimized$;
+        const visible$ = derive(minimized$);
         const styles$ = new Val(styles);
         const el$ = new Val<HTMLElement>(document.createElement("button"));
 
         const valConfig: ValConfig = {
             styles: styles$,
-            el: el$,
+            $collector: el$,
         };
 
-        withValueEnhancer(this, valConfig);
+        withValueEnhancer(this, valConfig, valManager);
 
-        const readonlyValConfig: ReadonlyValConfig = {
-            rect: rect$,
-            visible: visible$,
+        const propsValConfig: PropsValConfig = {
             root: root$,
         };
 
-        withReadonlyValueEnhancer(this, readonlyValConfig);
+        withReadonlyValueEnhancer(this, propsValConfig);
+
+        const myReadonlyValConfig: MyReadonlyValConfig = {
+            rect: rect$,
+            visible: visible$,
+        };
+
+        withReadonlyValueEnhancer(this, myReadonlyValConfig, valManager);
 
         el$.value.className = this.wrapClassName("collector");
         el$.value.style.backgroundImage = `url('${collectorSVG}')`;

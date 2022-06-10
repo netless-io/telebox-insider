@@ -6,11 +6,13 @@ import type {
     ValEnhancedResult,
     ReadonlyValEnhancedResult,
 } from "value-enhancer";
+import { derive } from "value-enhancer";
 import {
     combine,
     Val,
     withValueEnhancer,
     withReadonlyValueEnhancer,
+    ValManager,
 } from "value-enhancer";
 import Emittery from "emittery";
 import type {
@@ -82,6 +84,9 @@ export class TeleBoxManager {
         this._sideEffect = new SideEffectManager();
 
         this.namespace = namespace;
+
+        const valManager = new ValManager();
+        this._sideEffect.addDisposer(() => valManager.destroy());
 
         const root$ = new Val(root);
         const readonly$ = new Val(readonly);
@@ -215,7 +220,7 @@ export class TeleBoxManager {
             stageRect: teleStage.stageRect$,
         };
 
-        withReadonlyValueEnhancer(this, readonlyValConfig);
+        withReadonlyValueEnhancer(this, readonlyValConfig, valManager);
 
         const valConfig: ValConfig = {
             prefersColorScheme: prefersColorScheme$,
@@ -227,7 +232,7 @@ export class TeleBoxManager {
             highlightStage: highlightStage$,
         };
 
-        withValueEnhancer(this, valConfig);
+        withValueEnhancer(this, valConfig, valManager);
 
         const closeBtnClassName = this.wrapClassName("titlebar-icon-close");
 

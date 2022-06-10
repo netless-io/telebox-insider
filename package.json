@@ -63,6 +63,6 @@
         "shallowequal": "^1.1.0",
         "side-effect-manager": "^1.1.0",
         "stylefire": "^7.0.3",
-        "value-enhancer": "^1.1.1"
+        "value-enhancer": "^1.2.1"
     }
 }
