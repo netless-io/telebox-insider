@@ -721,8 +721,14 @@ export class TeleBox {
             ]) => {
                 if (minimized && collectorRect) {
                     return {
-                        x: collectorRect.x + collectorRect.width / 2,
-                        y: collectorRect.y + collectorRect.height / 2,
+                        x:
+                            collectorRect.x -
+                            pxIntrinsicSize.width / 2 +
+                            collectorRect.width / 2,
+                        y:
+                            collectorRect.y -
+                            pxIntrinsicSize.height / 2 +
+                            collectorRect.height / 2,
                         width: pxIntrinsicSize.width + "px",
                         height: pxIntrinsicSize.height + "px",
                         scaleX: collectorRect.width / pxIntrinsicSize.width,
