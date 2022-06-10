@@ -3,13 +3,12 @@ import "./style.scss";
 import shallowequal from "shallowequal";
 import { SideEffectManager } from "side-effect-manager";
 import type { ReadonlyVal } from "value-enhancer";
-import { Val } from "value-enhancer";
 import { combine } from "value-enhancer";
 import type { TeleBoxRect } from "../TeleBox/typings";
 
 export interface TeleStageConfig {
     namespace: string;
-    root?: HTMLElement | null;
+    root$: ReadonlyVal<HTMLElement | null>;
     rootRect$: ReadonlyVal<TeleBoxRect>;
     ratio$: ReadonlyVal<number>;
     highlightStage$: ReadonlyVal<boolean>;
@@ -21,7 +20,6 @@ export class TeleStage {
     public readonly namespace: string;
     public readonly stageRect$: ReadonlyVal<TeleBoxRect>;
     public readonly highlightStage$: ReadonlyVal<boolean>;
-    public readonly root$: Val<HTMLElement | null>;
 
     public $boxStage?: HTMLDivElement;
 
@@ -30,11 +28,10 @@ export class TeleStage {
         rootRect$,
         ratio$,
         highlightStage$,
-        root = null,
+        root$,
     }: TeleStageConfig) {
         this.namespace = namespace;
         this.highlightStage$ = highlightStage$;
-        this.root$ = new Val<HTMLElement | null>(root);
 
         this.stageRect$ = combine(
             [rootRect$, highlightStage$, ratio$],
@@ -73,7 +70,7 @@ export class TeleStage {
         );
 
         this._sideEffect.addDisposer(
-            combine([this.root$, highlightStage$]).subscribe(
+            combine([root$, highlightStage$]).subscribe(
                 ([root, highlightStage]) => {
                     if (root && highlightStage) {
                         root.appendChild(this.render());
@@ -169,14 +166,6 @@ export class TeleStage {
 
         this.$boxStage = $boxStage;
         return $boxStage;
-    }
-
-    public mount($root: HTMLElement): void {
-        this.root$.setValue($root);
-    }
-
-    public unmount(): void {
-        this.root$.setValue(null);
     }
 
     public destroy(): void {

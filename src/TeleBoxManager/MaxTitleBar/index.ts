@@ -14,6 +14,7 @@ export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
     darkMode$: ReadonlyVal<boolean>;
     boxes$: ReadonlyVal<TeleBox[]>;
     rootRect$: ReadonlyVal<TeleBoxRect>;
+    root$: ReadonlyVal<HTMLElement | null>;
 }
 
 export class MaxTitleBar extends DefaultTitleBar {
@@ -23,6 +24,16 @@ export class MaxTitleBar extends DefaultTitleBar {
         this.boxes$ = config.boxes$;
         this.rootRect$ = config.rootRect$;
         this.darkMode$ = config.darkMode$;
+
+        this.sideEffect.addDisposer(
+            config.root$.subscribe((root) => {
+                if (root) {
+                    root.appendChild(this.render());
+                } else if (this.$titleBar?.parentNode) {
+                    this.$titleBar.remove();
+                }
+            })
+        );
     }
 
     public focusBox(box?: TeleBox): void {
@@ -54,6 +65,10 @@ export class MaxTitleBar extends DefaultTitleBar {
     }
 
     public render(): HTMLElement {
+        if (this.$titleBar) {
+            return this.$titleBar;
+        }
+
         const $titleBar = super.render();
 
         $titleBar.classList.add(this.wrapClassName("max-titlebar"));

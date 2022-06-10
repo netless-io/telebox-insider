@@ -78,6 +78,8 @@ export interface TeleBoxConfig {
     readonly minimized$: ReadonlyVal<boolean, boolean>;
     /** Is box readonly */
     readonly readonly$: ReadonlyVal<boolean, boolean>;
+    /** Root element to mount boxes */
+    readonly root$: ReadonlyVal<HTMLElement | null>;
     /** Position and dimension of root element */
     readonly rootRect$: ReadonlyVal<TeleBoxRect>;
     /** Position and dimension of stage area */

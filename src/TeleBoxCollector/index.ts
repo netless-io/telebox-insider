@@ -16,7 +16,7 @@ import type { TeleBoxRect } from "../TeleBox/typings";
 export interface TeleBoxCollectorConfig {
     namespace?: string;
     styles?: TeleStyles;
-    root?: HTMLElement;
+    root$: ReadonlyVal<HTMLElement | null>;
     minimized$: Val<boolean>;
     readonly$: ReadonlyVal<boolean>;
     darkMode$: ReadonlyVal<boolean>;
@@ -25,13 +25,13 @@ export interface TeleBoxCollectorConfig {
 
 type ValConfig = {
     styles: Val<TeleStyles>;
-    root: Val<HTMLElement | undefined>;
     el: Val<HTMLElement>;
 };
 
 type ReadonlyValConfig = {
     rect: ReadonlyVal<TeleBoxRect | undefined>;
     visible: ReadonlyVal<boolean>;
+    root: ReadonlyVal<HTMLElement | null>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
@@ -47,19 +47,17 @@ export class TeleBoxCollector {
         rootRect$,
         namespace = "telebox",
         styles = {},
-        root,
+        root$,
     }: TeleBoxCollectorConfig) {
         this.namespace = namespace;
 
         const rect$ = new Val<TeleBoxRect | undefined>(void 0);
         const visible$ = minimized$;
         const styles$ = new Val(styles);
-        const root$ = new Val(root);
         const el$ = new Val<HTMLElement>(document.createElement("button"));
 
         const valConfig: ValConfig = {
             styles: styles$,
-            root: root$,
             el: el$,
         };
 
@@ -68,6 +66,7 @@ export class TeleBoxCollector {
         const readonlyValConfig: ReadonlyValConfig = {
             rect: rect$,
             visible: visible$,
+            root: root$,
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig);

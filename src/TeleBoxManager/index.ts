@@ -46,6 +46,7 @@ const ResizeObserver = window.ResizeObserver || ResizeObserverPolyfill;
 type ReadonlyValConfig = {
     darkMode: ReadonlyVal<boolean, boolean>;
     state: ReadonlyVal<TeleBoxState, boolean>;
+    root: Val<HTMLElement | null>;
     rootRect: Val<TeleBoxRect>;
     stageRect: ReadonlyVal<TeleBoxRect>;
 };
@@ -67,7 +68,7 @@ export interface TeleBoxManager extends CombinedValEnhancedResult {}
 
 export class TeleBoxManager {
     public constructor({
-        root = document.body,
+        root = null,
         prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
         minimized = false,
         maximized = false,
@@ -80,9 +81,9 @@ export class TeleBoxManager {
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
-        this.root = root;
         this.namespace = namespace;
 
+        const root$ = new Val(root);
         const readonly$ = new Val(readonly);
         const minimized$ = new Val(minimized);
         const maximized$ = new Val(maximized);
@@ -99,28 +100,35 @@ export class TeleBoxManager {
             },
             { compare: shallowequal }
         );
-        this._sideEffect.add(() => {
-            const observer = new ResizeObserver((entries) => {
-                this._sideEffect.setTimeout(
-                    // debounce
-                    () => {
-                        const rect = entries[0]?.contentRect;
-                        if (rect) {
-                            rootRect$.setValue({
-                                x: rect.x,
-                                y: rect.y,
-                                width: rect.width,
-                                height: rect.height,
-                            });
-                        }
-                    },
-                    50,
-                    "root-resize-observer"
-                );
-            });
-            observer.observe(root);
-            return () => observer.disconnect();
-        });
+        this._sideEffect.addDisposer(
+            root$.subscribe((root) => {
+                this._sideEffect.add(() => {
+                    if (!root) {
+                        return () => void 0;
+                    }
+                    const observer = new ResizeObserver((entries) => {
+                        this._sideEffect.setTimeout(
+                            // debounce
+                            () => {
+                                const rect = entries[0]?.contentRect;
+                                if (rect) {
+                                    rootRect$.setValue({
+                                        x: rect.x,
+                                        y: rect.y,
+                                        width: rect.width,
+                                        height: rect.height,
+                                    });
+                                }
+                            },
+                            50,
+                            "root-resize-observer"
+                        );
+                    });
+                    observer.observe(root);
+                    return () => observer.disconnect();
+                }, "calc-root-rect");
+            })
+        );
 
         this.boxes$ = new Val<TeleBox[]>([]);
         this.topBox$ = new Val<TeleBox | undefined>(undefined);
@@ -190,7 +198,7 @@ export class TeleBoxManager {
                 readonly$: readonly$,
                 darkMode$: darkMode$,
                 namespace,
-                root,
+                root$,
                 rootRect$,
             });
 
@@ -198,7 +206,7 @@ export class TeleBoxManager {
             namespace,
             rootRect$,
             ratio$: stageRatio$,
-            root,
+            root$,
             highlightStage$,
         });
         this._sideEffect.addDisposer(() => teleStage.destroy());
@@ -206,6 +214,7 @@ export class TeleBoxManager {
         const readonlyValConfig: ReadonlyValConfig = {
             darkMode: darkMode$,
             state: state$,
+            root: root$,
             rootRect: rootRect$,
             stageRect: teleStage.stageRect$,
         };
@@ -275,6 +284,7 @@ export class TeleBoxManager {
             darkMode$: darkMode$,
             readonly$: readonly$,
             state$: state$,
+            root$,
             rootRect$: rootRect$,
             onEvent: (event): void => {
                 switch (event.type) {
@@ -297,8 +307,6 @@ export class TeleBoxManager {
                 }
             },
         });
-
-        this.root.appendChild(this.titleBar.render());
 
         this._sideEffect.addDisposer([
             state$.reaction((state, skipUpdate) => {
@@ -345,8 +353,6 @@ export class TeleBoxManager {
 
     protected _sideEffect: SideEffectManager;
 
-    protected root: HTMLElement;
-
     public readonly namespace: string;
 
     /** @deprecated use setMaximized and setMinimized instead */
@@ -380,6 +386,7 @@ export class TeleBoxManager {
             ...config,
             ...(smartPosition ? this.smartPosition(config) : {}),
             namespace: this.namespace,
+            root$: this._root$,
             darkMode$: this._darkMode$,
             maximized$: this._maximized$,
             minimized$: this._minimized$,
@@ -391,8 +398,6 @@ export class TeleBoxManager {
             collectorRect$: this.collector._rect$,
             managerHighlightStage$: this._highlightStage$,
         });
-
-        box.mount(this.root);
 
         if (box.focus) {
             this.focusBox(box);
@@ -520,6 +525,20 @@ export class TeleBoxManager {
             this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, deletedBoxes);
         }
         return deletedBoxes;
+    }
+
+    /**
+     * Mount manager to a container element.
+     */
+    public mount(root: HTMLElement): void {
+        this._root$.setValue(root);
+    }
+
+    /**
+     * Unmount manager from the container element.
+     */
+    public unmount(): void {
+        this._root$.setValue(null);
     }
 
     public destroy(skipUpdate = false): void {

@@ -117,6 +117,7 @@ export class TeleBox {
         minimized$,
         maximized$,
         readonly$,
+        root$,
         rootRect$,
         managerStageRect$,
         stageRatio$,
@@ -220,12 +221,15 @@ export class TeleBox {
                     : boxHighlightStage
         );
 
+        const contentRoot$ = new Val<HTMLElement | null>(null);
+
         const contentRect$ = new Val<TeleBoxRect>(rootRect$.value, {
             compare: shallowequal,
         });
 
         const teleStage = new TeleStage({
             namespace,
+            root$: contentRoot$,
             rootRect$: contentRect$,
             ratio$: stageRatio$,
             highlightStage$,
@@ -312,7 +316,7 @@ export class TeleBox {
         );
 
         this.$box = this.render();
-        teleStage.root$.setValue(this.$content.parentElement);
+        contentRoot$.setValue(this.$content.parentElement);
 
         const watchValEvent = <E extends TeleBoxEvent>(
             val: ReadonlyVal<TeleBoxEventConfig[E], boolean>,
@@ -336,23 +340,27 @@ export class TeleBox {
         watchValEvent(intrinsicSize$, TELE_BOX_EVENT.IntrinsicResize);
         watchValEvent(intrinsicCoord$, TELE_BOX_EVENT.IntrinsicMove);
 
-        this._sideEffect.addDisposer(
+        this._sideEffect.addDisposer([
             visible$.reaction((visible, skipUpdate) => {
                 if (!skipUpdate && !visible) {
                     this.events.emit(TELE_BOX_EVENT.Close);
                 }
-            })
-        );
-
-        this._sideEffect.addDisposer(
+            }),
             focus$.reaction((focus, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(
                         focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
                     );
                 }
-            })
-        );
+            }),
+            root$.subscribe((root) => {
+                if (root) {
+                    root.appendChild(this.$box);
+                } else if (this.$box.parentNode) {
+                    this.$box.remove();
+                }
+            }),
+        ]);
     }
 
     public readonly id: string;
@@ -533,22 +541,6 @@ export class TeleBox {
             },
             skipUpdate
         );
-    }
-
-    /**
-     * Mount box to a container element.
-     */
-    public mount(container: HTMLElement): void {
-        container.appendChild(this.$box);
-    }
-
-    /**
-     * Unmount box from the container element.
-     */
-    public unmount(): void {
-        if (this.$box.parentNode) {
-            this.$box.remove();
-        }
     }
 
     /**

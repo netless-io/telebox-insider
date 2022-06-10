@@ -6,7 +6,7 @@ import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 
 export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     /** Element to mount boxes. */
-    readonly root?: HTMLElement;
+    readonly root?: HTMLElement | null;
     /** Stage area height/with ratio. No ratio if <= 0. Default -1. */
     readonly stageRatio?: number;
     /** Where the minimized boxes go. */
