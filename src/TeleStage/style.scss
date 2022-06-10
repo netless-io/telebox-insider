@@ -3,7 +3,7 @@
 .#{$namespace}-box-stage-container {
     display: none;
     position: absolute;
-    z-index: $base-z-index - 1;
+    z-index: $base-z-index + 2000;
     top: 0;
     left: 0;
     width: 100%;

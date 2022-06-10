@@ -107,22 +107,15 @@ export class TeleBoxManager {
                         return () => void 0;
                     }
                     const observer = new ResizeObserver((entries) => {
-                        this._sideEffect.setTimeout(
-                            // debounce
-                            () => {
-                                const rect = entries[0]?.contentRect;
-                                if (rect) {
-                                    rootRect$.setValue({
-                                        x: rect.x,
-                                        y: rect.y,
-                                        width: rect.width,
-                                        height: rect.height,
-                                    });
-                                }
-                            },
-                            50,
-                            "root-resize-observer"
-                        );
+                        const rect = entries[0]?.contentRect;
+                        if (rect) {
+                            rootRect$.setValue({
+                                x: rect.x,
+                                y: rect.y,
+                                width: rect.width,
+                                height: rect.height,
+                            });
+                        }
                     });
                     observer.observe(root);
                     return () => observer.disconnect();
@@ -207,7 +200,10 @@ export class TeleBoxManager {
             rootRect$,
             ratio$: stageRatio$,
             root$,
-            highlightStage$,
+            highlightStage$: combine(
+                [highlightStage$, maximized$],
+                ([highlightStage, maximized]) => highlightStage && !maximized
+            ),
         });
         this._sideEffect.addDisposer(() => teleStage.destroy());
 
