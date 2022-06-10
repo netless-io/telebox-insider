@@ -66,6 +66,8 @@ export interface TeleBoxConfig {
     readonly footer?: HTMLElement;
     /** Box content styles. */
     readonly styles?: HTMLStyleElement;
+    /** Show stage frame and grey-out the non-stage area. Inherit setting from manager if null. Default null. */
+    readonly highlightStage?: boolean | null;
     /** Actual Box Dark Mode */
     readonly darkMode$: ReadonlyVal<boolean, boolean>;
     /** Restrict box to always be within the stage area. Default false. */
@@ -79,9 +81,13 @@ export interface TeleBoxConfig {
     /** Position and dimension of root element */
     readonly rootRect$: ReadonlyVal<TeleBoxRect>;
     /** Position and dimension of stage area */
-    readonly stageRect$: ReadonlyVal<TeleBoxRect>;
+    readonly managerStageRect$: ReadonlyVal<TeleBoxRect>;
+    /** Stage area height/with ratio. No ratio if <= 0. */
+    readonly stageRatio$: ReadonlyVal<number, boolean>;
     /** Position and dimension of collector */
     readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
+    /** highlight stage settings from manager */
+    readonly managerHighlightStage$: ReadonlyVal<boolean>;
 }
 
 type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;

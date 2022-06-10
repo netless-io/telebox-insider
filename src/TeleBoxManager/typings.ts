@@ -6,21 +6,23 @@ import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 
 export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     /** Element to mount boxes. */
-    root?: HTMLElement;
+    readonly root?: HTMLElement;
     /** Stage area height/with ratio. No ratio if <= 0. Default -1. */
-    stageRatio?: number;
+    readonly stageRatio?: number;
     /** Where the minimized boxes go. */
-    collector?: TeleBoxCollector;
+    readonly collector?: TeleBoxCollector;
     /** Restrict box to always be within the stage area. Default false. */
-    fence?: boolean;
+    readonly fence?: boolean;
     /** Prefers Box color scheme. Default light. */
-    prefersColorScheme?: TeleBoxColorScheme;
+    readonly prefersColorScheme?: TeleBoxColorScheme;
     /** Maximize box. Default false. */
-    maximized?: boolean;
+    readonly maximized?: boolean;
     /** Minimize box. Overwrites maximized state. Default false. */
-    minimized?: boolean;
+    readonly minimized?: boolean;
     /** Is box readonly */
-    readonly?: boolean;
+    readonly readonly?: boolean;
+    /** Show stage frame and grey-out the non-stage area. Default true. */
+    readonly highlightStage?: boolean;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =

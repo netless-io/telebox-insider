@@ -1,10 +1,32 @@
 import shallowequal from "shallowequal";
 import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
-import type { TeleBoxRect, TeleBoxState } from "../TeleBox/typings";
+import { SideEffectManager } from "side-effect-manager";
+import type {
+    ReadonlyVal,
+    ValEnhancedResult,
+    ReadonlyValEnhancedResult,
+} from "value-enhancer";
+import {
+    combine,
+    Val,
+    withValueEnhancer,
+    withReadonlyValueEnhancer,
+} from "value-enhancer";
+import Emittery from "emittery";
+import type {
+    ReadonlyTeleBox,
+    TeleBoxColorScheme,
+    TeleBoxRect,
+    TeleBoxState,
+} from "../TeleBox";
+import {
+    TeleBox,
+    TELE_BOX_EVENT,
+    TELE_BOX_STATE,
+    TELE_BOX_COLOR_SCHEME,
+    TELE_BOX_DELEGATE_EVENT,
+} from "../TeleBox";
 import { TeleBoxCollector } from "../TeleBoxCollector";
-import type { ReadonlyTeleBox } from "../TeleBox";
-import { TeleBox } from "../TeleBox";
-import { TELE_BOX_EVENT, TELE_BOX_STATE } from "../TeleBox/constants";
 import { TELE_BOX_MANAGER_EVENT } from "./constants";
 import type {
     TeleBoxManagerConfig,
@@ -14,17 +36,7 @@ import type {
     TeleBoxManagerUpdateConfig,
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
-import type { TeleBoxColorScheme } from "..";
-import { TELE_BOX_COLOR_SCHEME, TELE_BOX_DELEGATE_EVENT } from "..";
-import { SideEffectManager } from "side-effect-manager";
-import type {
-    ReadonlyVal,
-    ValEnhancedResult,
-    ReadonlyValEnhancedResult,
-} from "value-enhancer";
-import { withReadonlyValueEnhancer } from "value-enhancer";
-import { combine, Val, withValueEnhancer } from "value-enhancer";
-import Emittery from "emittery";
+import { TeleStage } from "../TeleStage";
 
 export * from "./typings";
 export * from "./constants";
@@ -45,6 +57,7 @@ type ValConfig = {
     maximized: Val<boolean, boolean>;
     fence: Val<boolean, boolean>;
     stageRatio: Val<number, boolean>;
+    highlightStage: Val<boolean, boolean>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
@@ -63,6 +76,7 @@ export class TeleBoxManager {
         namespace = "telebox",
         readonly = false,
         stageRatio = -1,
+        highlightStage = true,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
@@ -74,6 +88,7 @@ export class TeleBoxManager {
         const maximized$ = new Val(maximized);
         const fence$ = new Val(fence);
         const stageRatio$ = new Val(stageRatio);
+        const highlightStage$ = new Val(highlightStage);
 
         const rootRect$ = new Val<TeleBoxRect>(
             {
@@ -92,8 +107,8 @@ export class TeleBoxManager {
                         const rect = entries[0]?.contentRect;
                         if (rect) {
                             rootRect$.setValue({
-                                x: 0,
-                                y: 0,
+                                x: rect.x,
+                                y: rect.y,
                                 width: rect.width,
                                 height: rect.height,
                             });
@@ -106,42 +121,6 @@ export class TeleBoxManager {
             observer.observe(root);
             return () => observer.disconnect();
         });
-
-        const stageRect$ = combine(
-            [rootRect$, stageRatio$],
-            ([rootRect, stageRatio]): TeleBoxRect => {
-                if (
-                    stageRatio <= 0 ||
-                    rootRect.width <= 0 ||
-                    rootRect.height <= 0
-                ) {
-                    return rootRect;
-                }
-
-                const preferredHeight = rootRect.width * stageRatio;
-                if (preferredHeight === rootRect.height) {
-                    return rootRect;
-                }
-
-                if (preferredHeight < rootRect.height) {
-                    return {
-                        x: 0,
-                        y: (rootRect.height - preferredHeight) / 2,
-                        width: rootRect.width,
-                        height: preferredHeight,
-                    };
-                }
-
-                const preferredWidth = rootRect.height / stageRatio;
-                return {
-                    x: (rootRect.width - preferredWidth) / 2,
-                    y: 0,
-                    width: preferredWidth,
-                    height: rootRect.height,
-                };
-            },
-            { compare: shallowequal }
-        );
 
         this.boxes$ = new Val<TeleBox[]>([]);
         this.topBox$ = new Val<TeleBox | undefined>(undefined);
@@ -215,11 +194,20 @@ export class TeleBoxManager {
                 rootRect$,
             });
 
+        const teleStage = new TeleStage({
+            namespace,
+            rootRect$,
+            ratio$: stageRatio$,
+            root,
+            highlightStage$,
+        });
+        this._sideEffect.addDisposer(() => teleStage.destroy());
+
         const readonlyValConfig: ReadonlyValConfig = {
             darkMode: darkMode$,
             state: state$,
             rootRect: rootRect$,
-            stageRect: stageRect$,
+            stageRect: teleStage.stageRect$,
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig);
@@ -231,6 +219,7 @@ export class TeleBoxManager {
             minimized: minimized$,
             maximized: maximized$,
             stageRatio: stageRatio$,
+            highlightStage: highlightStage$,
         };
 
         withValueEnhancer(this, valConfig);
@@ -396,9 +385,11 @@ export class TeleBoxManager {
             minimized$: this._minimized$,
             fence$: this._fence$,
             rootRect$: this._rootRect$,
-            stageRect$: this._stageRect$,
+            managerStageRect$: this._stageRect$,
+            stageRatio$: this._stageRatio$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
+            managerHighlightStage$: this._highlightStage$,
         });
 
         box.mount(this.root);
