@@ -1,6 +1,7 @@
 /* eslint-env node */
 import path from "path";
 import { defineConfig } from "vite";
+import excludeDependenciesFromBundle from "rollup-plugin-exclude-dependencies-from-bundle";
 
 export default defineConfig(({ mode }) => {
     const isProd = mode === "production";
@@ -15,5 +16,6 @@ export default defineConfig(({ mode }) => {
             sourcemap: isProd,
             minify: isProd,
         },
+        plugins: [excludeDependenciesFromBundle()],
     };
 });
