@@ -7,7 +7,7 @@
     visibility: hidden;
     display: block;
     position: absolute;
-    z-index: $base-z-index * 2;
+    z-index: $collector-z-index;
     width: 40px;
     height: 40px;
     margin: 0;

@@ -1,2 +1,4 @@
 $namespace: "telebox";
 $base-z-index: 100;
+$stage-z-index: $base-z-index + 2000;
+$collector-z-index: $stage-z-index + 1;
