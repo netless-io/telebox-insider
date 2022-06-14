@@ -75,11 +75,6 @@ export class MaxTitleBar extends DefaultTitleBar {
 
         this.sideEffect.addDisposer(
             [
-                this.rootRect$.subscribe((rootRect) => {
-                    const { x, y, width } = rootRect;
-                    $titleBar.style.transform = `translate(${x}px, ${y}px)`;
-                    $titleBar.style.width = width + "px";
-                }),
                 this.state$.subscribe((state) => {
                     $titleBar.classList.toggle(
                         this.wrapClassName("max-titlebar-maximized"),

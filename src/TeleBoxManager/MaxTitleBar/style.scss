@@ -16,7 +16,10 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     position: absolute;
     top: 0;
     left: 0;
-    z-index: $base-z-index * 500;
+    width: 100%;
+    z-index: $max-titlebar-z-index;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
 
     .#{$namespace}-title {
         display: none;
@@ -95,7 +98,7 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     height: 100%;
     overflow: hidden;
     max-width: 182px;
-    min-width: 50px;
+    min-width: 150px;
     padding: 0 26px 0 16px;
     outline: none;
     font-size: 13px;

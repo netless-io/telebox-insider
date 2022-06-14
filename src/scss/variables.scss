@@ -1,4 +1,5 @@
 $namespace: "telebox";
 $base-z-index: 100;
-$stage-z-index: $base-z-index + 2000;
-$collector-z-index: $stage-z-index + 1;
+$max-titlebar-z-index: $base-z-index + 5000;
+$stage-z-index: $max-titlebar-z-index + 10;
+$collector-z-index: $stage-z-index + 10;

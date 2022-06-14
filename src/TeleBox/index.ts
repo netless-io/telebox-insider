@@ -737,12 +737,9 @@ export class TeleBox {
                           scaleY: 1,
                       };
                 if (minimized && collectorRect) {
-                    const boxWidth = maximized
-                        ? this.rootRect.width
-                        : pxIntrinsicSize.width;
-                    const boxHeight = maximized
-                        ? this.rootRect.height
-                        : pxIntrinsicSize.height;
+                    const { width: boxWidth, height: boxHeight } = maximized
+                        ? this.rootRect
+                        : pxIntrinsicSize;
                     styles.x =
                         collectorRect.x -
                         boxWidth / 2 +
@@ -792,16 +789,14 @@ export class TeleBox {
         this.$content = $content;
 
         this._sideEffect.add(() => {
-            const observer = new ResizeObserver((entries) => {
-                const rect = entries[0]?.contentRect;
-                if (rect) {
-                    this._contentRect$.setValue({
-                        x: rect.x,
-                        y: rect.y,
-                        width: rect.width,
-                        height: rect.height,
-                    });
-                }
+            const observer = new ResizeObserver(() => {
+                const rect = $content.getBoundingClientRect();
+                this._contentRect$.setValue({
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                });
             });
             observer.observe($content);
             return () => observer.disconnect();

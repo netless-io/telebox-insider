@@ -111,16 +111,14 @@ export class TeleBoxManager {
                     if (!root) {
                         return () => void 0;
                     }
-                    const observer = new ResizeObserver((entries) => {
-                        const rect = entries[0]?.contentRect;
-                        if (rect) {
-                            rootRect$.setValue({
-                                x: rect.x,
-                                y: rect.y,
-                                width: rect.width,
-                                height: rect.height,
-                            });
-                        }
+                    const observer = new ResizeObserver(() => {
+                        const rect = root.getBoundingClientRect();
+                        rootRect$.setValue({
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height,
+                        });
                     });
                     observer.observe(root);
                     return () => observer.disconnect();
