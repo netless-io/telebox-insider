@@ -34,12 +34,8 @@ export class TeleStage {
         this.highlightStage$ = highlightStage$;
 
         this.stageRect$ = combine(
-            [rootRect$, highlightStage$, ratio$],
-            ([rootRect, highlightStage, ratio]) => {
-                if (!highlightStage) {
-                    return rootRect;
-                }
-
+            [rootRect$, ratio$],
+            ([rootRect, ratio]) => {
                 if (ratio <= 0 || rootRect.width <= 0 || rootRect.height <= 0) {
                     return rootRect;
                 }
