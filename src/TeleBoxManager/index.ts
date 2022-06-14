@@ -206,8 +206,9 @@ export class TeleBoxManager {
             ratio$: stageRatio$,
             root$,
             highlightStage$: combine(
-                [highlightStage$, maximized$],
-                ([highlightStage, maximized]) => highlightStage && !maximized
+                [highlightStage$, maximized$, minimized$],
+                ([highlightStage, maximized, minimized]) =>
+                    highlightStage && (minimized || !maximized)
             ),
         });
         this._sideEffect.addDisposer(() => teleStage.destroy());

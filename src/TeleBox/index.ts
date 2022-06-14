@@ -719,40 +719,42 @@ export class TeleBox {
                 pxIntrinsicCoord,
                 collectorRect,
             ]) => {
+                const styles = maximized
+                    ? {
+                          x: 0,
+                          y: 0,
+                          width: "100%",
+                          height: "100%",
+                          scaleX: 1,
+                          scaleY: 1,
+                      }
+                    : {
+                          x: pxIntrinsicCoord.x,
+                          y: pxIntrinsicCoord.y,
+                          width: pxIntrinsicSize.width + "px",
+                          height: pxIntrinsicSize.height + "px",
+                          scaleX: 1,
+                          scaleY: 1,
+                      };
                 if (minimized && collectorRect) {
-                    return {
-                        x:
-                            collectorRect.x -
-                            pxIntrinsicSize.width / 2 +
-                            collectorRect.width / 2,
-                        y:
-                            collectorRect.y -
-                            pxIntrinsicSize.height / 2 +
-                            collectorRect.height / 2,
-                        width: pxIntrinsicSize.width + "px",
-                        height: pxIntrinsicSize.height + "px",
-                        scaleX: collectorRect.width / pxIntrinsicSize.width,
-                        scaleY: collectorRect.height / pxIntrinsicSize.height,
-                    };
+                    const boxWidth = maximized
+                        ? this.rootRect.width
+                        : pxIntrinsicSize.width;
+                    const boxHeight = maximized
+                        ? this.rootRect.height
+                        : pxIntrinsicSize.height;
+                    styles.x =
+                        collectorRect.x -
+                        boxWidth / 2 +
+                        collectorRect.width / 2;
+                    styles.y =
+                        collectorRect.y -
+                        boxHeight / 2 +
+                        collectorRect.height / 2;
+                    styles.scaleX = collectorRect.width / boxWidth;
+                    styles.scaleY = collectorRect.height / boxHeight;
                 }
-                if (maximized) {
-                    return {
-                        x: 0,
-                        y: 0,
-                        width: "100%",
-                        height: "100%",
-                        scaleX: 1,
-                        scaleY: 1,
-                    };
-                }
-                return {
-                    x: pxIntrinsicCoord.x,
-                    y: pxIntrinsicCoord.y,
-                    width: pxIntrinsicSize.width + "px",
-                    height: pxIntrinsicSize.height + "px",
-                    scaleX: 1,
-                    scaleY: 1,
-                };
+                return styles;
             },
             { compare: shallowequal }
         );
