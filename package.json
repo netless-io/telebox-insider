@@ -1,6 +1,6 @@
 {
     "name": "@netless/telebox-insider",
-    "version": "1.0.0-alpha.8",
+    "version": "1.0.0-alpha.9",
     "private": false,
     "description": "Window widget for Whiteboard",
     "license": "MIT",
@@ -63,6 +63,6 @@
         "shallowequal": "^1.1.0",
         "side-effect-manager": "^1.1.0",
         "stylefire": "^7.0.3",
-        "value-enhancer": "^1.2.1"
+        "value-enhancer": "^1.3.0"
     }
 }

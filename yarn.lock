@@ -2496,10 +2496,10 @@ v8-compile-cache@^2.0.3:
   resolved "https://registry.npmjs.org/v8-compile-cache/-/v8-compile-cache-2.3.0.tgz"
   integrity sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==
 
-value-enhancer@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-1.2.1.tgz#5db760da686def3a398ec3cee25e32c16d37f0af"
-  integrity sha512-11IrGi9xmVbr3twzuaMRrdUGzhdaE4eXvT6qYZlB5VrhK5uQzSPlYOEBlsIGH+dMvkakNkWGNIbxdZi87/MWuQ==
+value-enhancer@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/value-enhancer/-/value-enhancer-1.3.0.tgz#9882ede0b16ed66d95adb22887fc8b2e2a81c6d2"
+  integrity sha512-shI9N5ML4MGwD6bMu/My1l1+REFqhZGOuIjDN5Gf+k7gACfY2k8WtJEcqgdZMfepwivfhQxIfZp0riobUDZpDQ==
 
 vite@^2.4.4:
   version "2.4.4"
