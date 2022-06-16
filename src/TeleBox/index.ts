@@ -499,10 +499,10 @@ export class TeleBox {
             const rootRect = this.rootRect;
             safeX = clamp(
                 x,
-                rootRect.x - pxIntrinsicSize.width + 20,
-                rootRect.x + rootRect.width - 20
+                0 - pxIntrinsicSize.width + 20,
+                0 + rootRect.width - 20
             );
-            safeY = clamp(y, rootRect.y, rootRect.y + rootRect.height - 20);
+            safeY = clamp(y, 0, 0 + rootRect.height - 20);
         }
 
         this._intrinsicCoord$.setValue(
