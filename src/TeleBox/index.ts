@@ -58,6 +58,7 @@ type ValConfig = {
     resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
     draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
     ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
+    stageRatio: Val<number | null>;
 };
 
 type PropsValConfig = {
@@ -116,6 +117,7 @@ export class TeleBox {
         ratio = -1,
         focus = false,
         zIndex = 100,
+        stageRatio = null,
         titleBar,
         content,
         footer,
@@ -129,7 +131,7 @@ export class TeleBox {
         root$,
         rootRect$,
         managerStageRect$,
-        stageRatio$,
+        managerStageRatio$,
         collectorRect$,
         managerHighlightStage$,
     }: TeleBoxConfig) {
@@ -239,11 +241,17 @@ export class TeleBox {
             compare: shallowequal,
         });
 
+        const stageRatio$ = new Val(stageRatio);
+
         const teleStage = new TeleStage({
             namespace,
             root$: contentRoot$,
             rootRect$: contentRect$,
-            ratio$: stageRatio$,
+            ratio$: combine(
+                [stageRatio$, managerStageRatio$],
+                ([stageRatio, managerStageRatio]) =>
+                    stageRatio ?? managerStageRatio
+            ),
             highlightStage$,
         });
         this._sideEffect.addDisposer(() => teleStage.destroy());
@@ -290,6 +298,7 @@ export class TeleBox {
             resizable: resizable$,
             draggable: draggable$,
             ratio: ratio$,
+            stageRatio: stageRatio$,
         };
 
         withValueEnhancer(this, valConfig, valManager);

@@ -56,6 +56,8 @@ export interface TeleBoxConfig {
     readonly focus?: boolean;
     /** Base z-index for box. */
     readonly zIndex?: number;
+    /** Box stage ratio. Follow manager stage ratio if null. Default null. */
+    readonly stageRatio?: number | null;
     /** Classname Prefix. For CSS styling. Default "telebox". */
     readonly namespace?: string;
     /** TeleTitleBar Instance. */
@@ -85,7 +87,7 @@ export interface TeleBoxConfig {
     /** Position and dimension of stage area */
     readonly managerStageRect$: ReadonlyVal<TeleBoxRect>;
     /** Stage area height/with ratio. No ratio if <= 0. */
-    readonly stageRatio$: ReadonlyVal<number, boolean>;
+    readonly managerStageRatio$: ReadonlyVal<number, boolean>;
     /** Position and dimension of collector */
     readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
     /** highlight stage settings from manager */

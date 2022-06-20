@@ -394,7 +394,7 @@ export class TeleBoxManager {
             fence$: this._fence$,
             rootRect$: this._rootRect$,
             managerStageRect$: this._stageRect$,
-            stageRatio$: this._stageRatio$,
+            managerStageRatio$: this._stageRatio$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
             managerHighlightStage$: this._highlightStage$,
@@ -669,6 +669,9 @@ export class TeleBoxManager {
         }
         if (config.zIndex != null) {
             box._zIndex$.setValue(config.zIndex, skipUpdate);
+        }
+        if (config.stageRatio !== undefined) {
+            box.setStageRatio(config.stageRatio, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);
