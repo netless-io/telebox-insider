@@ -77,6 +77,7 @@ type MyReadonlyValConfig = {
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
 
     $userContent: Val<TeleBoxConfig["content"], boolean>;
+    $userStage: Val<TeleBoxConfig["content"], boolean>;
     $userFooter: Val<TeleBoxConfig["footer"], boolean>;
     $userStyles: Val<TeleBoxConfig["styles"], boolean>;
 
@@ -120,6 +121,7 @@ export class TeleBox {
         stageRatio = null,
         titleBar,
         content,
+        stage,
         footer,
         styles,
         highlightStage = null,
@@ -151,6 +153,7 @@ export class TeleBox {
         const zIndex$ = new Val(zIndex);
         const focus$ = new Val(focus);
         const $userContent$ = new Val(content);
+        const $userStage$ = new Val(stage);
         const $userFooter$ = new Val(footer);
         const $userStyles$ = new Val(styles);
 
@@ -272,6 +275,7 @@ export class TeleBox {
             focus: focus$,
 
             $userContent: $userContent$,
+            $userStage: $userStage$,
             $userFooter: $userFooter$,
             $userStyles: $userStyles$,
 
@@ -580,6 +584,17 @@ export class TeleBox {
         this._$userContent$.setValue(undefined);
     }
 
+    public mountStage(stage: HTMLElement): void {
+        this._$userStage$.setValue(stage);
+    }
+
+    /**
+     * Unmount content from the box.
+     */
+    public unmountStage(): void {
+        this._$userStage$.setValue(undefined);
+    }
+
     /**
      * Mount dom to box Footer.
      */
@@ -623,6 +638,9 @@ export class TeleBox {
 
     /** DOM of the box content */
     public $content!: HTMLElement;
+
+    /** DOM of the box stage area */
+    public $stage?: HTMLElement;
 
     /** DOM of the box title bar */
     public $titleBar!: HTMLElement;
@@ -831,6 +849,41 @@ export class TeleBox {
                 last$userContent = $userContent;
                 if ($userContent) {
                     $content.appendChild($userContent);
+                }
+            });
+        });
+
+        this._sideEffect.add(() => {
+            let last$userStage: HTMLElement | undefined;
+            return this._$userStage$.subscribe(($userStage) => {
+                if (last$userStage) {
+                    last$userStage.remove();
+                }
+                last$userStage = $userStage;
+                if ($userStage) {
+                    if (!this.$stage) {
+                        const $stage = document.createElement("div");
+                        this.$stage = $stage;
+                        $stage.className = this.wrapClassName("content-stage");
+                        this._sideEffect.addDisposer(
+                            this._contentStageRect$.subscribe((rect) => {
+                                if (rect) {
+                                    $stage.style.top = rect.y + "px";
+                                    $stage.style.left = rect.x + "px";
+                                    $stage.style.width = rect.width + "px";
+                                    $stage.style.height = rect.height + "px";
+                                }
+                            }),
+                            "content-stage-rect"
+                        );
+                        $content.appendChild($stage);
+                    }
+                    if (!this.$stage.parentElement) {
+                        $content.appendChild(this.$stage);
+                    }
+                    this.$stage.appendChild($userStage);
+                } else if (this.$stage?.parentElement) {
+                    this.$stage.remove();
                 }
             });
         });

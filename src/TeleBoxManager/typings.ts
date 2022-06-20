@@ -42,7 +42,12 @@ type TeleBoxManagerBoxConfigBaseProps =
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "content" | "footer" | "id" | "focus"
+    | TeleBoxManagerBoxConfigBaseProps
+    | "content"
+    | "stage"
+    | "footer"
+    | "id"
+    | "focus"
 >;
 
 export type TeleBoxManagerQueryConfig = Pick<
@@ -60,7 +65,7 @@ export type TeleBoxManagerQueryConfig = Pick<
 
 export type TeleBoxManagerUpdateConfig = Pick<
     TeleBoxConfig,
-    TeleBoxManagerBoxConfigBaseProps | "content" | "footer"
+    TeleBoxManagerBoxConfigBaseProps | "content" | "stage" | "footer"
 >;
 
 type CheckTeleBoxManagerConfig<

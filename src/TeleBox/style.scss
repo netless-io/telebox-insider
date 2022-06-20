@@ -46,6 +46,10 @@
     position: relative;
 }
 
+.#{$namespace}-content-stage {
+    position: absolute;
+}
+
 .#{$namespace}-footer-wrap {
     flex-shrink: 0;
     display: flex;

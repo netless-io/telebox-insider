@@ -62,9 +62,11 @@ export interface TeleBoxConfig {
     readonly namespace?: string;
     /** TeleTitleBar Instance. */
     readonly titleBar?: TeleTitleBar;
-    /** Box content. */
+    /** Box content element. */
     readonly content?: HTMLElement;
-    /** Box footer. */
+    /** Stage element. */
+    readonly stage?: HTMLElement;
+    /** Box footer element. */
     readonly footer?: HTMLElement;
     /** Box content styles. */
     readonly styles?: HTMLStyleElement;

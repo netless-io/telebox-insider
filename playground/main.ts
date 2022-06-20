@@ -56,7 +56,7 @@ createBtn("Create").addEventListener("click", () => {
         minWidth: 0.1,
         title: title.slice(0, 50),
         focus: true,
-        content,
+        stage: content,
     });
     if (manager.minimized) {
         manager.setMinimized(false);
