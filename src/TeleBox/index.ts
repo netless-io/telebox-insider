@@ -228,11 +228,9 @@ export class TeleBox {
         );
 
         const highlightStage$ = combine(
-            [maximized$, boxHighlightStage$, managerHighlightStage$],
-            ([maximized, boxHighlightStage, managerHighlightStage]) =>
-                boxHighlightStage === null
-                    ? managerHighlightStage && maximized
-                    : boxHighlightStage
+            [boxHighlightStage$, managerHighlightStage$],
+            ([boxHighlightStage, managerHighlightStage]) =>
+                boxHighlightStage ?? managerHighlightStage
         );
 
         const contentRoot$ = new Val<HTMLElement | null>(null);
