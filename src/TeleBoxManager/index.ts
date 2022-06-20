@@ -114,8 +114,8 @@ export class TeleBoxManager {
                     const observer = new ResizeObserver(() => {
                         const rect = root.getBoundingClientRect();
                         rootRect$.setValue({
-                            x: rect.x,
-                            y: rect.y,
+                            x: 0,
+                            y: 0,
                             width: rect.width,
                             height: rect.height,
                         });

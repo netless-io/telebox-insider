@@ -817,8 +817,8 @@ export class TeleBox {
             const observer = new ResizeObserver(() => {
                 const rect = $content.getBoundingClientRect();
                 this._contentRect$.setValue({
-                    x: rect.x,
-                    y: rect.y,
+                    x: 0,
+                    y: 0,
                     width: rect.width,
                     height: rect.height,
                 });
