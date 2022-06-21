@@ -195,7 +195,6 @@ export class TeleBoxManager {
                 darkMode$: darkMode$,
                 namespace,
                 root$,
-                rootRect$,
             });
 
         const teleStage = new TeleStage({

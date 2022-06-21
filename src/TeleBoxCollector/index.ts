@@ -24,7 +24,6 @@ export interface TeleBoxCollectorConfig {
     minimized$: Val<boolean>;
     readonly$: ReadonlyVal<boolean>;
     darkMode$: ReadonlyVal<boolean>;
-    rootRect$: ReadonlyVal<TeleBoxRect>;
 }
 
 type ValConfig = {
@@ -51,7 +50,6 @@ export class TeleBoxCollector {
         minimized$,
         readonly$,
         darkMode$,
-        rootRect$,
         namespace = "telebox",
         styles = {},
         root$,
@@ -144,11 +142,13 @@ export class TeleBoxCollector {
                             }
                         }),
                         // Place after $collector appended to the DOM so that rect calc works
-                        combine([minimized$, rootRect$, root$]).subscribe(
-                            ([minimized, rootRect, root]) => {
+                        combine([minimized$, root$]).subscribe(
+                            ([minimized, root]) => {
                                 if (minimized && root) {
                                     const { x, y, width, height } =
                                         $collector.getBoundingClientRect();
+                                    const rootRect =
+                                        root.getBoundingClientRect();
                                     rect$.setValue({
                                         x: x - rootRect.x,
                                         y: y - rootRect.y,

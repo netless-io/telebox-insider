@@ -744,7 +744,14 @@ export class TeleBox {
                 pxIntrinsicCoord,
                 collectorRect,
             ]) => {
-                const styles = maximized
+                const styles: {
+                    x: number;
+                    y: number;
+                    width: string;
+                    height: string;
+                    scaleX: number;
+                    scaleY: number;
+                } = maximized
                     ? {
                           x: 0,
                           y: 0,
