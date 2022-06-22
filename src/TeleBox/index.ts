@@ -1191,4 +1191,5 @@ export type ReadonlyTeleBox = Pick<
     | "setRatio"
     | "setVisible"
     | "handleTrackStart"
+    | "onValChanged"
 >;
