@@ -91,7 +91,7 @@ type MyReadonlyValConfig = {
     highlightStage: ReadonlyVal<boolean, boolean>;
     boxHighlightStage: Val<boolean | null, boolean>;
     contentRect: Val<TeleBoxRect>;
-    contentStageRect: ReadonlyVal<TeleBoxRect | null>;
+    contentStageRect: ReadonlyVal<TeleBoxRect>;
 };
 
 type CombinedValEnhancedResult = ReadonlyValEnhancedResult<
@@ -874,12 +874,10 @@ export class TeleBox {
                         $stage.className = this.wrapClassName("content-stage");
                         this._sideEffect.addDisposer(
                             this._contentStageRect$.subscribe((rect) => {
-                                if (rect) {
-                                    $stage.style.top = rect.y + "px";
-                                    $stage.style.left = rect.x + "px";
-                                    $stage.style.width = rect.width + "px";
-                                    $stage.style.height = rect.height + "px";
-                                }
+                                $stage.style.top = rect.y + "px";
+                                $stage.style.left = rect.x + "px";
+                                $stage.style.width = rect.width + "px";
+                                $stage.style.height = rect.height + "px";
                             }),
                             "content-stage-rect"
                         );
