@@ -629,7 +629,7 @@ export class TeleBox {
     }
 
     /** Show stage frame and grey-out the non-stage area. Inherit setting from manager if null. */
-    setHighlightStage(highlightStage: boolean | null): void {
+    public setHighlightStage(highlightStage: boolean | null): void {
         this._boxHighlightStage$.setValue(highlightStage);
     }
 
@@ -820,19 +820,36 @@ export class TeleBox {
             this.wrapClassName("content") + " tele-fancy-scrollbar";
         this.$content = $content;
 
+        const updateContentRect = (): void => {
+            const rect = $content.getBoundingClientRect();
+            this._contentRect$.setValue({
+                x: 0,
+                y: 0,
+                width: rect.width,
+                height: rect.height,
+            });
+        };
         this._sideEffect.add(() => {
             const observer = new ResizeObserver(() => {
-                const rect = $content.getBoundingClientRect();
-                this._contentRect$.setValue({
-                    x: 0,
-                    y: 0,
-                    width: rect.width,
-                    height: rect.height,
-                });
+                if (!this.minimized) {
+                    updateContentRect();
+                }
             });
             observer.observe($content);
             return () => observer.disconnect();
         });
+        this._sideEffect.addDisposer(
+            this._minimized$.reaction((minimized) => {
+                // correct content size when restoring from minimized
+                if (!minimized) {
+                    this._sideEffect.setTimeout(
+                        updateContentRect,
+                        400,
+                        "minimized-content-rect-fix"
+                    );
+                }
+            })
+        );
 
         this._sideEffect.add(() => {
             let last$userStyles: HTMLStyleElement | undefined;
