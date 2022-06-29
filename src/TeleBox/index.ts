@@ -323,8 +323,7 @@ export class TeleBox {
                         pxIntrinsicCoord$.value.x,
                         pxIntrinsicCoord$.value.y,
                         pxIntrinsicSize$.value.width,
-                        pxIntrinsicSize$.value.height,
-                        true
+                        pxIntrinsicSize$.value.height
                     );
                 }
             })
@@ -335,8 +334,7 @@ export class TeleBox {
                 if (fence) {
                     this.move(
                         pxIntrinsicCoord$.value.x,
-                        pxIntrinsicCoord$.value.y,
-                        true
+                        pxIntrinsicCoord$.value.y
                     );
                 }
             })
@@ -492,19 +490,29 @@ export class TeleBox {
         const pxIntrinsicSize = this.pxIntrinsicSize;
 
         if (this.fence) {
+            // safeX = clamp(
+            //     x,
+            //     managerStageRect.x,
+            //     managerStageRect.x +
+            //         managerStageRect.width -
+            //         pxIntrinsicSize.width
+            // );
+            // safeY = clamp(
+            //     y,
+            //     managerStageRect.y,
+            //     managerStageRect.y +
+            //         managerStageRect.height -
+            //         pxIntrinsicSize.height
+            // );
             safeX = clamp(
                 x,
-                managerStageRect.x,
-                managerStageRect.x +
-                    managerStageRect.width -
-                    pxIntrinsicSize.width
+                0 - pxIntrinsicSize.width + 20,
+                0 + managerStageRect.width - 20
             );
             safeY = clamp(
                 y,
                 managerStageRect.y,
-                managerStageRect.y +
-                    managerStageRect.height -
-                    pxIntrinsicSize.height
+                managerStageRect.y + managerStageRect.height - 20
             );
         } else {
             const rootRect = this.rootRect;

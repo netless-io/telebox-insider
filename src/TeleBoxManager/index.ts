@@ -74,7 +74,7 @@ export class TeleBoxManager {
         prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
         minimized = false,
         maximized = false,
-        fence = false,
+        fence = true,
         collector,
         namespace = "telebox",
         readonly = false,
