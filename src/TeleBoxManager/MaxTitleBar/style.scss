@@ -1,7 +1,7 @@
 @import "../../scss/variables.scss";
 @import "../../scss/mixins.scss";
 
-$scrollbar-size: 8px;
+$scrollbar-size: 4px;
 $scrollbar-ff-width: auto; // FF-only accepts auto, thin, none
 $scrollbar-minlength: 50px; // Minimum length of scrollbar thumb
 $scrollbar-track-color: transparent;
@@ -108,15 +108,26 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     white-space: nowrap;
     word-break: keep-all;
     border: none;
-    border-right: 1px solid #e5e5f0;
-    color: #7b88a0;
-    background: transparent;
+    border-right-width: 1px;
+    border-right-style: solid;
     cursor: pointer;
     user-select: none;
+
+    @include v(color, titlebar-tab-color, $titlebar-tab-color);
+    @include v(
+        background-color,
+        titlebar-tab-background,
+        $titlebar-tab-background
+    );
+    @include v(
+        border-right-color,
+        titlebar-tab-divider-color,
+        $titlebar-tab-divider-color
+    );
 }
 
 .#{$namespace}-titles-tab-focus {
-    color: #357bf6;
+    @include v(color, titlebar-tab-focus-color, $titlebar-tab-focus-color);
 }
 
 .#{$namespace}-readonly {
@@ -128,17 +139,25 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
 .#{$namespace}-color-scheme-dark {
     color-scheme: dark;
 
-    &.#{$namespace}-titlebar {
-        color: #e9e9e9;
-        background: #383b42;
-        border-bottom: none;
-    }
-
     .#{$namespace}-titles-tab {
-        border-right-color: #7b88a0;
+        @include v(color, titlebar-tab-color-dark, $titlebar-tab-color-dark);
+        @include v(
+            background-color,
+            titlebar-tab-background-dark,
+            $titlebar-tab-background-dark
+        );
+        @include v(
+            border-right-color,
+            titlebar-tab-divider-color-dark,
+            $titlebar-tab-divider-color-dark
+        );
     }
 
-    .#{$namespace}-title {
-        color: #e9e9e9;
+    .#{$namespace}-titles-tab-focus {
+        @include v(
+            color,
+            titlebar-tab-focus-color-dark,
+            $titlebar-tab-focus-color-dark
+        );
     }
 }

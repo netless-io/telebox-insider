@@ -1,4 +1,5 @@
 @import "../scss/variables.scss";
+@import "../scss/mixins.scss";
 
 .#{$namespace}-manager-container {
     position: relative;
@@ -8,7 +9,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: $color-container-background;
+    @include v(
+        background,
+        manager-container-background,
+        $manager-container-background
+    );
 
     &.is-maximized,
     &.is-minimized {
@@ -21,19 +26,31 @@
 .#{$namespace}-manager-stage {
     position: relative;
     overflow: hidden;
-    background: $color-stage-background;
-    box-shadow: $color-stage-shadow;
+    @include v(background, manager-stage-background, $manager-stage-background);
+    @include v(box-shadow, manager-stage-shadow, $manager-stage-shadow);
 }
 
 .#{$namespace}-color-scheme-dark {
     color-scheme: dark;
 
     &.#{$namespace}-manager-container {
-        background: $color-container-background-dark;
+        @include v(
+            background,
+            manager-container-background-dark,
+            $manager-container-background-dark
+        );
 
         & > .#{$namespace}-manager-stage {
-            background: $color-stage-background-dark;
-            box-shadow: $color-stage-shadow-dark;
+            @include v(
+                background,
+                manager-stage-background-dark,
+                $manager-stage-background-dark
+            );
+            @include v(
+                box-shadow,
+                manager-stage-shadow-dark,
+                $manager-stage-shadow-dark
+            );
         }
     }
 }

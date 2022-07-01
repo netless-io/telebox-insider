@@ -14,7 +14,7 @@ export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
     darkMode$: ReadonlyVal<boolean>;
     boxes$: ReadonlyVal<TeleBox[]>;
     rootRect$: ReadonlyVal<TeleBoxRect>;
-    root$: ReadonlyVal<HTMLElement | null>;
+    root: HTMLElement;
 }
 
 export class MaxTitleBar extends DefaultTitleBar {
@@ -25,15 +25,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         this.rootRect$ = config.rootRect$;
         this.darkMode$ = config.darkMode$;
 
-        this.sideEffect.addDisposer(
-            config.root$.subscribe((root) => {
-                if (root) {
-                    root.appendChild(this.render());
-                } else if (this.$titleBar?.parentNode) {
-                    this.$titleBar.remove();
-                }
-            })
-        );
+        config.root.appendChild(this.render());
     }
 
     public focusBox(box?: TeleBox): void {
@@ -85,16 +77,6 @@ export class MaxTitleBar extends DefaultTitleBar {
                     $titleBar.classList.toggle(
                         this.wrapClassName("readonly"),
                         readonly
-                    );
-                }),
-                this.darkMode$.subscribe((darkMode) => {
-                    $titleBar.classList.toggle(
-                        this.wrapClassName("color-scheme-dark"),
-                        darkMode
-                    );
-                    $titleBar.classList.toggle(
-                        this.wrapClassName("color-scheme-light"),
-                        !darkMode
                     );
                 }),
                 combine([this.state$, this.boxes$]).subscribe(

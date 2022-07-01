@@ -8,10 +8,12 @@
     height: 26px;
     display: flex;
     align-items: center;
-    background: #fff;
     user-select: none;
-    border-bottom: 1px solid #eeeef7;
     touch-action: manipulation;
+
+    @include v(color, titlebar-color, $titlebar-color);
+    @include v(background-color, titlebar-background, $titlebar-background);
+    @include v(border-bottom, titlebar-border-bottom, $titlebar-border-bottom);
 }
 
 .#{$namespace}-title-area {
@@ -26,6 +28,7 @@
 
 .#{$namespace}-title {
     @include no-user-select;
+    @include v(color, titlebar-color, $titlebar-color);
 
     overflow: hidden;
     margin: 0;
@@ -36,7 +39,6 @@
     white-space: nowrap;
     word-break: keep-all;
     text-overflow: ellipsis;
-    color: #191919;
 }
 
 .#{$namespace}-drag-area {
@@ -85,31 +87,86 @@
 }
 
 .#{$namespace}-titlebar-icon-minimize {
-    background: center / cover no-repeat url("./icons/minimize.svg");
+    background: center / cover no-repeat;
+    @include v(
+        background-image,
+        titlebar-icon-minimize,
+        url("./icons/minimize.svg")
+    );
 }
 
 .#{$namespace}-titlebar-icon-maximize {
-    background: center / cover no-repeat url("./icons/maximize.svg");
+    background: center / cover no-repeat;
+    @include v(
+        background-image,
+        titlebar-icon-maximize,
+        url("./icons/maximize.svg")
+    );
 
     &.is-active {
-        background-image: url("./icons/maximize-active.svg");
+        @include v(
+            background-image,
+            titlebar-icon-maximize-active,
+            url("./icons/maximize-active.svg")
+        );
     }
 }
 
 .#{$namespace}-titlebar-icon-close {
-    background: center / cover no-repeat url("./icons/close.svg");
+    background: center / cover no-repeat;
+    @include v(background-image, titlebar-icon-close, url("./icons/close.svg"));
 }
 
 .#{$namespace}-color-scheme-dark {
     color-scheme: dark;
 
     .#{$namespace}-title {
-        color: #e9e9e9;
+        @include v(color, titlebar-color-dark, $titlebar-color-dark);
     }
 
     .#{$namespace}-titlebar {
-        color: #e9e9e9;
-        background: #383b42;
-        border-bottom: none;
+        @include v(color, titlebar-color-dark, $titlebar-color-dark);
+        @include v(
+            background-color,
+            titlebar-background-dark,
+            $titlebar-background-dark
+        );
+        @include v(
+            border-bottom,
+            titlebar-border-bottom-dark,
+            $titlebar-border-bottom-dark
+        );
+    }
+
+    .#{$namespace}-titlebar-icon-minimize {
+        @include v(
+            background-image,
+            titlebar-icon-minimize-dark,
+            url("./icons/minimize.svg")
+        );
+    }
+
+    .#{$namespace}-titlebar-icon-maximize {
+        @include v(
+            background-image,
+            titlebar-icon-maximize-dark,
+            url("./icons/maximize.svg")
+        );
+
+        &.is-active {
+            @include v(
+                background-image,
+                titlebar-icon-maximize-active-dark,
+                url("./icons/maximize-active.svg")
+            );
+        }
+    }
+
+    .#{$namespace}-titlebar-icon-close {
+        @include v(
+            background-image,
+            titlebar-icon-close-dark,
+            url("./icons/close.svg")
+        );
     }
 }

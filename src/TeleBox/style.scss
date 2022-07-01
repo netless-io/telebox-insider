@@ -12,15 +12,17 @@
 }
 
 .#{$namespace}-box-main {
+    @include v(color, box-color, $box-color);
+    @include v(border, box-border, $box-border);
+    @include v(box-shadow, box-shadow, $box-shadow);
+
     position: relative;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15);
     border-radius: 6px;
-    border: 1px solid #e3e3ec;
 }
 
 .#{$namespace}-titlebar-wrap {
@@ -29,7 +31,7 @@
     z-index: 1;
 }
 
-.#{$namespace}-content-wrap {
+.#{$namespace}-body-wrap {
     flex: 1;
     width: 100%;
     overflow: hidden;
@@ -43,15 +45,24 @@
     width: 100%;
     height: 100%;
     position: relative;
-    background: $color-container-background;
+    @include v(
+        background-color,
+        manager-container-background,
+        $manager-container-background
+    );
 }
 
-.#{$namespace}-content-stage {
+.#{$namespace}-box-stage {
     position: absolute;
     z-index: 1;
     overflow: hidden;
-    background: $color-stage-background;
-    box-shadow: $color-stage-shadow;
+
+    @include v(
+        background-color,
+        manager-stage-background,
+        $manager-stage-background
+    );
+    @include v(box-shadow, manager-stage-shadow, $manager-stage-shadow);
 }
 
 .#{$namespace}-footer-wrap {
@@ -219,16 +230,29 @@
     color-scheme: dark;
 
     .#{$namespace}-box-main {
-        color: #e9e9e9;
-        border-color: #383b42;
+        @include v(color, box-color-dark, $box-color-dark);
+        @include v(border, box-border-dark, $box-border-dark);
+        @include v(box-shadow, box-shadow-dark, $box-shadow-dark);
     }
 
     .#{$namespace}-content {
-        background: $color-container-background-dark;
+        @include v(
+            background-color,
+            manager-container-background-dark,
+            $manager-container-background-dark
+        );
     }
 
-    .#{$namespace}-content-stage {
-        background: $color-stage-background-dark;
-        box-shadow: $color-stage-shadow-dark;
+    .#{$namespace}-box-stage {
+        @include v(
+            background-color,
+            manager-stage-background-dark,
+            $manager-stage-background-dark
+        );
+        @include v(
+            box-shadow,
+            manager-stage-shadow-dark,
+            $manager-stage-shadow-dark
+        );
     }
 }

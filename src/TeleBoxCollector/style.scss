@@ -16,8 +16,6 @@
     outline: none;
     font-size: 0;
     border-radius: 50%;
-    background: #fff;
-    box-shadow: 0px 2px 6px 0px rgba(47, 65, 146, 0.15);
     cursor: pointer;
     user-select: none;
     pointer-events: none;
@@ -25,6 +23,9 @@
     background-size: 18px 16px;
     background-position: center;
     -webkit-tap-highlight-color: transparent;
+
+    @include v(background-color, collector-background, $collector-background);
+    @include v(box-shadow, collector-shadow, $collector-shadow);
 }
 
 .#{$namespace}-collector-visible {
@@ -40,6 +41,11 @@
     color-scheme: dark;
 
     &.#{$namespace}-collector {
-        background-color: #383b42;
+        @include v(
+            background-color,
+            collector-background-dark,
+            $collector-background-dark
+        );
+        @include v(box-shadow, collector-shadow-dark, $collector-shadow-dark);
     }
 }

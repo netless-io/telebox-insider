@@ -806,7 +806,7 @@ export class TeleBox {
         this.$titleBar = $titleBar;
 
         const $body = document.createElement("div");
-        $body.className = this.wrapClassName("content-wrap");
+        $body.className = this.wrapClassName("body-wrap");
         this.$body = $body;
 
         const $styles = document.createElement("style");
@@ -878,7 +878,7 @@ export class TeleBox {
     private _renderStage(): HTMLDivElement {
         const $stage = document.createElement("div");
 
-        $stage.className = this.wrapClassName("content-stage");
+        $stage.className = this.wrapClassName("box-stage");
         const updateStageRect = (stageRect: TeleBoxRect): void => {
             $stage.style.top = stageRect.y + "px";
             $stage.style.left = stageRect.x + "px";
@@ -897,7 +897,7 @@ export class TeleBox {
                 }),
                 this._stageRect$.subscribe(updateStageRect),
             ],
-            "content-stage-styles"
+            "box-stage-styles"
         );
         return $stage;
     }

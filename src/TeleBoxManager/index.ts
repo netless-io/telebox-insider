@@ -282,6 +282,51 @@ export class TeleBoxManager {
             true
         );
 
+        this.$container = document.createElement("div");
+        this.$container.className = this.wrapClassName("manager-container");
+
+        this.$stage = document.createElement("div");
+        this.$stage.className = this.wrapClassName("manager-stage");
+        this.$container.appendChild(this.$stage);
+
+        this._sideEffect.addDisposer([
+            darkMode$.subscribe((darkMode) => {
+                this.$container.classList.toggle(
+                    this.wrapClassName("color-scheme-dark"),
+                    darkMode
+                );
+                this.$container.classList.toggle(
+                    this.wrapClassName("color-scheme-light"),
+                    !darkMode
+                );
+            }),
+            maximized$.subscribe((maximized) => {
+                this.$container.classList.toggle("is-maximized", maximized);
+            }),
+            minimized$.subscribe((minimized) => {
+                this.$container.classList.toggle("is-minimized", minimized);
+            }),
+            containerStyle$.subscribe((containerStyle) => {
+                this.$container.style.cssText = containerStyle;
+            }),
+            stageStyle$.subscribe((stageStyle) => {
+                this.$stage.style.cssText = stageStyle;
+                this.$stage.style.width = stageRect$.value.width + "px";
+                this.$stage.style.height = stageRect$.value.height + "px";
+            }),
+            stageRect$.subscribe((stageRect) => {
+                this.$stage.style.width = stageRect.width + "px";
+                this.$stage.style.height = stageRect.height + "px";
+            }),
+            root$.subscribe((root) => {
+                if (root) {
+                    root.appendChild(this.$container);
+                } else if (this.$container.parentElement) {
+                    this.$container.remove();
+                }
+            }),
+        ]);
+
         this.titleBar = new MaxTitleBar({
             namespace: this.namespace,
             title$: derive(this.topBox$, (topBox) => topBox?.title || ""),
@@ -289,8 +334,8 @@ export class TeleBoxManager {
             darkMode$: darkMode$,
             readonly$: readonly$,
             state$: state$,
-            root$,
             rootRect$: rootRect$,
+            root: this.$container,
             onEvent: (event): void => {
                 switch (event.type) {
                     case TELE_BOX_DELEGATE_EVENT.Maximize: {
@@ -338,51 +383,6 @@ export class TeleBoxManager {
             darkMode$.reaction((darkMode, skipUpdate) => {
                 if (!skipUpdate) {
                     this.events.emit(TELE_BOX_MANAGER_EVENT.DarkMode, darkMode);
-                }
-            }),
-        ]);
-
-        this.$container = document.createElement("div");
-        this.$container.className = this.wrapClassName("manager-container");
-
-        this.$stage = document.createElement("div");
-        this.$stage.className = this.wrapClassName("manager-stage");
-        this.$container.appendChild(this.$stage);
-
-        this._sideEffect.addDisposer([
-            darkMode$.subscribe((darkMode) => {
-                this.$container.classList.toggle(
-                    this.wrapClassName("color-scheme-dark"),
-                    darkMode
-                );
-                this.$container.classList.toggle(
-                    this.wrapClassName("color-scheme-light"),
-                    !darkMode
-                );
-            }),
-            maximized$.subscribe((maximized) => {
-                this.$container.classList.toggle("is-maximized", maximized);
-            }),
-            minimized$.subscribe((minimized) => {
-                this.$container.classList.toggle("is-minimized", minimized);
-            }),
-            containerStyle$.subscribe((containerStyle) => {
-                this.$container.style.cssText = containerStyle;
-            }),
-            stageStyle$.subscribe((stageStyle) => {
-                this.$stage.style.cssText = stageStyle;
-                this.$stage.style.width = stageRect$.value.width + "px";
-                this.$stage.style.height = stageRect$.value.height + "px";
-            }),
-            stageRect$.subscribe((stageRect) => {
-                this.$stage.style.width = stageRect.width + "px";
-                this.$stage.style.height = stageRect.height + "px";
-            }),
-            root$.subscribe((root) => {
-                if (root) {
-                    root.appendChild(this.$container);
-                } else if (this.$container.parentElement) {
-                    this.$container.remove();
                 }
             }),
         ]);
