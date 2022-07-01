@@ -71,8 +71,8 @@ type PropsValConfig = {
     readonly: RequiredTeleBoxConfig["readonly$"];
     rootRect: RequiredTeleBoxConfig["rootRect$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
-    managerStageStyle: RequiredTeleBoxConfig["managerStageStyle$"];
-    managerContainerStyle: RequiredTeleBoxConfig["managerContainerStyle$"];
+    defaultBoxStageStyle: RequiredTeleBoxConfig["defaultBoxStageStyle$"];
+    defaultBoxContentStyle: RequiredTeleBoxConfig["defaultBoxContentStyle$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
 };
 
@@ -137,8 +137,8 @@ export class TeleBox {
         rootRect$,
         managerStageRect$,
         managerStageRatio$,
-        managerContainerStyle$,
-        managerStageStyle$,
+        defaultBoxContentStyle$,
+        defaultBoxStageStyle$,
         collectorRect$,
     }: TeleBoxConfig) {
         this._sideEffect = new SideEffectManager();
@@ -253,8 +253,8 @@ export class TeleBox {
             readonly: readonly$,
             rootRect: rootRect$,
             managerStageRect: managerStageRect$,
-            managerContainerStyle: managerContainerStyle$,
-            managerStageStyle: managerStageStyle$,
+            defaultBoxContentStyle: defaultBoxContentStyle$,
+            defaultBoxStageStyle: defaultBoxStageStyle$,
             collectorRect: collectorRect$,
         };
 
@@ -794,10 +794,10 @@ export class TeleBox {
         this.$content = $content;
         this._sideEffect.addDisposer(
             combine(
-                [this._contentStyle$, this._managerContainerStyle$],
-                ([contentStyle, managerContainerStyle]) =>
-                    contentStyle ?? managerContainerStyle
-            ).subscribe((style) => ($content.style.cssText = style))
+                [this._contentStyle$, this._defaultBoxContentStyle$],
+                ([contentStyle, defaultBoxContentStyle]) =>
+                    contentStyle ?? defaultBoxContentStyle
+            ).subscribe((style) => ($content.style.cssText = style || ""))
         );
 
         const updateContentRect = (): void => {
@@ -922,11 +922,11 @@ export class TeleBox {
         this._sideEffect.addDisposer(
             [
                 combine(
-                    [this._contentStageStyle$, this._managerStageStyle$],
-                    ([contentStageStyle, managerStageStyle]) =>
-                        contentStageStyle ?? managerStageStyle
+                    [this._contentStageStyle$, this._defaultBoxStageStyle$],
+                    ([contentStageStyle, defaultBoxStageStyle]) =>
+                        contentStageStyle ?? defaultBoxStageStyle
                 ).subscribe((styles) => {
-                    $stage.style.cssText = styles;
+                    $stage.style.cssText = styles || "";
                     updateContentStageRect(this._contentStageRect$.value);
                 }),
                 this._contentStageRect$.subscribe(updateContentStageRect),

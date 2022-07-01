@@ -64,6 +64,8 @@ type ValConfig = {
     stageRatio: Val<number, boolean>;
     containerStyle: Val<string>;
     stageStyle: Val<string>;
+    defaultBoxContentStyle: Val<string | null>;
+    defaultBoxStageStyle: Val<string | null>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
@@ -84,6 +86,8 @@ export class TeleBoxManager {
         stageRatio = -1,
         containerStyle = "",
         stageStyle = "",
+        defaultBoxContentStyle = null,
+        defaultBoxStageStyle = null,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
@@ -100,6 +104,8 @@ export class TeleBoxManager {
         const containerStyle$ = new Val(containerStyle);
         const stageStyle$ = new Val(stageStyle);
         const stageRatio$ = new Val(stageRatio);
+        const defaultBoxContentStyle$ = new Val(defaultBoxContentStyle);
+        const defaultBoxStageStyle$ = new Val(defaultBoxStageStyle);
 
         const rootRect$ = new Val<TeleBoxRect>(
             {
@@ -225,6 +231,8 @@ export class TeleBoxManager {
             stageRatio: stageRatio$,
             containerStyle: containerStyle$,
             stageStyle: stageStyle$,
+            defaultBoxContentStyle: defaultBoxContentStyle$,
+            defaultBoxStageStyle: defaultBoxStageStyle$,
         };
 
         withValueEnhancer(this, valConfig, valManager);
@@ -442,8 +450,8 @@ export class TeleBoxManager {
             managerStageRatio$: this._stageRatio$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
-            managerContainerStyle$: this._containerStyle$,
-            managerStageStyle$: this._stageStyle$,
+            defaultBoxContentStyle$: this._defaultBoxContentStyle$,
+            defaultBoxStageStyle$: this._defaultBoxStageStyle$,
         });
 
         if (box.focus) {

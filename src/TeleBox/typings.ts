@@ -92,10 +92,10 @@ export interface TeleBoxConfig {
     readonly managerStageRect$: ReadonlyVal<TeleBoxRect>;
     /** Stage area height/with ratio. No ratio if <= 0. */
     readonly managerStageRatio$: ReadonlyVal<number, boolean>;
-    /** Custom container styles from manager */
-    readonly managerContainerStyle$: ReadonlyVal<string>;
-    /** Custom stage styles from manager */
-    readonly managerStageStyle$: ReadonlyVal<string>;
+    /** Default content styles for all boxes */
+    readonly defaultBoxContentStyle$: ReadonlyVal<string | null>;
+    /** Default stage styles for all boxes */
+    readonly defaultBoxStageStyle$: ReadonlyVal<string | null>;
     /** Position and dimension of collector */
     readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
 }

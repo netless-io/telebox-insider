@@ -21,10 +21,14 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     readonly minimized?: boolean;
     /** Is box readonly */
     readonly readonly?: boolean;
-    /** Extra styles for telebox manager container */
+    /** Custom styles for telebox manager container */
     readonly containerStyle?: string;
-    /** Extra styles for telebox manager stage */
+    /** Custom styles for telebox manager stage */
     readonly stageStyle?: string;
+    /** Custom styles for content area of all boxes. Can be overwritten by box. */
+    readonly defaultBoxContentStyle?: string | null;
+    /** Custom styles for stage area of all boxes. Can be overwritten by box. */
+    readonly defaultBoxStageStyle?: string | null;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
