@@ -25,9 +25,9 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     readonly containerStyle?: string;
     /** Custom styles for telebox manager stage */
     readonly stageStyle?: string;
-    /** Custom styles for content area of all boxes. Can be overwritten by box. */
-    readonly defaultBoxContentStyle?: string | null;
-    /** Custom styles for stage area of all boxes. Can be overwritten by box. */
+    /** Custom `style` attribute value for content area of all boxes. Can be overwritten by box. */
+    readonly defaultBoxBodyStyle?: string | null;
+    /** Custom `style` attribute value for stage area of all boxes. Can be overwritten by box. */
     readonly defaultBoxStageStyle?: string | null;
 }
 
@@ -44,7 +44,7 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "draggable"
     | "boxRatio"
     | "zIndex"
-    | "contentStageRatio";
+    | "stageRatio";
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
@@ -63,7 +63,7 @@ export type TeleBoxManagerQueryConfig = Pick<
     | "resizable"
     | "draggable"
     | "boxRatio"
-    | "contentStageRatio"
+    | "stageRatio"
     | "zIndex"
     | "id"
     | "focus"

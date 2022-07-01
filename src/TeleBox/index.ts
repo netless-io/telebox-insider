@@ -58,9 +58,9 @@ type ValConfig = {
     resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
     draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
     boxRatio: Val<RequiredTeleBoxConfig["boxRatio"], boolean>;
-    contentStageRatio: Val<number | null>;
-    contentStageStyle: Val<string | null>;
-    contentStyle: Val<string | null>;
+    stageRatio: Val<RequiredTeleBoxConfig["stageRatio"], boolean>;
+    stageStyle: Val<RequiredTeleBoxConfig["stageStyle"], boolean>;
+    bodyStyle: Val<RequiredTeleBoxConfig["bodyStyle"], boolean>;
 };
 
 type PropsValConfig = {
@@ -72,18 +72,13 @@ type PropsValConfig = {
     rootRect: RequiredTeleBoxConfig["rootRect$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
     defaultBoxStageStyle: RequiredTeleBoxConfig["defaultBoxStageStyle$"];
-    defaultBoxContentStyle: RequiredTeleBoxConfig["defaultBoxContentStyle$"];
+    defaultBoxBodyStyle: RequiredTeleBoxConfig["defaultBoxBodyStyle$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
 };
 
 type MyReadonlyValConfig = {
     zIndex: Val<RequiredTeleBoxConfig["zIndex"], boolean>;
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
-
-    $userContent: Val<TeleBoxConfig["content"], boolean>;
-    $userStage: Val<TeleBoxConfig["stage"], boolean>;
-    $userFooter: Val<TeleBoxConfig["footer"], boolean>;
-    $userStyles: Val<TeleBoxConfig["styles"], boolean>;
 
     minSize: Val<TeleBoxSize, boolean>;
     intrinsicSize: Val<TeleBoxSize, boolean>;
@@ -92,8 +87,8 @@ type MyReadonlyValConfig = {
     pxIntrinsicSize: ReadonlyVal<TeleBoxSize, boolean>;
     pxIntrinsicCoord: ReadonlyVal<TeleBoxCoord, boolean>;
     state: ReadonlyVal<TeleBoxState, boolean>;
-    contentRect: Val<TeleBoxRect>;
-    contentStageRect: ReadonlyVal<TeleBoxRect>;
+    bodyRect: Val<TeleBoxRect>;
+    stageRect: ReadonlyVal<TeleBoxRect>;
 };
 
 type CombinedValEnhancedResult = ReadonlyValEnhancedResult<
@@ -120,14 +115,15 @@ export class TeleBox {
         boxRatio = -1,
         focus = false,
         zIndex = 100,
-        contentStageRatio = null,
+        stageRatio = null,
         titleBar,
         content,
         stage,
         footer,
         styles,
-        contentStyle = null,
-        contentStageStyle = null,
+        userStyles,
+        bodyStyle = null,
+        stageStyle = null,
         darkMode$,
         fence$,
         minimized$,
@@ -137,7 +133,7 @@ export class TeleBox {
         rootRect$,
         managerStageRect$,
         managerStageRatio$,
-        defaultBoxContentStyle$,
+        defaultBoxBodyStyle$,
         defaultBoxStageStyle$,
         collectorRect$,
     }: TeleBoxConfig) {
@@ -156,10 +152,6 @@ export class TeleBox {
         const boxRatio$ = new Val(boxRatio);
         const zIndex$ = new Val(zIndex);
         const focus$ = new Val(focus);
-        const $userContent$ = new Val(content);
-        const $userStage$ = new Val(stage);
-        const $userFooter$ = new Val(footer);
-        const $userStyles$ = new Val(styles);
 
         const state$ = combine(
             [minimized$, maximized$],
@@ -226,21 +218,20 @@ export class TeleBox {
             { compare: shallowequal }
         );
 
-        const contentStyle$ = new Val<string | null>(contentStyle);
-        const contentStageStyle$ = new Val<string | null>(contentStageStyle);
+        const bodyStyle$ = new Val<string | null>(bodyStyle);
+        const stageStyle$ = new Val<string | null>(stageStyle);
 
         const contentRoot$ = new Val<HTMLElement | null>(null);
-        const contentRect$ = new Val<TeleBoxRect>(managerStageRect$.value, {
+        const bodyRect$ = new Val<TeleBoxRect>(managerStageRect$.value, {
             compare: shallowequal,
         });
-        const contentStageRatio$ = new Val(contentStageRatio);
+        const stageRatio$ = new Val(stageRatio);
         const finalStageRatio$ = combine(
-            [contentStageRatio$, managerStageRatio$],
-            ([contentStageRatio, managerStageRatio]) =>
-                contentStageRatio ?? managerStageRatio
+            [stageRatio$, managerStageRatio$],
+            ([stageRatio, managerStageRatio]) => stageRatio ?? managerStageRatio
         );
-        const contentStageRect$ = combine(
-            [contentRect$, finalStageRatio$],
+        const stageRect$ = combine(
+            [bodyRect$, finalStageRatio$],
             calcStageRect,
             { compare: shallowequal }
         );
@@ -253,7 +244,7 @@ export class TeleBox {
             readonly: readonly$,
             rootRect: rootRect$,
             managerStageRect: managerStageRect$,
-            defaultBoxContentStyle: defaultBoxContentStyle$,
+            defaultBoxBodyStyle: defaultBoxBodyStyle$,
             defaultBoxStageStyle: defaultBoxStageStyle$,
             collectorRect: collectorRect$,
         };
@@ -264,11 +255,6 @@ export class TeleBox {
             zIndex: zIndex$,
             focus: focus$,
 
-            $userContent: $userContent$,
-            $userStage: $userStage$,
-            $userFooter: $userFooter$,
-            $userStyles: $userStyles$,
-
             state: state$,
             minSize: minSize$,
             pxMinSize: pxMinSize$,
@@ -276,8 +262,8 @@ export class TeleBox {
             intrinsicCoord: intrinsicCoord$,
             pxIntrinsicSize: pxIntrinsicSize$,
             pxIntrinsicCoord: pxIntrinsicCoord$,
-            contentRect: contentRect$,
-            contentStageRect: contentStageRect$,
+            bodyRect: bodyRect$,
+            stageRect: stageRect$,
         };
 
         withReadonlyValueEnhancer(this, myReadonlyValConfig, valManager);
@@ -288,9 +274,9 @@ export class TeleBox {
             resizable: resizable$,
             draggable: draggable$,
             boxRatio: boxRatio$,
-            contentStageRatio: contentStageRatio$,
-            contentStyle: contentStyle$,
-            contentStageStyle: contentStageStyle$,
+            stageRatio: stageRatio$,
+            bodyStyle: bodyStyle$,
+            stageStyle: stageStyle$,
         };
 
         withValueEnhancer(this, valConfig, valManager);
@@ -332,6 +318,11 @@ export class TeleBox {
 
         this.$box = this._render();
         contentRoot$.setValue(this.$content.parentElement);
+        content && this.mountContent(content);
+        stage && this.mountStage(stage);
+        footer && this.mountFooter(footer);
+        styles && this.mountStyles(styles);
+        userStyles && this.mountUserStyles(userStyles);
         root.appendChild(this.$box);
 
         const watchValEvent = <E extends TeleBoxEvent>(
@@ -542,77 +533,106 @@ export class TeleBox {
         );
     }
 
-    /**
-     * Mount dom to box content.
-     */
+    private $authorContent?: HTMLElement;
+
+    /** Mount dom to box content. */
     public mountContent(content: HTMLElement): void {
-        this._$userContent$.setValue(content);
+        this.$authorContent?.remove();
+        this.$authorContent = content;
+        this.$content.appendChild(content);
     }
 
-    /**
-     * Unmount content from the box.
-     */
+    /**  Unmount content from the box. */
     public unmountContent(): void {
-        this._$userContent$.setValue(undefined);
-    }
-
-    public mountStage(stage: HTMLElement): void {
-        this._$userStage$.setValue(stage);
-    }
-
-    /**
-     * Unmount content from the box.
-     */
-    public unmountStage(): void {
-        this._$userStage$.setValue(undefined);
-    }
-
-    /**
-     * Mount dom to box Footer.
-     */
-    public mountFooter(footer: HTMLElement): void {
-        this._$userFooter$.setValue(footer);
-    }
-
-    /**
-     * Unmount Footer from the box.
-     */
-    public unmountFooter(): void {
-        this._$userFooter$.setValue(undefined);
-    }
-
-    public getUserStyles(): HTMLStyleElement | undefined {
-        return this.$userStyles;
-    }
-
-    public mountStyles(styles: string | HTMLStyleElement): void {
-        let $styles: HTMLStyleElement;
-        if (typeof styles === "string") {
-            $styles = document.createElement("style");
-            $styles.textContent = styles;
-        } else {
-            $styles = styles;
+        if (this.$authorContent) {
+            this.$authorContent.remove();
+            this.$authorContent = undefined;
         }
-        this._$userStyles$.setValue($styles);
     }
 
+    private $authorStage?: HTMLElement;
+
+    /** Mount dom to box stage. */
+    public mountStage(stage: HTMLElement): void {
+        this.$authorStage?.remove();
+        this.$authorStage = stage;
+        if (!this.$stage) {
+            this.$stage = this._renderStage();
+        }
+        this.$stage.appendChild(stage);
+        if (!this.$stage.parentElement) {
+            this.$body.appendChild(this.$stage);
+        }
+    }
+
+    /** Unmount content from the box. */
+    public unmountStage(): void {
+        if (this.$authorStage) {
+            this.$authorStage.remove();
+            this.$authorStage = undefined;
+        }
+        this.$stage?.remove();
+    }
+
+    private $authorFooter?: HTMLElement;
+
+    /** Mount dom to box Footer. */
+    public mountFooter(footer: HTMLElement): void {
+        this.$authorFooter?.remove();
+        this.$authorFooter = footer;
+        this.$footer.appendChild(footer);
+    }
+
+    /** Unmount Footer from the box. */
+    public unmountFooter(): void {
+        if (this.$authorFooter) {
+            this.$authorFooter.remove();
+            this.$authorFooter = undefined;
+        }
+    }
+
+    /** Mount styles for box content */
+    public mountStyles(styles: string): void {
+        this.$styles.textContent = styles;
+    }
+
+    /** Umount styles for box content */
     public unmountStyles(): void {
-        this._$userStyles$.setValue(undefined);
+        this.$styles.textContent = "";
+    }
+
+    /** Mount user styles for box content */
+    public mountUserStyles(styles: string): void {
+        this.$userStyles.textContent = styles;
+    }
+
+    /** Umount user styles for box content */
+    public unmountUserStyles(): void {
+        this.$userStyles.textContent = "";
     }
 
     /** DOM of the box */
     public $box: HTMLElement;
 
-    /** DOM of the box content */
+    /** DOM of the box body */
+    public $body!: HTMLElement;
+
+    /** DOM of the box content container inside box body */
     public $content!: HTMLElement;
 
-    /** DOM of the box stage area */
+    /** DOM of the box stage area inside box body */
     public $stage?: HTMLElement;
 
-    /** DOM of the box title bar */
+    /** DOM of custom box content styles */
+    public $styles!: HTMLStyleElement;
+
+    /** DOM of end user custom box content styles */
+    public $userStyles!: HTMLStyleElement;
+
+    /** DOM of the box title bar container */
     public $titleBar!: HTMLElement;
 
-    /** DOM of the box footer */
+    /** DOM of the box footer container */
     public $footer!: HTMLElement;
 
     private _render(): HTMLElement {
@@ -785,8 +805,17 @@ export class TeleBox {
         $titleBar.appendChild(this.titleBar.render());
         this.$titleBar = $titleBar;
 
-        const $contentWrap = document.createElement("div");
-        $contentWrap.className = this.wrapClassName("content-wrap");
+        const $body = document.createElement("div");
+        $body.className = this.wrapClassName("content-wrap");
+        this.$body = $body;
+
+        const $styles = document.createElement("style");
+        this.$styles = $styles;
+        $body.appendChild($styles);
+
+        const $userStyles = document.createElement("style");
+        this.$userStyles = $userStyles;
+        $body.appendChild($userStyles);
 
         const $content = document.createElement("div");
         $content.className =
@@ -794,15 +823,27 @@ export class TeleBox {
         this.$content = $content;
         this._sideEffect.addDisposer(
             combine(
-                [this._contentStyle$, this._defaultBoxContentStyle$],
-                ([contentStyle, defaultBoxContentStyle]) =>
-                    contentStyle ?? defaultBoxContentStyle
+                [this._bodyStyle$, this._defaultBoxBodyStyle$],
+                ([bodyStyle, defaultBoxBodyStyle]) =>
+                    bodyStyle ?? defaultBoxBodyStyle
             ).subscribe((style) => ($content.style.cssText = style || ""))
         );
 
-        const updateContentRect = (): void => {
-            const rect = $content.getBoundingClientRect();
-            this._contentRect$.setValue({
+        $body.appendChild($content);
+
+        const $footer = document.createElement("div");
+        $footer.className = this.wrapClassName("footer-wrap");
+        this.$footer = $footer;
+
+        $boxMain.appendChild($titleBar);
+        $boxMain.appendChild($body);
+        $boxMain.appendChild($footer);
+
+        this._renderResizeHandlers();
+
+        const updateBodyRect = (): void => {
+            const rect = $body.getBoundingClientRect();
+            this._bodyRect$.setValue({
                 x: 0,
                 y: 0,
                 width: rect.width,
@@ -812,10 +853,10 @@ export class TeleBox {
         this._sideEffect.add(() => {
             const observer = new ResizeObserver(() => {
                 if (!this.minimized) {
-                    updateContentRect();
+                    updateBodyRect();
                 }
             });
-            observer.observe($content);
+            observer.observe($body);
             return () => observer.disconnect();
         });
         this._sideEffect.addDisposer(
@@ -823,86 +864,13 @@ export class TeleBox {
                 // correct content size when restoring from minimized
                 if (!minimized) {
                     this._sideEffect.setTimeout(
-                        updateContentRect,
+                        updateBodyRect,
                         400,
                         "minimized-content-rect-fix"
                     );
                 }
             })
         );
-
-        this._sideEffect.add(() => {
-            let last$userStyles: HTMLStyleElement | undefined;
-            return this._$userStyles$.subscribe(($userStyles) => {
-                if (last$userStyles) {
-                    last$userStyles.remove();
-                }
-                last$userStyles = $userStyles;
-                if ($userStyles) {
-                    $contentWrap.appendChild($userStyles);
-                }
-            });
-        });
-
-        this._sideEffect.add(() => {
-            let last$userContent: HTMLElement | undefined;
-            return this._$userContent$.subscribe(($userContent) => {
-                if (last$userContent) {
-                    last$userContent.remove();
-                }
-                last$userContent = $userContent;
-                if ($userContent) {
-                    $content.appendChild($userContent);
-                }
-            });
-        });
-
-        this._sideEffect.add(() => {
-            let last$userStage: HTMLElement | undefined;
-            return this._$userStage$.subscribe(($userStage) => {
-                if (last$userStage) {
-                    last$userStage.remove();
-                }
-                last$userStage = $userStage;
-                if ($userStage) {
-                    if (!this.$stage) {
-                        this.$stage = this._renderStage();
-                        $content.appendChild(this.$stage);
-                    }
-                    if (!this.$stage.parentElement) {
-                        $content.appendChild(this.$stage);
-                    }
-                    this.$stage.appendChild($userStage);
-                } else if (this.$stage?.parentElement) {
-                    this.$stage.remove();
-                }
-            });
-        });
-
-        $contentWrap.appendChild($content);
-
-        const $footer = document.createElement("div");
-        $footer.className = this.wrapClassName("footer-wrap");
-        this.$footer = $footer;
-
-        this._sideEffect.add(() => {
-            let last$userFooter: HTMLElement | undefined;
-            return this._$userFooter$.subscribe(($userFooter) => {
-                if (last$userFooter) {
-                    last$userFooter.remove();
-                }
-                last$userFooter = $userFooter;
-                if ($userFooter) {
-                    $footer.appendChild($userFooter);
-                }
-            });
-        });
-
-        $boxMain.appendChild($titleBar);
-        $boxMain.appendChild($contentWrap);
-        $boxMain.appendChild($footer);
-
-        this._renderResizeHandlers();
 
         return this.$box;
     }
@@ -911,25 +879,23 @@ export class TeleBox {
         const $stage = document.createElement("div");
 
         $stage.className = this.wrapClassName("content-stage");
-        const updateContentStageRect = (
-            contentStageRect: TeleBoxRect
-        ): void => {
-            $stage.style.top = contentStageRect.y + "px";
-            $stage.style.left = contentStageRect.x + "px";
-            $stage.style.width = contentStageRect.width + "px";
-            $stage.style.height = contentStageRect.height + "px";
+        const updateStageRect = (stageRect: TeleBoxRect): void => {
+            $stage.style.top = stageRect.y + "px";
+            $stage.style.left = stageRect.x + "px";
+            $stage.style.width = stageRect.width + "px";
+            $stage.style.height = stageRect.height + "px";
         };
         this._sideEffect.addDisposer(
             [
                 combine(
-                    [this._contentStageStyle$, this._defaultBoxStageStyle$],
-                    ([contentStageStyle, defaultBoxStageStyle]) =>
-                        contentStageStyle ?? defaultBoxStageStyle
+                    [this._stageStyle$, this._defaultBoxStageStyle$],
+                    ([stageStyle, defaultBoxStageStyle]) =>
+                        stageStyle ?? defaultBoxStageStyle
                 ).subscribe((styles) => {
                     $stage.style.cssText = styles || "";
-                    updateContentStageRect(this._contentStageRect$.value);
+                    updateStageRect(this._stageRect$.value);
                 }),
-                this._contentStageRect$.subscribe(updateContentStageRect),
+                this._stageRect$.subscribe(updateStageRect),
             ],
             "content-stage-styles"
         );
@@ -1196,14 +1162,14 @@ export type ReadonlyTeleBox = Pick<
     | "unmountStage"
     | "mountStyles"
     | "unmountStyles"
-    | "setContentStageRatio"
-    | "setContentStageStyle"
-    | "setContentStyle"
+    | "setTitle"
     | "setDraggable"
     | "setResizable"
-    | "setTitle"
-    | "setBoxRatio"
     | "setVisible"
+    | "setBoxRatio"
+    | "setStageRatio"
+    | "setStageStyle"
+    | "setBodyStyle"
     | "handleTrackStart"
     | "onValChanged"
 >;

@@ -64,7 +64,7 @@ type ValConfig = {
     stageRatio: Val<number, boolean>;
     containerStyle: Val<string>;
     stageStyle: Val<string>;
-    defaultBoxContentStyle: Val<string | null>;
+    defaultBoxBodyStyle: Val<string | null>;
     defaultBoxStageStyle: Val<string | null>;
 };
 
@@ -86,7 +86,7 @@ export class TeleBoxManager {
         stageRatio = -1,
         containerStyle = "",
         stageStyle = "",
-        defaultBoxContentStyle = null,
+        defaultBoxBodyStyle = null,
         defaultBoxStageStyle = null,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
@@ -104,7 +104,7 @@ export class TeleBoxManager {
         const containerStyle$ = new Val(containerStyle);
         const stageStyle$ = new Val(stageStyle);
         const stageRatio$ = new Val(stageRatio);
-        const defaultBoxContentStyle$ = new Val(defaultBoxContentStyle);
+        const defaultBoxBodyStyle$ = new Val(defaultBoxBodyStyle);
         const defaultBoxStageStyle$ = new Val(defaultBoxStageStyle);
 
         const rootRect$ = new Val<TeleBoxRect>(
@@ -231,7 +231,7 @@ export class TeleBoxManager {
             stageRatio: stageRatio$,
             containerStyle: containerStyle$,
             stageStyle: stageStyle$,
-            defaultBoxContentStyle: defaultBoxContentStyle$,
+            defaultBoxBodyStyle: defaultBoxBodyStyle$,
             defaultBoxStageStyle: defaultBoxStageStyle$,
         };
 
@@ -450,7 +450,7 @@ export class TeleBoxManager {
             managerStageRatio$: this._stageRatio$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
-            defaultBoxContentStyle$: this._defaultBoxContentStyle$,
+            defaultBoxBodyStyle$: this._defaultBoxBodyStyle$,
             defaultBoxStageStyle$: this._defaultBoxStageStyle$,
         });
 
@@ -724,8 +724,8 @@ export class TeleBoxManager {
         if (config.zIndex != null) {
             box._zIndex$.setValue(config.zIndex, skipUpdate);
         }
-        if (config.contentStageRatio !== undefined) {
-            box.setContentStageRatio(config.contentStageRatio, skipUpdate);
+        if (config.stageRatio !== undefined) {
+            box.setStageRatio(config.stageRatio, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);

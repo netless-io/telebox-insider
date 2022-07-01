@@ -57,7 +57,7 @@ export interface TeleBoxConfig {
     /** Base z-index for box. */
     readonly zIndex?: number;
     /** Box content stage ratio. Follow manager stage ratio if null. Default null. */
-    readonly contentStageRatio?: number | null;
+    readonly stageRatio?: number | null;
     /** Classname Prefix. For CSS styling. Default "telebox". */
     readonly namespace?: string;
     /** TeleTitleBar Instance. */
@@ -69,11 +69,13 @@ export interface TeleBoxConfig {
     /** Box footer element. */
     readonly footer?: HTMLElement;
     /** Box content styles. */
-    readonly styles?: HTMLStyleElement;
+    readonly styles?: string;
+    /** Box content styles from end users. */
+    readonly userStyles?: string;
     /** Custom styles for box content container. Inherit from manager container style if null. Default null. */
-    readonly contentStyle?: string | null;
+    readonly bodyStyle?: string | null;
     /** Custom styles for box content stage. Inherit from manager stage style if null. Default null. */
-    readonly contentStageStyle?: string | null;
+    readonly stageStyle?: string | null;
     /** Actual Box Dark Mode */
     readonly darkMode$: ReadonlyVal<boolean, boolean>;
     /** Restrict box to always be within the stage area. Default false. */
@@ -93,7 +95,7 @@ export interface TeleBoxConfig {
     /** Stage area height/with ratio. No ratio if <= 0. */
     readonly managerStageRatio$: ReadonlyVal<number, boolean>;
     /** Default content styles for all boxes */
-    readonly defaultBoxContentStyle$: ReadonlyVal<string | null>;
+    readonly defaultBoxBodyStyle$: ReadonlyVal<string | null>;
     /** Default stage styles for all boxes */
     readonly defaultBoxStageStyle$: ReadonlyVal<string | null>;
     /** Position and dimension of collector */
