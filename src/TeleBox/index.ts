@@ -43,7 +43,7 @@ import type {
     TeleBoxDelegateEventConfig,
     TeleBoxRect,
 } from "./typings";
-import { TeleStage } from "../TeleStage";
+import { calcStageRect } from "./utils";
 
 export * from "./constants";
 export * from "./typings";
@@ -57,8 +57,10 @@ type ValConfig = {
     visible: Val<RequiredTeleBoxConfig["visible"], boolean>;
     resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
     draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
-    ratio: Val<RequiredTeleBoxConfig["ratio"], boolean>;
-    stageRatio: Val<number | null>;
+    boxRatio: Val<RequiredTeleBoxConfig["boxRatio"], boolean>;
+    contentStageRatio: Val<number | null>;
+    contentStageStyle: Val<string | null>;
+    contentStyle: Val<string | null>;
 };
 
 type PropsValConfig = {
@@ -69,6 +71,8 @@ type PropsValConfig = {
     readonly: RequiredTeleBoxConfig["readonly$"];
     rootRect: RequiredTeleBoxConfig["rootRect$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
+    managerStageStyle: RequiredTeleBoxConfig["managerStageStyle$"];
+    managerContainerStyle: RequiredTeleBoxConfig["managerContainerStyle$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
 };
 
@@ -77,7 +81,7 @@ type MyReadonlyValConfig = {
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
 
     $userContent: Val<TeleBoxConfig["content"], boolean>;
-    $userStage: Val<TeleBoxConfig["content"], boolean>;
+    $userStage: Val<TeleBoxConfig["stage"], boolean>;
     $userFooter: Val<TeleBoxConfig["footer"], boolean>;
     $userStyles: Val<TeleBoxConfig["styles"], boolean>;
 
@@ -88,8 +92,6 @@ type MyReadonlyValConfig = {
     pxIntrinsicSize: ReadonlyVal<TeleBoxSize, boolean>;
     pxIntrinsicCoord: ReadonlyVal<TeleBoxCoord, boolean>;
     state: ReadonlyVal<TeleBoxState, boolean>;
-    highlightStage: ReadonlyVal<boolean, boolean>;
-    boxHighlightStage: Val<boolean | null, boolean>;
     contentRect: Val<TeleBoxRect>;
     contentStageRect: ReadonlyVal<TeleBoxRect>;
 };
@@ -115,27 +117,29 @@ export class TeleBox {
         y = 0.1,
         resizable = true,
         draggable = true,
-        ratio = -1,
+        boxRatio = -1,
         focus = false,
         zIndex = 100,
-        stageRatio = null,
+        contentStageRatio = null,
         titleBar,
         content,
         stage,
         footer,
         styles,
-        highlightStage = null,
+        contentStyle = null,
+        contentStageStyle = null,
         darkMode$,
         fence$,
         minimized$,
         maximized$,
         readonly$,
-        root$,
+        root,
         rootRect$,
         managerStageRect$,
         managerStageRatio$,
+        managerContainerStyle$,
+        managerStageStyle$,
         collectorRect$,
-        managerHighlightStage$,
     }: TeleBoxConfig) {
         this._sideEffect = new SideEffectManager();
 
@@ -149,7 +153,7 @@ export class TeleBox {
         const visible$ = new Val(visible);
         const resizable$ = new Val(resizable);
         const draggable$ = new Val(draggable);
-        const ratio$ = new Val(ratio);
+        const boxRatio$ = new Val(boxRatio);
         const zIndex$ = new Val(zIndex);
         const focus$ = new Val(focus);
         const $userContent$ = new Val(content);
@@ -216,46 +220,30 @@ export class TeleBox {
         const pxIntrinsicCoord$ = combine(
             [intrinsicCoord$, managerStageRect$],
             ([intrinsicCoord, managerStageRect]) => ({
-                x:
-                    intrinsicCoord.x * managerStageRect.width +
-                    managerStageRect.x,
-                y:
-                    intrinsicCoord.y * managerStageRect.height +
-                    managerStageRect.y,
+                x: intrinsicCoord.x * managerStageRect.width,
+                y: intrinsicCoord.y * managerStageRect.height,
             }),
             { compare: shallowequal }
         );
 
-        const boxHighlightStage$ = new Val<boolean | null, boolean>(
-            highlightStage
-        );
-
-        const highlightStage$ = combine(
-            [boxHighlightStage$, managerHighlightStage$],
-            ([boxHighlightStage, managerHighlightStage]) =>
-                boxHighlightStage ?? managerHighlightStage
-        );
+        const contentStyle$ = new Val<string | null>(contentStyle);
+        const contentStageStyle$ = new Val<string | null>(contentStageStyle);
 
         const contentRoot$ = new Val<HTMLElement | null>(null);
-
-        const contentRect$ = new Val<TeleBoxRect>(rootRect$.value, {
+        const contentRect$ = new Val<TeleBoxRect>(managerStageRect$.value, {
             compare: shallowequal,
         });
-
-        const stageRatio$ = new Val(stageRatio);
-
-        const teleStage = new TeleStage({
-            namespace,
-            root$: contentRoot$,
-            rootRect$: contentRect$,
-            ratio$: combine(
-                [stageRatio$, managerStageRatio$],
-                ([stageRatio, managerStageRatio]) =>
-                    stageRatio ?? managerStageRatio
-            ),
-            highlightStage$,
-        });
-        this._sideEffect.addDisposer(() => teleStage.destroy());
+        const contentStageRatio$ = new Val(contentStageRatio);
+        const finalStageRatio$ = combine(
+            [contentStageRatio$, managerStageRatio$],
+            ([contentStageRatio, managerStageRatio]) =>
+                contentStageRatio ?? managerStageRatio
+        );
+        const contentStageRect$ = combine(
+            [contentRect$, finalStageRatio$],
+            calcStageRect,
+            { compare: shallowequal }
+        );
 
         const propsValConfig: PropsValConfig = {
             darkMode: darkMode$,
@@ -265,6 +253,8 @@ export class TeleBox {
             readonly: readonly$,
             rootRect: rootRect$,
             managerStageRect: managerStageRect$,
+            managerContainerStyle: managerContainerStyle$,
+            managerStageStyle: managerStageStyle$,
             collectorRect: collectorRect$,
         };
 
@@ -286,10 +276,8 @@ export class TeleBox {
             intrinsicCoord: intrinsicCoord$,
             pxIntrinsicSize: pxIntrinsicSize$,
             pxIntrinsicCoord: pxIntrinsicCoord$,
-            highlightStage: highlightStage$,
-            boxHighlightStage: boxHighlightStage$,
             contentRect: contentRect$,
-            contentStageRect: teleStage.stageRect$,
+            contentStageRect: contentStageRect$,
         };
 
         withReadonlyValueEnhancer(this, myReadonlyValConfig, valManager);
@@ -299,8 +287,10 @@ export class TeleBox {
             visible: visible$,
             resizable: resizable$,
             draggable: draggable$,
-            ratio: ratio$,
-            stageRatio: stageRatio$,
+            boxRatio: boxRatio$,
+            contentStageRatio: contentStageRatio$,
+            contentStyle: contentStyle$,
+            contentStageStyle: contentStageStyle$,
         };
 
         withValueEnhancer(this, valConfig, valManager);
@@ -317,8 +307,8 @@ export class TeleBox {
             });
 
         this._sideEffect.addDisposer(
-            ratio$.subscribe((ratio) => {
-                if (ratio > 0) {
+            boxRatio$.subscribe((boxRatio) => {
+                if (boxRatio > 0) {
                     this.transform(
                         pxIntrinsicCoord$.value.x,
                         pxIntrinsicCoord$.value.y,
@@ -340,8 +330,9 @@ export class TeleBox {
             })
         );
 
-        this.$box = this.render();
+        this.$box = this._render();
         contentRoot$.setValue(this.$content.parentElement);
+        root.appendChild(this.$box);
 
         const watchValEvent = <E extends TeleBoxEvent>(
             val: ReadonlyVal<TeleBoxEventConfig[E], boolean>,
@@ -376,13 +367,6 @@ export class TeleBox {
                     this.events.emit(
                         focus ? TELE_BOX_EVENT.Focus : TELE_BOX_EVENT.Blur
                     );
-                }
-            }),
-            root$.subscribe((root) => {
-                if (root) {
-                    root.appendChild(this.$box);
-                } else if (this.$box.parentNode) {
-                    this.$box.remove();
                 }
             }),
         ]);
@@ -490,44 +474,25 @@ export class TeleBox {
         const pxIntrinsicSize = this.pxIntrinsicSize;
 
         if (this.fence) {
-            // safeX = clamp(
-            //     x,
-            //     managerStageRect.x,
-            //     managerStageRect.x +
-            //         managerStageRect.width -
-            //         pxIntrinsicSize.width
-            // );
-            // safeY = clamp(
-            //     y,
-            //     managerStageRect.y,
-            //     managerStageRect.y +
-            //         managerStageRect.height -
-            //         pxIntrinsicSize.height
-            // );
-            safeX = clamp(
-                x,
-                0 - pxIntrinsicSize.width + 20,
-                0 + managerStageRect.width - 20
-            );
+            safeX = clamp(x, 0, managerStageRect.width - pxIntrinsicSize.width);
             safeY = clamp(
                 y,
-                managerStageRect.y,
-                managerStageRect.y + managerStageRect.height - 20
+                0,
+                managerStageRect.height - pxIntrinsicSize.height
             );
         } else {
-            const rootRect = this.rootRect;
             safeX = clamp(
                 x,
-                0 - pxIntrinsicSize.width + 20,
-                0 + rootRect.width - 20
+                -(pxIntrinsicSize.width - 120),
+                0 + managerStageRect.width - 20
             );
-            safeY = clamp(y, 0, 0 + rootRect.height - 20);
+            safeY = clamp(y, 0, 0 + managerStageRect.height - 20);
         }
 
         this._intrinsicCoord$.setValue(
             {
-                x: (safeX - managerStageRect.x) / managerStageRect.width,
-                y: (safeY - managerStageRect.y) / managerStageRect.height,
+                x: safeX / managerStageRect.width,
+                y: safeY / managerStageRect.height,
             },
             skipUpdate
         );
@@ -550,21 +515,20 @@ export class TeleBox {
         skipUpdate = false
     ): void {
         const managerStageRect = this.managerStageRect;
-        const rootRect = this.rootRect;
 
         width = Math.max(width, this.pxMinSize.width);
         height = Math.max(height, this.pxMinSize.height);
 
-        if (this.ratio > 0) {
-            const newHeight = this.ratio * width;
+        if (this.boxRatio > 0) {
+            const newHeight = this.boxRatio * width;
             if (y !== this.pxIntrinsicCoord.y) {
                 y -= newHeight - height;
             }
             height = newHeight;
         }
 
-        if (y < rootRect.y) {
-            y = rootRect.y;
+        if (y < 0) {
+            y = 0;
             height = this.pxIntrinsicSize.height;
         }
 
@@ -636,11 +600,6 @@ export class TeleBox {
         this._$userStyles$.setValue(undefined);
     }
 
-    /** Show stage frame and grey-out the non-stage area. Inherit setting from manager if null. */
-    public setHighlightStage(highlightStage: boolean | null): void {
-        this._boxHighlightStage$.setValue(highlightStage);
-    }
-
     /** DOM of the box */
     public $box: HTMLElement;
 
@@ -656,7 +615,7 @@ export class TeleBox {
     /** DOM of the box footer */
     public $footer!: HTMLElement;
 
-    protected render(): HTMLElement {
+    private _render(): HTMLElement {
         if (this.$box) {
             return this.$box;
         }
@@ -744,6 +703,8 @@ export class TeleBox {
                 this._pxIntrinsicSize$,
                 this._pxIntrinsicCoord$,
                 this._collectorRect$,
+                this._rootRect$,
+                this._managerStageRect$,
             ],
             ([
                 maximized,
@@ -751,28 +712,30 @@ export class TeleBox {
                 pxIntrinsicSize,
                 pxIntrinsicCoord,
                 collectorRect,
+                rootRect,
+                managerStageRect,
             ]) => {
                 const styles: {
                     x: number;
                     y: number;
-                    width: string;
-                    height: string;
+                    width: number;
+                    height: number;
                     scaleX: number;
                     scaleY: number;
                 } = maximized
                     ? {
-                          x: 0,
-                          y: 0,
-                          width: "100%",
-                          height: "100%",
+                          x: -managerStageRect.x,
+                          y: -managerStageRect.y,
+                          width: rootRect.width,
+                          height: rootRect.height,
                           scaleX: 1,
                           scaleY: 1,
                       }
                     : {
                           x: pxIntrinsicCoord.x,
                           y: pxIntrinsicCoord.y,
-                          width: pxIntrinsicSize.width + "px",
-                          height: pxIntrinsicSize.height + "px",
+                          width: pxIntrinsicSize.width,
+                          height: pxIntrinsicSize.height,
                           scaleX: 1,
                           scaleY: 1,
                       };
@@ -783,11 +746,13 @@ export class TeleBox {
                     styles.x =
                         collectorRect.x -
                         boxWidth / 2 +
-                        collectorRect.width / 2;
+                        collectorRect.width / 2 -
+                        managerStageRect.x;
                     styles.y =
                         collectorRect.y -
                         boxHeight / 2 +
-                        collectorRect.height / 2;
+                        collectorRect.height / 2 -
+                        managerStageRect.y;
                     styles.scaleX = collectorRect.width / boxWidth;
                     styles.scaleY = collectorRect.height / boxHeight;
                 }
@@ -797,8 +762,8 @@ export class TeleBox {
         );
 
         const boxStyles = boxStyles$.value;
-        this.$box.style.width = boxStyles.width;
-        this.$box.style.height = boxStyles.height;
+        this.$box.style.width = boxStyles.width + "px";
+        this.$box.style.height = boxStyles.height + "px";
         // Add 10px offset on first frame
         // which creates a subtle moving effect
         this.$box.style.transform = `translate(${boxStyles.x - 10}px,${
@@ -827,6 +792,13 @@ export class TeleBox {
         $content.className =
             this.wrapClassName("content") + " tele-fancy-scrollbar";
         this.$content = $content;
+        this._sideEffect.addDisposer(
+            combine(
+                [this._contentStyle$, this._managerContainerStyle$],
+                ([contentStyle, managerContainerStyle]) =>
+                    contentStyle ?? managerContainerStyle
+            ).subscribe((style) => ($content.style.cssText = style))
+        );
 
         const updateContentRect = (): void => {
             const rect = $content.getBoundingClientRect();
@@ -894,19 +866,8 @@ export class TeleBox {
                 last$userStage = $userStage;
                 if ($userStage) {
                     if (!this.$stage) {
-                        const $stage = document.createElement("div");
-                        this.$stage = $stage;
-                        $stage.className = this.wrapClassName("content-stage");
-                        this._sideEffect.addDisposer(
-                            this._contentStageRect$.subscribe((rect) => {
-                                $stage.style.top = rect.y + "px";
-                                $stage.style.left = rect.x + "px";
-                                $stage.style.width = rect.width + "px";
-                                $stage.style.height = rect.height + "px";
-                            }),
-                            "content-stage-rect"
-                        );
-                        $content.appendChild($stage);
+                        this.$stage = this._renderStage();
+                        $content.appendChild(this.$stage);
                     }
                     if (!this.$stage.parentElement) {
                         $content.appendChild(this.$stage);
@@ -946,13 +907,42 @@ export class TeleBox {
         return this.$box;
     }
 
-    protected _handleTrackStart?: (ev: MouseEvent | TouchEvent) => void;
+    private _renderStage(): HTMLDivElement {
+        const $stage = document.createElement("div");
+
+        $stage.className = this.wrapClassName("content-stage");
+        const updateContentStageRect = (
+            contentStageRect: TeleBoxRect
+        ): void => {
+            $stage.style.top = contentStageRect.y + "px";
+            $stage.style.left = contentStageRect.x + "px";
+            $stage.style.width = contentStageRect.width + "px";
+            $stage.style.height = contentStageRect.height + "px";
+        };
+        this._sideEffect.addDisposer(
+            [
+                combine(
+                    [this._contentStageStyle$, this._managerStageStyle$],
+                    ([contentStageStyle, managerStageStyle]) =>
+                        contentStageStyle ?? managerStageStyle
+                ).subscribe((styles) => {
+                    $stage.style.cssText = styles;
+                    updateContentStageRect(this._contentStageRect$.value);
+                }),
+                this._contentStageRect$.subscribe(updateContentStageRect),
+            ],
+            "content-stage-styles"
+        );
+        return $stage;
+    }
+
+    private _handleTrackStart?: (ev: MouseEvent | TouchEvent) => void;
 
     public handleTrackStart: (ev: MouseEvent | TouchEvent) => void = (ev) => {
         return this._handleTrackStart?.(ev);
     };
 
-    protected _renderResizeHandlers(): void {
+    private _renderResizeHandlers(): void {
         const $resizeHandles = document.createElement("div");
         $resizeHandles.className = this.wrapClassName("resize-handles");
 
@@ -993,8 +983,8 @@ export class TeleBox {
             preventEvent(ev);
 
             let { pageX, pageY } = flattenEvent(ev);
-            if (pageY < this.rootRect.y) {
-                pageY = this.rootRect.y;
+            if (pageY < 0) {
+                pageY = 0;
             }
 
             const offsetX = pageX - trackStartPageX;
@@ -1206,12 +1196,13 @@ export type ReadonlyTeleBox = Pick<
     | "unmountStage"
     | "mountStyles"
     | "unmountStyles"
-    | "setStageRatio"
+    | "setContentStageRatio"
+    | "setContentStageStyle"
+    | "setContentStyle"
     | "setDraggable"
     | "setResizable"
-    | "setHighlightStage"
     | "setTitle"
-    | "setRatio"
+    | "setBoxRatio"
     | "setVisible"
     | "handleTrackStart"
     | "onValChanged"

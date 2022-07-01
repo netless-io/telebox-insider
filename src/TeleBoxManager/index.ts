@@ -1,3 +1,5 @@
+import "./style.scss";
+
 import shallowequal from "shallowequal";
 import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
 import { SideEffectManager } from "side-effect-manager";
@@ -38,7 +40,7 @@ import type {
     TeleBoxManagerUpdateConfig,
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
-import { TeleStage } from "../TeleStage";
+import { calcStageRect } from "../TeleBox/utils";
 
 export * from "./typings";
 export * from "./constants";
@@ -60,7 +62,8 @@ type ValConfig = {
     maximized: Val<boolean, boolean>;
     fence: Val<boolean, boolean>;
     stageRatio: Val<number, boolean>;
-    highlightStage: Val<boolean, boolean>;
+    containerStyle: Val<string>;
+    stageStyle: Val<string>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
@@ -79,7 +82,8 @@ export class TeleBoxManager {
         namespace = "telebox",
         readonly = false,
         stageRatio = -1,
-        highlightStage = true,
+        containerStyle = "",
+        stageStyle = "",
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
@@ -93,8 +97,9 @@ export class TeleBoxManager {
         const minimized$ = new Val(minimized);
         const maximized$ = new Val(maximized);
         const fence$ = new Val(fence);
+        const containerStyle$ = new Val(containerStyle);
+        const stageStyle$ = new Val(stageStyle);
         const stageRatio$ = new Val(stageRatio);
-        const highlightStage$ = new Val(highlightStage);
 
         const rootRect$ = new Val<TeleBoxRect>(
             {
@@ -125,6 +130,10 @@ export class TeleBoxManager {
                 }, "calc-root-rect");
             })
         );
+
+        const stageRect$ = combine([rootRect$, stageRatio$], calcStageRect, {
+            compare: shallowequal,
+        });
 
         this.boxes$ = new Val<TeleBox[]>([]);
         this.topBox$ = new Val<TeleBox | undefined>(undefined);
@@ -197,25 +206,12 @@ export class TeleBoxManager {
                 root$,
             });
 
-        const teleStage = new TeleStage({
-            namespace,
-            rootRect$,
-            ratio$: stageRatio$,
-            root$,
-            highlightStage$: combine(
-                [highlightStage$, maximized$, minimized$],
-                ([highlightStage, maximized, minimized]) =>
-                    highlightStage && (minimized || !maximized)
-            ),
-        });
-        this._sideEffect.addDisposer(() => teleStage.destroy());
-
         const readonlyValConfig: ReadonlyValConfig = {
             darkMode: darkMode$,
             state: state$,
             root: root$,
             rootRect: rootRect$,
-            stageRect: teleStage.stageRect$,
+            stageRect: stageRect$,
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig, valManager);
@@ -227,7 +223,8 @@ export class TeleBoxManager {
             minimized: minimized$,
             maximized: maximized$,
             stageRatio: stageRatio$,
-            highlightStage: highlightStage$,
+            containerStyle: containerStyle$,
+            stageStyle: stageStyle$,
         };
 
         withValueEnhancer(this, valConfig, valManager);
@@ -336,7 +333,56 @@ export class TeleBoxManager {
                 }
             }),
         ]);
+
+        this.$container = document.createElement("div");
+        this.$container.className = this.wrapClassName("manager-container");
+
+        this.$stage = document.createElement("div");
+        this.$stage.className = this.wrapClassName("manager-stage");
+        this.$container.appendChild(this.$stage);
+
+        this._sideEffect.addDisposer([
+            darkMode$.subscribe((darkMode) => {
+                this.$container.classList.toggle(
+                    this.wrapClassName("color-scheme-dark"),
+                    darkMode
+                );
+                this.$container.classList.toggle(
+                    this.wrapClassName("color-scheme-light"),
+                    !darkMode
+                );
+            }),
+            maximized$.subscribe((maximized) => {
+                this.$container.classList.toggle("is-maximized", maximized);
+            }),
+            minimized$.subscribe((minimized) => {
+                this.$container.classList.toggle("is-minimized", minimized);
+            }),
+            containerStyle$.subscribe((containerStyle) => {
+                this.$container.style.cssText = containerStyle;
+            }),
+            stageStyle$.subscribe((stageStyle) => {
+                this.$stage.style.cssText = stageStyle;
+                this.$stage.style.width = stageRect$.value.width + "px";
+                this.$stage.style.height = stageRect$.value.height + "px";
+            }),
+            stageRect$.subscribe((stageRect) => {
+                this.$stage.style.width = stageRect.width + "px";
+                this.$stage.style.height = stageRect.height + "px";
+            }),
+            root$.subscribe((root) => {
+                if (root) {
+                    root.appendChild(this.$container);
+                } else if (this.$container.parentElement) {
+                    this.$container.remove();
+                }
+            }),
+        ]);
     }
+
+    public readonly $container: HTMLDivElement;
+
+    public readonly $stage: HTMLDivElement;
 
     public get boxes(): ReadonlyArray<TeleBox> {
         return this.boxes$.value;
@@ -386,7 +432,7 @@ export class TeleBoxManager {
             ...config,
             ...(smartPosition ? this.smartPosition(config) : {}),
             namespace: this.namespace,
-            root$: this._root$,
+            root: this.$stage,
             darkMode$: this._darkMode$,
             maximized$: this._maximized$,
             minimized$: this._minimized$,
@@ -396,7 +442,8 @@ export class TeleBoxManager {
             managerStageRatio$: this._stageRatio$,
             readonly$: this._readonly$,
             collectorRect$: this.collector._rect$,
-            managerHighlightStage$: this._highlightStage$,
+            managerContainerStyle$: this._containerStyle$,
+            managerStageStyle$: this._stageStyle$,
         });
 
         if (box.focus) {
@@ -663,14 +710,14 @@ export class TeleBoxManager {
         if (config.draggable != null) {
             box._draggable$.setValue(config.draggable, skipUpdate);
         }
-        if (config.ratio != null) {
-            box._ratio$.setValue(config.ratio, skipUpdate);
+        if (config.boxRatio != null) {
+            box._boxRatio$.setValue(config.boxRatio, skipUpdate);
         }
         if (config.zIndex != null) {
             box._zIndex$.setValue(config.zIndex, skipUpdate);
         }
-        if (config.stageRatio !== undefined) {
-            box.setStageRatio(config.stageRatio, skipUpdate);
+        if (config.contentStageRatio !== undefined) {
+            box.setContentStageRatio(config.contentStageRatio, skipUpdate);
         }
         if (config.content != null) {
             box.mountContent(config.content);
@@ -697,33 +744,27 @@ export class TeleBoxManager {
         const topBox = this.topBox;
 
         if (x == null) {
-            let pxX = stageRect.x + 20;
+            let pxX = 20;
             if (topBox) {
                 const pxPreferredX = topBox.pxIntrinsicCoord.x + 20;
                 const pxIntrinsicWidth = width * stageRect.width;
-                if (
-                    pxPreferredX + pxIntrinsicWidth <=
-                    stageRect.x + stageRect.width
-                ) {
+                if (pxPreferredX + pxIntrinsicWidth <= stageRect.width) {
                     pxX = pxPreferredX;
                 }
             }
-            x = (pxX - stageRect.x) / stageRect.width;
+            x = pxX / stageRect.width;
         }
 
         if (y == null) {
-            let pxY = stageRect.y + 20;
+            let pxY = 20;
             if (topBox) {
                 const pxPreferredY = topBox.pxIntrinsicCoord.y + 20;
                 const pxIntrinsicHeight = height * stageRect.height;
-                if (
-                    pxPreferredY + pxIntrinsicHeight <=
-                    stageRect.y + stageRect.height
-                ) {
+                if (pxPreferredY + pxIntrinsicHeight <= stageRect.height) {
                     pxY = pxPreferredY;
                 }
             }
-            y = (pxY - stageRect.y) / stageRect.height;
+            y = pxY / stageRect.height;
         }
 
         return { x, y, width, height };

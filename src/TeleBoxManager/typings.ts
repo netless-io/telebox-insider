@@ -21,8 +21,10 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     readonly minimized?: boolean;
     /** Is box readonly */
     readonly readonly?: boolean;
-    /** Show stage frame and grey-out the non-stage area. Default true. */
-    readonly highlightStage?: boolean;
+    /** Extra styles for telebox manager container */
+    readonly containerStyle?: string;
+    /** Extra styles for telebox manager stage */
+    readonly stageStyle?: string;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
@@ -36,9 +38,9 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "y"
     | "resizable"
     | "draggable"
-    | "ratio"
+    | "boxRatio"
     | "zIndex"
-    | "stageRatio";
+    | "contentStageRatio";
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,
@@ -56,8 +58,8 @@ export type TeleBoxManagerQueryConfig = Pick<
     | "visible"
     | "resizable"
     | "draggable"
-    | "ratio"
-    | "stageRatio"
+    | "boxRatio"
+    | "contentStageRatio"
     | "zIndex"
     | "id"
     | "focus"

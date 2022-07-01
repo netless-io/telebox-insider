@@ -1,5 +1,14 @@
 $namespace: "telebox";
+
 $base-z-index: 100;
 $max-titlebar-z-index: $base-z-index + 5000;
 $stage-z-index: $max-titlebar-z-index + 10;
 $collector-z-index: $stage-z-index + 10;
+
+$color-container-background: #f9f9f9;
+$color-stage-background: #fff;
+$color-stage-shadow: 0px 0px 16px rgba(0, 0, 0, 0.08);
+
+$color-container-background-dark: #25282e;
+$color-stage-background-dark: #272a30;
+$color-stage-shadow-dark: 0px 0px 16px rgba(0, 0, 0, 0.24);

@@ -31,7 +31,7 @@ const createSelector = (
 };
 
 const manager = new TeleBoxManager({
-    fence: true,
+    fence: false,
     root: board,
     stageRatio: 9 / 16,
 });

@@ -1,0 +1,39 @@
+@import "../scss/variables.scss";
+
+.#{$namespace}-manager-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: $color-container-background;
+
+    &.is-maximized,
+    &.is-minimized {
+        & > .#{$namespace}-manager-stage {
+            overflow: visible;
+        }
+    }
+}
+
+.#{$namespace}-manager-stage {
+    position: relative;
+    overflow: hidden;
+    background: $color-stage-background;
+    box-shadow: $color-stage-shadow;
+}
+
+.#{$namespace}-color-scheme-dark {
+    color-scheme: dark;
+
+    &.#{$namespace}-manager-container {
+        background: $color-container-background-dark;
+
+        & > .#{$namespace}-manager-stage {
+            background: $color-stage-background-dark;
+            box-shadow: $color-stage-shadow-dark;
+        }
+    }
+}

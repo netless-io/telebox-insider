@@ -51,13 +51,13 @@ export interface TeleBoxConfig {
     /** Able to drag box window Default true. */
     readonly draggable?: boolean;
     /** Fixed height/width ratio for box window. No ratio limit if <= 0. Default -1. */
-    readonly ratio?: number;
+    readonly boxRatio?: number;
     /** Box focused. */
     readonly focus?: boolean;
     /** Base z-index for box. */
     readonly zIndex?: number;
-    /** Box stage ratio. Follow manager stage ratio if null. Default null. */
-    readonly stageRatio?: number | null;
+    /** Box content stage ratio. Follow manager stage ratio if null. Default null. */
+    readonly contentStageRatio?: number | null;
     /** Classname Prefix. For CSS styling. Default "telebox". */
     readonly namespace?: string;
     /** TeleTitleBar Instance. */
@@ -70,8 +70,10 @@ export interface TeleBoxConfig {
     readonly footer?: HTMLElement;
     /** Box content styles. */
     readonly styles?: HTMLStyleElement;
-    /** Show stage frame and grey-out the non-stage area. Inherit setting from manager if null. Default null. */
-    readonly highlightStage?: boolean | null;
+    /** Custom styles for box content container. Inherit from manager container style if null. Default null. */
+    readonly contentStyle?: string | null;
+    /** Custom styles for box content stage. Inherit from manager stage style if null. Default null. */
+    readonly contentStageStyle?: string | null;
     /** Actual Box Dark Mode */
     readonly darkMode$: ReadonlyVal<boolean, boolean>;
     /** Restrict box to always be within the stage area. Default false. */
@@ -83,17 +85,19 @@ export interface TeleBoxConfig {
     /** Is box readonly */
     readonly readonly$: ReadonlyVal<boolean, boolean>;
     /** Root element to mount boxes */
-    readonly root$: ReadonlyVal<HTMLElement | null>;
+    readonly root: HTMLElement;
     /** Position and dimension of root element */
     readonly rootRect$: ReadonlyVal<TeleBoxRect>;
     /** Position and dimension of stage area */
     readonly managerStageRect$: ReadonlyVal<TeleBoxRect>;
     /** Stage area height/with ratio. No ratio if <= 0. */
     readonly managerStageRatio$: ReadonlyVal<number, boolean>;
+    /** Custom container styles from manager */
+    readonly managerContainerStyle$: ReadonlyVal<string>;
+    /** Custom stage styles from manager */
+    readonly managerStageStyle$: ReadonlyVal<string>;
     /** Position and dimension of collector */
     readonly collectorRect$: ReadonlyVal<TeleBoxRect | undefined>;
-    /** highlight stage settings from manager */
-    readonly managerHighlightStage$: ReadonlyVal<boolean>;
 }
 
 type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
