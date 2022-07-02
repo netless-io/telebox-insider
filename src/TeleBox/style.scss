@@ -1,6 +1,8 @@
 @import "../scss/variables.scss";
 @import "../scss/mixins.scss";
 
+@import "./style.shadow.scss";
+
 .#{$namespace}-box {
     position: absolute;
     top: 0;
@@ -12,7 +14,6 @@
 }
 
 .#{$namespace}-box-main {
-    @include v(color, box-color, $box-color);
     @include v(border, box-border, $box-border);
     @include v(box-shadow, box-shadow, $box-shadow);
 
@@ -31,50 +32,11 @@
     z-index: 1;
 }
 
-.#{$namespace}-body-wrap {
+.#{$namespace}-quarantine-wrap {
+    all: initial;
     flex: 1;
     width: 100%;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.#{$namespace}-content {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    @include v(
-        background-color,
-        manager-container-background,
-        $manager-container-background
-    );
-}
-
-.#{$namespace}-box-stage {
-    position: absolute;
-    z-index: 1;
-    overflow: hidden;
-
-    @include v(
-        background-color,
-        manager-stage-background,
-        $manager-stage-background
-    );
-    @include v(box-shadow, manager-stage-shadow, $manager-stage-shadow);
-}
-
-.#{$namespace}-footer-wrap {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-
-    &::before {
-        content: "";
-        display: block;
-        flex: 1;
-    }
 }
 
 .#{$namespace}-resize-handle {
@@ -230,29 +192,7 @@
     color-scheme: dark;
 
     .#{$namespace}-box-main {
-        @include v(color, box-color-dark, $box-color-dark);
         @include v(border, box-border-dark, $box-border-dark);
         @include v(box-shadow, box-shadow-dark, $box-shadow-dark);
-    }
-
-    .#{$namespace}-content {
-        @include v(
-            background-color,
-            manager-container-background-dark,
-            $manager-container-background-dark
-        );
-    }
-
-    .#{$namespace}-box-stage {
-        @include v(
-            background-color,
-            manager-stage-background-dark,
-            $manager-stage-background-dark
-        );
-        @include v(
-            box-shadow,
-            manager-stage-shadow-dark,
-            $manager-stage-shadow-dark
-        );
     }
 }

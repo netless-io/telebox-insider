@@ -1,4 +1,5 @@
 import "./style.scss";
+import contentStyle from "./content.scss?inline";
 
 import faker from "faker";
 import type { TeleBoxColorScheme } from "../src";
@@ -6,6 +7,8 @@ import { TeleBoxManager } from "../src";
 
 const btns = document.querySelector(".btns") as HTMLDivElement;
 const board = document.querySelector(".board") as HTMLDivElement;
+
+let enableShadowDOM = true;
 
 const createBtn = (title: string): HTMLButtonElement => {
     const btn = document.createElement("button");
@@ -48,16 +51,21 @@ createBtn("Create").addEventListener("click", () => {
     const title = faker.datatype.boolean()
         ? faker.commerce.productName()
         : faker.random.words(50);
-    const content = document.createElement("div");
-    content.className = "content";
-    content.textContent = `Content ${title}`;
-    manager.create({
+    const box = manager.create({
         minHeight: 0.1,
         minWidth: 0.1,
         title: title.slice(0, 50),
         focus: true,
-        stage: content,
+        enableShadowDOM,
     });
+
+    const content = document.createElement("div");
+    content.className = "content";
+    content.textContent = `Content ${title}`;
+
+    box.mountStage(content);
+    box.mountStyles(contentStyle);
+
     if (manager.minimized) {
         manager.setMinimized(false);
     }
@@ -89,5 +97,15 @@ createSelector("light", [
         (evt.currentTarget as HTMLSelectElement).value as TeleBoxColorScheme
     );
 });
+
+createBtn(enableShadowDOM ? "ShadowDOM" : "DOM").addEventListener(
+    "click",
+    (evt) => {
+        enableShadowDOM = !enableShadowDOM;
+        (evt.currentTarget as HTMLButtonElement).textContent = enableShadowDOM
+            ? "ShadowDOM"
+            : "DOM";
+    }
+);
 
 manager.events.on("state", (state) => console.log("state", state));

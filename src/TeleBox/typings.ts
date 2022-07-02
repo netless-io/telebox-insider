@@ -60,6 +60,8 @@ export interface TeleBoxConfig {
     readonly stageRatio?: number | null;
     /** Classname Prefix. For CSS styling. Default "telebox". */
     readonly namespace?: string;
+    /** Enable shadow DOM for box content. Default true. */
+    readonly enableShadowDOM?: boolean;
     /** TeleTitleBar Instance. */
     readonly titleBar?: TeleTitleBar;
     /** Box content element. */

@@ -1,4 +1,5 @@
 import "./style.scss";
+import shadowStyles from "./style.shadow.scss?inline";
 
 import Emittery from "emittery";
 import styler from "stylefire";
@@ -19,14 +20,7 @@ import {
 import type { TeleTitleBar } from "../TeleTitleBar";
 import { DefaultTitleBar } from "../TeleTitleBar";
 import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
-import {
-    clamp,
-    flattenEvent,
-    getBoxDefaultName,
-    isFalsy,
-    isTruthy,
-    preventEvent,
-} from "../utils";
+import { clamp, flattenEvent, getBoxDefaultName, preventEvent } from "../utils";
 import {
     TELE_BOX_EVENT,
     TELE_BOX_STATE,
@@ -116,6 +110,7 @@ export class TeleBox {
         focus = false,
         zIndex = 100,
         stageRatio = null,
+        enableShadowDOM = true,
         titleBar,
         content,
         stage,
@@ -141,6 +136,7 @@ export class TeleBox {
 
         this.id = id;
         this.namespace = namespace;
+        this.enableShadowDOM = enableShadowDOM;
 
         const valManager = new ValManager();
         this._sideEffect.addDisposer(() => valManager.destroy());
@@ -367,6 +363,9 @@ export class TeleBox {
 
     /** ClassName Prefix. For CSS styling. Default "telebox" */
     public readonly namespace: string;
+
+    /** Enable shadow DOM for box content. Default true. */
+    public readonly enableShadowDOM: boolean;
 
     public readonly events = new Emittery<
         TeleBoxEventConfig,
@@ -640,35 +639,48 @@ export class TeleBox {
             return this.$box;
         }
 
-        this.$box = document.createElement("div");
-
-        this.$box.classList.add(this.wrapClassName("box"));
-
-        const bindClassName = <TValue>(
-            el: Element,
-            val: ReadonlyVal<TValue, boolean>,
-            className: string,
-            predicate: (value: TValue) => boolean = isTruthy
-        ): string => {
-            return this._sideEffect.add(() => {
-                const wrappedClassName = this.wrapClassName(className);
-                return val.subscribe((value) => {
-                    el.classList.toggle(wrappedClassName, predicate(value));
-                });
-            });
+        const bindBoxStates = (el: Element, disposerID?: string): string => {
+            return this._sideEffect.addDisposer(
+                [
+                    this._readonly$.subscribe((readonly) =>
+                        el.classList.toggle(
+                            this.wrapClassName("readonly"),
+                            readonly
+                        )
+                    ),
+                    this._draggable$.subscribe((draggable) =>
+                        el.classList.toggle(
+                            this.wrapClassName("no-drag"),
+                            !draggable
+                        )
+                    ),
+                    this._resizable$.subscribe((resizable) =>
+                        el.classList.toggle(
+                            this.wrapClassName("no-resize"),
+                            !resizable
+                        )
+                    ),
+                    this._focus$.subscribe((focus) =>
+                        el.classList.toggle(this.wrapClassName("blur"), !focus)
+                    ),
+                    this._darkMode$.subscribe((darkMode) => {
+                        el.classList.toggle(
+                            this.wrapClassName("color-scheme-dark"),
+                            darkMode
+                        );
+                        el.classList.toggle(
+                            this.wrapClassName("color-scheme-light"),
+                            !darkMode
+                        );
+                    }),
+                ],
+                disposerID
+            );
         };
 
-        bindClassName(this.$box, this._readonly$, "readonly");
-        bindClassName(this.$box, this._draggable$, "no-drag", isFalsy);
-        bindClassName(this.$box, this._resizable$, "no-resize", isFalsy);
-        bindClassName(this.$box, this._focus$, "blur", isFalsy);
-        bindClassName(this.$box, this._darkMode$, "color-scheme-dark");
-        bindClassName(
-            this.$box,
-            this._darkMode$,
-            "color-scheme-light",
-            isFalsy
-        );
+        this.$box = document.createElement("div");
+        this.$box.classList.add(this.wrapClassName("box"));
+        bindBoxStates(this.$box, "bind-box-state");
 
         this._sideEffect.add(() => {
             const minimizedClassName = this.wrapClassName("minimized");
@@ -836,8 +848,29 @@ export class TeleBox {
         this.$footer = $footer;
 
         $boxMain.appendChild($titleBar);
-        $boxMain.appendChild($body);
-        $boxMain.appendChild($footer);
+
+        if (this.enableShadowDOM) {
+            const $quarantineWrap = document.createElement("div");
+            $quarantineWrap.className = this.wrapClassName("quarantine-wrap");
+            $boxMain.appendChild($quarantineWrap);
+
+            const $quarantine = document.createElement("div");
+            $quarantine.className = this.wrapClassName("quarantine");
+            bindBoxStates($quarantine, "bind-quarantine-state");
+
+            const $shadowStyle = document.createElement("style");
+            $shadowStyle.textContent = shadowStyles;
+
+            $quarantine.appendChild($shadowStyle);
+            $quarantine.appendChild($body);
+            $quarantine.appendChild($footer);
+
+            const shadow = $quarantineWrap.attachShadow({ mode: "open" });
+            shadow.appendChild($quarantine);
+        } else {
+            $boxMain.appendChild($body);
+            $boxMain.appendChild($footer);
+        }
 
         this._renderResizeHandlers();
 

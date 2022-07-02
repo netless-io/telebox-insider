@@ -52,8 +52,12 @@ export type TeleBoxManagerCreateConfig = Pick<
     | "content"
     | "stage"
     | "footer"
+    | "styles"
+    | "bodyStyle"
+    | "stageStyle"
     | "id"
     | "focus"
+    | "enableShadowDOM"
 >;
 
 export type TeleBoxManagerQueryConfig = Pick<
