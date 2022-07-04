@@ -51,6 +51,9 @@
     display: flex;
     flex-direction: column;
 
+    @include v(color, box-footer-color, $titlebar-color);
+    @include v(background-color, box-footer-background, $titlebar-background);
+
     &::before {
         content: "";
         display: block;
@@ -83,6 +86,15 @@
             box-shadow,
             manager-stage-shadow-dark,
             $manager-stage-shadow-dark
+        );
+    }
+
+    .#{$namespace}-footer-wrap {
+        @include v(color, box-footer-color-dark, $titlebar-color-dark);
+        @include v(
+            background-color,
+            box-footer-background-dark,
+            $titlebar-background-dark
         );
     }
 }
