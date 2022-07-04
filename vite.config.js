@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
             },
             outDir: "dist",
             sourcemap: isProd,
-            minify: isProd,
+            minify: false,
         },
         plugins: [excludeDependenciesFromBundle()],
     };
