@@ -857,6 +857,10 @@ export class TeleBox {
         this.$main = $main;
         $boxMain.appendChild($main);
 
+        const $quarantineOuter = document.createElement("div");
+        $quarantineOuter.className = this.wrapClassName("quarantine-outer");
+        $main.appendChild($quarantineOuter);
+
         const $quarantine = document.createElement("div");
         $quarantine.className = this.wrapClassName("quarantine");
         $quarantine.appendChild($body);
@@ -867,10 +871,10 @@ export class TeleBox {
             const $shadowStyle = document.createElement("style");
             $shadowStyle.textContent = shadowStyles;
             $quarantine.insertBefore($shadowStyle, $quarantine.firstChild);
-            const shadow = $main.attachShadow({ mode: "open" });
+            const shadow = $quarantineOuter.attachShadow({ mode: "open" });
             shadow.appendChild($quarantine);
         } else {
-            $main.appendChild($quarantine);
+            $quarantineOuter.appendChild($quarantine);
         }
 
         this._renderResizeHandlers();
