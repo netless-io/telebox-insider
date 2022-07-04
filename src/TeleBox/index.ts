@@ -20,7 +20,7 @@ import {
 import type { TeleTitleBar } from "../TeleTitleBar";
 import { DefaultTitleBar } from "../TeleTitleBar";
 import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
-import { clamp, flattenEvent, getBoxDefaultName, preventEvent } from "../utils";
+import { clamp, getBoxDefaultName, preventEvent } from "../utils";
 import {
     TELE_BOX_EVENT,
     TELE_BOX_STATE,
@@ -936,9 +936,9 @@ export class TeleBox {
         return $stage;
     }
 
-    private _handleTrackStart?: (ev: MouseEvent | TouchEvent) => void;
+    private _handleTrackStart?: (ev: PointerEvent) => void;
 
-    public handleTrackStart: (ev: MouseEvent | TouchEvent) => void = (ev) => {
+    public handleTrackStart: (ev: PointerEvent) => void = (ev) => {
         return this._handleTrackStart?.(ev);
     };
 
@@ -975,14 +975,14 @@ export class TeleBox {
 
         let trackingHandle: TeleBoxHandleType | undefined;
 
-        const handleTracking = (ev: MouseEvent | TouchEvent): void => {
-            if (this.state !== TELE_BOX_STATE.Normal) {
+        const handleTracking = (ev: PointerEvent): void => {
+            if (!ev.isPrimary || this.state !== TELE_BOX_STATE.Normal) {
                 return;
             }
 
             preventEvent(ev);
 
-            let { pageX, pageY } = flattenEvent(ev);
+            let { pageX, pageY } = ev;
             if (pageY < 0) {
                 pageY = 0;
             }
@@ -1046,7 +1046,11 @@ export class TeleBox {
             this.transform(newX, newY, newWidth, newHeight);
         };
 
-        const handleTrackEnd = (ev: MouseEvent | TouchEvent): void => {
+        const handleTrackEnd = (ev: PointerEvent): void => {
+            if (!ev.isPrimary) {
+                return;
+            }
+
             trackingHandle = void 0;
 
             if (!$trackMask) {
@@ -1062,8 +1066,8 @@ export class TeleBox {
             $trackMask.remove();
         };
 
-        const handleTrackStart = (ev: MouseEvent | TouchEvent): void => {
-            if (this.readonly) {
+        const handleTrackStart = (ev: PointerEvent): void => {
+            if (!ev.isPrimary || this.readonly) {
                 return;
             }
 
@@ -1091,8 +1095,7 @@ export class TeleBox {
                 ({ width: trackStartWidth, height: trackStartHeight } =
                     this.pxIntrinsicSize);
 
-                ({ pageX: trackStartPageX, pageY: trackStartPageY } =
-                    flattenEvent(ev));
+                ({ pageX: trackStartPageX, pageY: trackStartPageY } = ev);
 
                 trackingHandle = target.dataset
                     .teleBoxHandle as TELE_BOX_RESIZE_HANDLE;
@@ -1114,25 +1117,24 @@ export class TeleBox {
                 this.$box.classList.add(transformingClassName);
 
                 this._sideEffect.add(() => {
-                    window.addEventListener("mousemove", handleTracking);
-                    window.addEventListener("touchmove", handleTracking, {
+                    window.addEventListener("pointermove", handleTracking, {
                         passive: false,
                     });
-                    window.addEventListener("mouseup", handleTrackEnd);
-                    window.addEventListener("touchend", handleTrackEnd, {
+                    window.addEventListener("pointerup", handleTrackEnd, {
                         passive: false,
                     });
-                    window.addEventListener("touchcancel", handleTrackEnd, {
+                    window.addEventListener("pointercancel", handleTrackEnd, {
                         passive: false,
                     });
 
                     return () => {
-                        window.removeEventListener("mousemove", handleTracking);
-                        window.removeEventListener("touchmove", handleTracking);
-                        window.removeEventListener("mouseup", handleTrackEnd);
-                        window.removeEventListener("touchend", handleTrackEnd);
                         window.removeEventListener(
-                            "touchcancel",
+                            "pointermove",
+                            handleTracking
+                        );
+                        window.removeEventListener("pointerup", handleTrackEnd);
+                        window.removeEventListener(
+                            "pointercancel",
                             handleTrackEnd
                         );
                     };
@@ -1144,18 +1146,10 @@ export class TeleBox {
 
         this._sideEffect.addEventListener(
             $resizeHandles,
-            "mousedown",
+            "pointerdown",
             handleTrackStart,
             {},
-            "box-resizeHandles-mousedown"
-        );
-
-        this._sideEffect.addEventListener(
-            $resizeHandles,
-            "touchstart",
-            handleTrackStart,
-            { passive: false },
-            "box-resizeHandles-touchstart"
+            "box-resizeHandles-pointerdown"
         );
     }
 

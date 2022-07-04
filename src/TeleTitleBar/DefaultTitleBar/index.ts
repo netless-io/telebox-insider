@@ -122,9 +122,9 @@ export class DefaultTitleBar implements TeleTitleBar {
 
             this.sideEffect.addEventListener(
                 $buttonsContainer,
-                "click",
+                "pointerup",
                 (ev) => {
-                    if (this.readonly$.value) {
+                    if (!ev.isPrimary || this.readonly$.value) {
                         return;
                     }
                     const target = ev.target as HTMLElement;
@@ -162,14 +162,8 @@ export class DefaultTitleBar implements TeleTitleBar {
         $dragArea.dataset.teleBoxHandle = TeleBoxDragHandleType;
         this.sideEffect.addEventListener(
             $dragArea,
-            "mousedown",
+            "pointerdown",
             this.handleTitleBarClick
-        );
-        this.sideEffect.addEventListener(
-            $dragArea,
-            "touchstart",
-            this.handleTitleBarTouch,
-            { passive: true }
         );
         return $dragArea;
     }
@@ -211,8 +205,8 @@ export class DefaultTitleBar implements TeleTitleBar {
         clientY: -100,
     };
 
-    protected handleTitleBarClick = (ev: MouseEvent): void => {
-        if (this.readonly$.value) {
+    protected handleTitleBarClick = (ev: PointerEvent): void => {
+        if (!ev.isPrimary || this.readonly$.value) {
             return;
         }
 
@@ -245,44 +239,44 @@ export class DefaultTitleBar implements TeleTitleBar {
         this.lastTitleBarClick.clientY = ev.clientY;
     };
 
-    protected lastTitleBarTouch = {
-        timestamp: 0,
-        clientX: -100,
-        clientY: -100,
-    };
+    // protected lastTitleBarTouch = {
+    //     timestamp: 0,
+    //     clientX: -100,
+    //     clientY: -100,
+    // };
 
-    protected handleTitleBarTouch = (ev: TouchEvent): void => {
-        if (this.readonly$.value) {
-            return;
-        }
+    // protected handleTitleBarTouch = (ev: TouchEvent): void => {
+    //     if (this.readonly$.value) {
+    //         return;
+    //     }
 
-        if ((ev.target as HTMLElement).dataset?.teleTitleBarNoDblClick) {
-            return; // btns
-        }
+    //     if ((ev.target as HTMLElement).dataset?.teleTitleBarNoDblClick) {
+    //         return; // btns
+    //     }
 
-        preventEvent(ev);
+    //     preventEvent(ev);
 
-        const now = Date.now();
-        const {
-            clientX = this.lastTitleBarTouch.clientX + 100,
-            clientY = this.lastTitleBarTouch.clientY + 100,
-        } = ev.touches[0] || {};
+    //     const now = Date.now();
+    //     const {
+    //         clientX = this.lastTitleBarTouch.clientX + 100,
+    //         clientY = this.lastTitleBarTouch.clientY + 100,
+    //     } = ev.touches[0] || {};
 
-        if (now - this.lastTitleBarTouch.timestamp <= 500) {
-            if (
-                Math.abs(clientX - this.lastTitleBarTouch.clientX) <= 10 &&
-                Math.abs(clientY - this.lastTitleBarTouch.clientY) <= 10
-            ) {
-                // double click
-                if (this.onEvent) {
-                    this.onEvent({ type: TELE_BOX_DELEGATE_EVENT.Maximize });
-                }
-            }
-        } else if (this.onDragStart) {
-            this.onDragStart(ev);
-        }
-        this.lastTitleBarTouch.timestamp = now;
-        this.lastTitleBarTouch.clientX = clientX;
-        this.lastTitleBarTouch.clientY = clientY;
-    };
+    //     if (now - this.lastTitleBarTouch.timestamp <= 500) {
+    //         if (
+    //             Math.abs(clientX - this.lastTitleBarTouch.clientX) <= 10 &&
+    //             Math.abs(clientY - this.lastTitleBarTouch.clientY) <= 10
+    //         ) {
+    //             // double click
+    //             if (this.onEvent) {
+    //                 this.onEvent({ type: TELE_BOX_DELEGATE_EVENT.Maximize });
+    //             }
+    //         }
+    //     } else if (this.onDragStart) {
+    //         this.onDragStart(ev);
+    //     }
+    //     this.lastTitleBarTouch.timestamp = now;
+    //     this.lastTitleBarTouch.clientX = clientX;
+    //     this.lastTitleBarTouch.clientY = clientY;
+    // };
 }

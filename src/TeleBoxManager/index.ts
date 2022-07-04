@@ -239,8 +239,8 @@ export class TeleBoxManager {
 
         const closeBtnClassName = this.wrapClassName("titlebar-icon-close");
 
-        const checkFocusBox = (ev: MouseEvent | TouchEvent): void => {
-            if (readonly$.value) {
+        const checkFocusBox = (ev: PointerEvent): void => {
+            if (!ev.isPrimary || readonly$.value) {
                 return;
             }
 
@@ -271,13 +271,7 @@ export class TeleBoxManager {
 
         this._sideEffect.addEventListener(
             window,
-            "mousedown",
-            checkFocusBox,
-            true
-        );
-        this._sideEffect.addEventListener(
-            window,
-            "touchstart",
+            "pointerdown",
             checkFocusBox,
             true
         );

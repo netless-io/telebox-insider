@@ -91,9 +91,9 @@ export class TeleBoxCollector {
             el$.subscribe(($collector) => {
                 this._sideEffect.addEventListener(
                     $collector,
-                    "click",
-                    () => {
-                        if (!readonly$.value) {
+                    "pointerup",
+                    (ev) => {
+                        if (ev.isPrimary && !readonly$.value) {
                             minimized$.setValue(false);
                         }
                     },

@@ -9,12 +9,6 @@ export function preventEvent(ev: Event): void {
     }
 }
 
-export function flattenEvent(ev: MouseEvent | TouchEvent): MouseEvent | Touch {
-    return (ev as TouchEvent).touches
-        ? (ev as TouchEvent).touches[0]
-        : (ev as MouseEvent);
-}
-
 export function getRandomInt(min: number, max: number): number {
     min = Math.ceil(min);
     max = Math.floor(max);

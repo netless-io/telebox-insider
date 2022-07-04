@@ -14,7 +14,7 @@ export interface TeleTitleBarConfig {
     state$: ReadonlyVal<TeleBoxState, boolean>;
     namespace?: string;
     onEvent?: (event: TeleTitleBarEvent) => void;
-    onDragStart?: (event: MouseEvent | TouchEvent) => void;
+    onDragStart?: (event: PointerEvent) => void;
 }
 
 export interface TeleTitleBar {
