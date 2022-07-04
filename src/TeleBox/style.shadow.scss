@@ -2,6 +2,7 @@
 @import "../scss/mixins.scss";
 
 .#{$namespace}-quarantine {
+    all: initial;
     position: relative;
     width: 100%;
     height: 100%;

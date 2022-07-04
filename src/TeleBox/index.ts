@@ -613,6 +613,9 @@ export class TeleBox {
     /** DOM of the box */
     public $box: HTMLElement;
 
+    /** DOM of main area of the box. Including $body and $footer. */
+    public $main!: HTMLElement;
+
     /** DOM of the box body */
     public $body!: HTMLElement;
 
@@ -849,27 +852,25 @@ export class TeleBox {
 
         $boxMain.appendChild($titleBar);
 
+        const $main = document.createElement("div");
+        $main.className = this.wrapClassName("main");
+        this.$main = $main;
+        $boxMain.appendChild($main);
+
+        const $quarantine = document.createElement("div");
+        $quarantine.className = this.wrapClassName("quarantine");
+        $quarantine.appendChild($body);
+        $quarantine.appendChild($footer);
+
         if (this.enableShadowDOM) {
-            const $quarantineWrap = document.createElement("div");
-            $quarantineWrap.className = this.wrapClassName("quarantine-wrap");
-            $boxMain.appendChild($quarantineWrap);
-
-            const $quarantine = document.createElement("div");
-            $quarantine.className = this.wrapClassName("quarantine");
             bindBoxStates($quarantine, "bind-quarantine-state");
-
             const $shadowStyle = document.createElement("style");
             $shadowStyle.textContent = shadowStyles;
-
-            $quarantine.appendChild($shadowStyle);
-            $quarantine.appendChild($body);
-            $quarantine.appendChild($footer);
-
-            const shadow = $quarantineWrap.attachShadow({ mode: "open" });
+            $quarantine.insertBefore($shadowStyle, $quarantine.firstChild);
+            const shadow = $main.attachShadow({ mode: "open" });
             shadow.appendChild($quarantine);
         } else {
-            $boxMain.appendChild($body);
-            $boxMain.appendChild($footer);
+            $main.appendChild($quarantine);
         }
 
         this._renderResizeHandlers();

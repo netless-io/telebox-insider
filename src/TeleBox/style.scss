@@ -32,8 +32,8 @@
     z-index: 1;
 }
 
-.#{$namespace}-quarantine-wrap {
-    all: initial;
+.#{$namespace}-main {
+    position: relative;
     flex: 1;
     width: 100%;
     overflow: hidden;
