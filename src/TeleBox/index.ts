@@ -65,6 +65,7 @@ type PropsValConfig = {
     readonly: RequiredTeleBoxConfig["readonly$"];
     rootRect: RequiredTeleBoxConfig["rootRect$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
+    managerStageRatio: RequiredTeleBoxConfig["managerStageRatio$"];
     defaultBoxStageStyle: RequiredTeleBoxConfig["defaultBoxStageStyle$"];
     defaultBoxBodyStyle: RequiredTeleBoxConfig["defaultBoxBodyStyle$"];
     collectorRect: RequiredTeleBoxConfig["collectorRect$"];
@@ -240,6 +241,7 @@ export class TeleBox {
             readonly: readonly$,
             rootRect: rootRect$,
             managerStageRect: managerStageRect$,
+            managerStageRatio: managerStageRatio$,
             defaultBoxBodyStyle: defaultBoxBodyStyle$,
             defaultBoxStageStyle: defaultBoxStageStyle$,
             collectorRect: collectorRect$,
