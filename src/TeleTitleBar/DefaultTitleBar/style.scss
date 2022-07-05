@@ -49,6 +49,8 @@
     bottom: 0;
     margin: auto;
     z-index: 10;
+    // enable pointermove event on touch devices
+    touch-action: none;
 }
 
 .#{$namespace}-titlebar-btns {

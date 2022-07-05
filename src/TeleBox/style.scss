@@ -50,6 +50,8 @@
 
     position: absolute;
     z-index: 2147483647;
+    // enable pointermove event on touch devices
+    touch-action: none;
 }
 
 .#{$namespace}-n {
