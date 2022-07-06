@@ -9,11 +9,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    @include v(
-        background,
-        manager-container-background,
-        $manager-container-background
-    );
+    @include clr-root();
+    @include clr(background, managerContainerBackground);
 
     &.is-maximized,
     &.is-minimized {
@@ -26,31 +23,20 @@
 .#{$namespace}-manager-stage {
     position: relative;
     overflow: hidden;
-    @include v(background, manager-stage-background, $manager-stage-background);
-    @include v(box-shadow, manager-stage-shadow, $manager-stage-shadow);
+    @include clr(background, managerStageBackground);
+    @include clr(boxShadow, managerStageShadow);
 }
 
 .#{$namespace}-color-scheme-dark {
     color-scheme: dark;
 
     &.#{$namespace}-manager-container {
-        @include v(
-            background,
-            manager-container-background-dark,
-            $manager-container-background-dark
-        );
+        @include clr-root-dark();
+        @include clr-dark(background, managerContainerBackground);
 
         & > .#{$namespace}-manager-stage {
-            @include v(
-                background,
-                manager-stage-background-dark,
-                $manager-stage-background-dark
-            );
-            @include v(
-                box-shadow,
-                manager-stage-shadow-dark,
-                $manager-stage-shadow-dark
-            );
+            @include clr-dark(background, managerStageBackground);
+            @include clr-dark(boxShadow, managerStageShadow);
         }
     }
 }

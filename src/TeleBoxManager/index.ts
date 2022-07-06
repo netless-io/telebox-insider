@@ -37,6 +37,7 @@ import type {
     TeleBoxManagerCreateConfig,
     TeleBoxManagerEventConfig,
     TeleBoxManagerQueryConfig,
+    TeleBoxManagerThemeConfig,
     TeleBoxManagerUpdateConfig,
 } from "./typings";
 import { MaxTitleBar } from "./MaxTitleBar";
@@ -88,6 +89,7 @@ export class TeleBoxManager {
         stageStyle = "",
         defaultBoxBodyStyle = null,
         defaultBoxStageStyle = null,
+        theme = {},
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
@@ -202,16 +204,6 @@ export class TeleBoxManager {
                     : TELE_BOX_STATE.Normal
         );
 
-        this.collector =
-            collector ??
-            new TeleBoxCollector({
-                minimized$: minimized$,
-                readonly$: readonly$,
-                darkMode$: darkMode$,
-                namespace,
-                root$,
-            });
-
         const readonlyValConfig: ReadonlyValConfig = {
             darkMode: darkMode$,
             state: state$,
@@ -278,6 +270,7 @@ export class TeleBoxManager {
 
         this.$container = document.createElement("div");
         this.$container.className = this.wrapClassName("manager-container");
+        this.setTheme(theme);
 
         this.$stage = document.createElement("div");
         this.$stage.className = this.wrapClassName("manager-stage");
@@ -320,6 +313,16 @@ export class TeleBoxManager {
                 }
             }),
         ]);
+
+        this.collector =
+            collector ??
+            new TeleBoxCollector({
+                minimized$: minimized$,
+                readonly$: readonly$,
+                darkMode$: darkMode$,
+                namespace,
+                root: this.$container,
+            });
 
         this.titleBar = new MaxTitleBar({
             namespace: this.namespace,
@@ -574,6 +577,15 @@ export class TeleBoxManager {
             this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, deletedBoxes);
         }
         return deletedBoxes;
+    }
+
+    public setTheme(theme: TeleBoxManagerThemeConfig): void {
+        Object.keys(theme).forEach((key) => {
+            this.$container.style.setProperty(
+                `--tele-${key}`,
+                theme[key as keyof TeleBoxManagerThemeConfig] ?? null
+            );
+        });
     }
 
     /**

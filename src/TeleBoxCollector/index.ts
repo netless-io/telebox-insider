@@ -9,7 +9,6 @@ import type {
 import { derive } from "value-enhancer";
 import {
     withValueEnhancer,
-    combine,
     Val,
     withReadonlyValueEnhancer,
     ValManager,
@@ -20,7 +19,7 @@ import type { TeleBoxRect } from "../TeleBox/typings";
 export interface TeleBoxCollectorConfig {
     namespace?: string;
     styles?: TeleStyles;
-    root$: ReadonlyVal<HTMLElement | null>;
+    root: HTMLElement;
     minimized$: Val<boolean>;
     readonly$: ReadonlyVal<boolean>;
     darkMode$: ReadonlyVal<boolean>;
@@ -31,17 +30,13 @@ type ValConfig = {
     $collector: Val<HTMLElement>;
 };
 
-type PropsValConfig = {
-    root: TeleBoxCollectorConfig["root$"];
-};
-
 type MyReadonlyValConfig = {
     rect: ReadonlyVal<TeleBoxRect | undefined>;
     visible: ReadonlyVal<boolean>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
-    ReadonlyValEnhancedResult<PropsValConfig & MyReadonlyValConfig>;
+    ReadonlyValEnhancedResult<MyReadonlyValConfig>;
 
 export interface TeleBoxCollector extends CombinedValEnhancedResult {}
 
@@ -52,7 +47,7 @@ export class TeleBoxCollector {
         darkMode$,
         namespace = "telebox",
         styles = {},
-        root$,
+        root,
     }: TeleBoxCollectorConfig) {
         this.namespace = namespace;
 
@@ -71,12 +66,6 @@ export class TeleBoxCollector {
 
         withValueEnhancer(this, valConfig, valManager);
 
-        const propsValConfig: PropsValConfig = {
-            root: root$,
-        };
-
-        withReadonlyValueEnhancer(this, propsValConfig);
-
         const myReadonlyValConfig: MyReadonlyValConfig = {
             rect: rect$,
             visible: visible$,
@@ -89,6 +78,11 @@ export class TeleBoxCollector {
 
         this._sideEffect.addDisposer(
             el$.subscribe(($collector) => {
+                this._sideEffect.add(() => {
+                    root.appendChild($collector);
+                    return () => $collector.remove();
+                }, "telebox-collector-mount");
+
                 this._sideEffect.addEventListener(
                     $collector,
                     "pointerup",
@@ -136,28 +130,20 @@ export class TeleBoxCollector {
                                 }
                             });
                         }),
-                        root$.subscribe((root) => {
-                            if (root) {
-                                root.appendChild($collector);
+                        // Place after $collector appended to the DOM so that rect calc works
+                        minimized$.subscribe((minimized) => {
+                            if (minimized) {
+                                const { x, y, width, height } =
+                                    $collector.getBoundingClientRect();
+                                const rootRect = root.getBoundingClientRect();
+                                rect$.setValue({
+                                    x: x - rootRect.x,
+                                    y: y - rootRect.y,
+                                    width,
+                                    height,
+                                });
                             }
                         }),
-                        // Place after $collector appended to the DOM so that rect calc works
-                        combine([minimized$, root$]).subscribe(
-                            ([minimized, root]) => {
-                                if (minimized && root) {
-                                    const { x, y, width, height } =
-                                        $collector.getBoundingClientRect();
-                                    const rootRect =
-                                        root.getBoundingClientRect();
-                                    rect$.setValue({
-                                        x: x - rootRect.x,
-                                        y: y - rootRect.y,
-                                        width,
-                                        height,
-                                    });
-                                }
-                            }
-                        ),
                     ],
                     "telebox-collector-el"
                 );

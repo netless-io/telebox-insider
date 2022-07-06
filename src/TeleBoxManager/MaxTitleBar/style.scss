@@ -113,21 +113,13 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     cursor: pointer;
     user-select: none;
 
-    @include v(color, titlebar-tab-color, $titlebar-tab-color);
-    @include v(
-        background-color,
-        titlebar-tab-background,
-        $titlebar-tab-background
-    );
-    @include v(
-        border-right-color,
-        titlebar-tab-divider-color,
-        $titlebar-tab-divider-color
-    );
+    @include clr(color, titlebarTabColor);
+    @include clr(background-color, titlebarTabBackground);
+    @include clr(border-right-color, titlebarTabDividerColor);
 }
 
 .#{$namespace}-titles-tab-focus {
-    @include v(color, titlebar-tab-focus-color, $titlebar-tab-focus-color);
+    @include clr(color, titlebarTabFocusColor);
 }
 
 .#{$namespace}-readonly {
@@ -140,24 +132,12 @@ $scrollbar-color-active: rgba(238, 238, 247, 1);
     color-scheme: dark;
 
     .#{$namespace}-titles-tab {
-        @include v(color, titlebar-tab-color-dark, $titlebar-tab-color-dark);
-        @include v(
-            background-color,
-            titlebar-tab-background-dark,
-            $titlebar-tab-background-dark
-        );
-        @include v(
-            border-right-color,
-            titlebar-tab-divider-color-dark,
-            $titlebar-tab-divider-color-dark
-        );
+        @include clr-dark(color, titlebarTabColor);
+        @include clr-dark(background-color, titlebarTabBackground);
+        @include clr-dark(border-right-color, titlebarTabDividerColor);
     }
 
     .#{$namespace}-titles-tab-focus {
-        @include v(
-            color,
-            titlebar-tab-focus-color-dark,
-            $titlebar-tab-focus-color-dark
-        );
+        @include clr-dark(color, titlebarTabFocusColor);
     }
 }

@@ -5,8 +5,3 @@
     // iOS Safari
     -webkit-user-select: none;
 }
-
-@mixin v($property, $varName, $val) {
-    #{$property}: $val;
-    #{$property}: var(--tele-#{$varName}, $val);
-}

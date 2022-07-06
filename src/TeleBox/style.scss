@@ -14,8 +14,8 @@
 }
 
 .#{$namespace}-box-main {
-    @include v(border, box-border, $box-border);
-    @include v(box-shadow, box-shadow, $box-shadow);
+    @include clr(border, boxBorder);
+    @include clr(boxShadow, boxShadow);
 
     position: relative;
     width: 100%;
@@ -171,7 +171,7 @@
 }
 
 .#{$namespace}-maximized {
-    box-shadow: none;
+    boxshadow: none;
     transition: none;
 }
 
@@ -200,7 +200,7 @@
     color-scheme: dark;
 
     .#{$namespace}-box-main {
-        @include v(border, box-border-dark, $box-border-dark);
-        @include v(box-shadow, box-shadow-dark, $box-shadow-dark);
+        @include clr-dark(border, boxBorder);
+        @include clr-dark(boxShadow, boxShadow);
     }
 }

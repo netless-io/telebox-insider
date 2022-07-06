@@ -29,6 +29,8 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     readonly defaultBoxBodyStyle?: string | null;
     /** Custom `style` attribute value for stage area of all boxes. Can be overwritten by box. */
     readonly defaultBoxStageStyle?: string | null;
+    /** Theme variable */
+    readonly theme?: TeleBoxManagerThemeConfig;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
@@ -101,3 +103,35 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;
+
+export type TeleBoxManagerThemeConfig = {
+    managerContainerBackground?: string | null;
+    managerStageBackground?: string | null;
+    managerStageShadow?: string | null;
+
+    boxContainerBackground?: string | null;
+    boxStageBackground?: string | null;
+    boxStageShadow?: string | null;
+
+    boxColor?: string | null;
+    boxBorder?: string | null;
+    boxShadow?: string | null;
+    boxFooterColor?: string | null;
+    boxFooterBackground?: string | null;
+
+    titlebarColor?: string | null;
+    titlebarBackground?: string | null;
+    titlebarBorderBottom?: string | null;
+    titlebarTabColor?: string | null;
+    titlebarTabFocusColor?: string | null;
+    titlebarTabBackground?: string | null;
+    titlebarTabDividerColor?: string | null;
+
+    collectorBackground?: string | null;
+    collectorShadow?: string | null;
+
+    titlebarIconMinimize?: string | null;
+    titlebarIconMaximize?: string | null;
+    titlebarIconMaximizeActive?: string | null;
+    titlebarIconClose?: string | null;
+};

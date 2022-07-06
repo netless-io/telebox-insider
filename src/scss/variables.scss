@@ -5,44 +5,70 @@ $max-titlebar-z-index: $base-z-index + 5000;
 $stage-z-index: $max-titlebar-z-index + 10;
 $collector-z-index: $stage-z-index + 10;
 
-$manager-container-background: #f9f9f9;
-$manager-container-background-dark: #25282e;
-$manager-stage-background: #fff;
-$manager-stage-background-dark: #272a30;
-$manager-stage-shadow: 0px 0px 16px rgba(0, 0, 0, 0.08);
-$manager-stage-shadow-dark: 0px 0px 16px rgba(0, 0, 0, 0.24);
+$tele-colors: (
+    managerContainerBackground: #f9f9f9,
+    managerStageBackground: #fff,
+    managerStageShadow: 0px 0px 16px rgba(0, 0, 0, 0.08),
+    boxContainerBackground: #f9f9f9,
+    boxStageBackground: #fff,
+    boxStageShadow: 0px 0px 16px rgba(0, 0, 0, 0.08),
+    boxColor: #191919,
+    boxBorder: 1px solid #e3e3ec,
+    boxShadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15),
+    boxFooterColor: #191919,
+    boxFooterBackground: #fff,
+    titlebarColor: #191919,
+    titlebarBackground: #fff,
+    titlebarBorderBottom: 1px solid #eeeef7,
+    titlebarTabColor: #7b88a0,
+    titlebarTabFocusColor: #357bf6,
+    titlebarTabBackground: transparent,
+    titlebarTabDividerColor: #e5e5f0,
+    collectorBackground: #fff,
+    collectorShadow: 0px 2px 6px 0px rgba(47, 65, 146, 0.15),
+);
 
-$box-container-background: $manager-container-background;
-$box-container-background-dark: $manager-container-background-dark;
-$box-stage-background: $manager-stage-background;
-$box-stage-background-dark: $manager-stage-background-dark;
-$box-stage-shadow: $manager-stage-shadow;
-$box-stage-shadow-dark: $manager-stage-shadow-dark;
+$tele-colors-dark: (
+    managerContainerBackground: #25282e,
+    managerStageBackground: #272a30,
+    managerStageShadow: 0px 0px 16px rgba(0, 0, 0, 0.24),
+    boxContainerBackground: #25282e,
+    boxStageBackground: #272a30,
+    boxStageShadow: 0px 0px 16px rgba(0, 0, 0, 0.24),
+    boxColor: #e9e9e9,
+    boxBorder: 1px solid #383b42,
+    boxShadow: 0px 4px 10px 0px rgba(56, 59, 66, 0.15),
+    boxFooterColor: #e9e9e9,
+    boxFooterBackground: #383b42,
+    titlebarColor: #e9e9e9,
+    titlebarBackground: #383b42,
+    titlebarBorderBottom: none,
+    titlebarTabColor: #e9e9e9,
+    titlebarTabFocusColor: #357bf6,
+    titlebarTabBackground: transparent,
+    titlebarTabDividerColor: #7b88a0,
+    collectorBackground: #383b42,
+    collectorShadow: 0px 2px 6px 0px rgba(47, 65, 146, 0.15),
+);
 
-$box-color: #191919;
-$box-color-dark: #e9e9e9;
-$box-border: 1px solid #e3e3ec;
-$box-border-dark: 1px solid #383b42;
-$box-shadow: 0px 4px 10px 0px rgba(47, 65, 146, 0.15);
-$box-shadow-dark: 0px 4px 10px 0px rgba(56, 59, 66, 0.15);
+@mixin clr($property, $key) {
+    #{$property}: map-get($tele-colors, $key);
+    #{$property}: var(--tele-#{$key}, map-get($tele-colors, $key));
+}
 
-$titlebar-color: #191919;
-$titlebar-color-dark: #e9e9e9;
-$titlebar-background: #fff;
-$titlebar-background-dark: #383b42;
-$titlebar-border-bottom: 1px solid #eeeef7;
-$titlebar-border-bottom-dark: none;
+@mixin clr-dark($property, $key) {
+    #{$property}: map-get($tele-colors-dark, $key);
+    #{$property}: var(--tele-#{$key}, map-get($tele-colors-dark, $key));
+}
 
-$titlebar-tab-color: #7b88a0;
-$titlebar-tab-color-dark: #e9e9e9;
-$titlebar-tab-focus-color: #357bf6;
-$titlebar-tab-focus-color-dark: #357bf6;
-$titlebar-tab-background: transparent;
-$titlebar-tab-background-dark: transparent;
-$titlebar-tab-divider-color: #e5e5f0;
-$titlebar-tab-divider-color-dark: #7b88a0;
+@mixin clr-root() {
+    @each $key, $value in $tele-colors {
+        --tele-#{$key}: #{$value};
+    }
+}
 
-$collector-background: #fff;
-$collector-background-dark: #383b42;
-$collector-shadow: 0px 2px 6px 0px rgba(47, 65, 146, 0.15);
-$collector-shadow-dark: $collector-shadow;
+@mixin clr-root-dark() {
+    @each $key, $value in $tele-colors-dark {
+        --tele-#{$key}: #{$value};
+    }
+}

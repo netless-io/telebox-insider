@@ -11,9 +11,9 @@
     user-select: none;
     touch-action: manipulation;
 
-    @include v(color, titlebar-color, $titlebar-color);
-    @include v(background-color, titlebar-background, $titlebar-background);
-    @include v(border-bottom, titlebar-border-bottom, $titlebar-border-bottom);
+    @include clr(color, titlebarColor);
+    @include clr(background-color, titlebarBackground);
+    @include clr(border-bottom, titlebarBorderBottom);
 }
 
 .#{$namespace}-title-area {
@@ -28,7 +28,7 @@
 
 .#{$namespace}-title {
     @include no-user-select;
-    @include v(color, titlebar-color, $titlebar-color);
+    @include clr(color, titlebarColor);
 
     overflow: hidden;
     margin: 0;
@@ -90,25 +90,25 @@
 
 .#{$namespace}-titlebar-icon-minimize {
     background: center / cover no-repeat;
-    @include v(
-        background-image,
-        titlebar-icon-minimize,
+    background-image: url("./icons/minimize.svg");
+    background-image: var(
+        --tele-titlebarIconMinimize,
         url("./icons/minimize.svg")
     );
 }
 
 .#{$namespace}-titlebar-icon-maximize {
     background: center / cover no-repeat;
-    @include v(
-        background-image,
-        titlebar-icon-maximize,
+    background-image: url("./icons/maximize.svg");
+    background-image: var(
+        --tele-titlebarIconMaximize,
         url("./icons/maximize.svg")
     );
 
     &.is-active {
-        @include v(
-            background-image,
-            titlebar-icon-maximize-active,
+        background-image: url("./icons/maximize-active.svg");
+        background-image: var(
+            --tele-titlebarIconMaximizeActive,
             url("./icons/maximize-active.svg")
         );
     }
@@ -116,59 +116,20 @@
 
 .#{$namespace}-titlebar-icon-close {
     background: center / cover no-repeat;
-    @include v(background-image, titlebar-icon-close, url("./icons/close.svg"));
+    background-image: url("./icons/close.svg");
+    background-image: var(--tele-titlebarIconClose, url("./icons/close.svg"));
 }
 
 .#{$namespace}-color-scheme-dark {
     color-scheme: dark;
 
     .#{$namespace}-title {
-        @include v(color, titlebar-color-dark, $titlebar-color-dark);
+        @include clr-dark(color, titlebarColor);
     }
 
     .#{$namespace}-titlebar {
-        @include v(color, titlebar-color-dark, $titlebar-color-dark);
-        @include v(
-            background-color,
-            titlebar-background-dark,
-            $titlebar-background-dark
-        );
-        @include v(
-            border-bottom,
-            titlebar-border-bottom-dark,
-            $titlebar-border-bottom-dark
-        );
-    }
-
-    .#{$namespace}-titlebar-icon-minimize {
-        @include v(
-            background-image,
-            titlebar-icon-minimize-dark,
-            url("./icons/minimize.svg")
-        );
-    }
-
-    .#{$namespace}-titlebar-icon-maximize {
-        @include v(
-            background-image,
-            titlebar-icon-maximize-dark,
-            url("./icons/maximize.svg")
-        );
-
-        &.is-active {
-            @include v(
-                background-image,
-                titlebar-icon-maximize-active-dark,
-                url("./icons/maximize-active.svg")
-            );
-        }
-    }
-
-    .#{$namespace}-titlebar-icon-close {
-        @include v(
-            background-image,
-            titlebar-icon-close-dark,
-            url("./icons/close.svg")
-        );
+        @include clr-dark(color, titlebarColor);
+        @include clr-dark(background-color, titlebarBackground);
+        @include clr-dark(border-bottom, titlebarBorderBottom);
     }
 }

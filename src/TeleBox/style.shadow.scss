@@ -12,7 +12,7 @@
 }
 
 .#{$namespace}-body-wrap {
-    @include v(color, box-color, $box-color);
+    @include clr(color, boxColor);
 
     flex: 1;
     width: 100%;
@@ -27,11 +27,7 @@
     width: 100%;
     height: 100%;
     position: relative;
-    @include v(
-        background-color,
-        manager-container-background,
-        $manager-container-background
-    );
+    @include clr(background-color, boxContainerBackground);
 }
 
 .#{$namespace}-box-stage {
@@ -39,12 +35,8 @@
     z-index: 1;
     overflow: hidden;
 
-    @include v(
-        background-color,
-        manager-stage-background,
-        $manager-stage-background
-    );
-    @include v(box-shadow, manager-stage-shadow, $manager-stage-shadow);
+    @include clr(background-color, boxStageBackground);
+    @include clr(boxShadow, boxStageShadow);
 }
 
 .#{$namespace}-footer-wrap {
@@ -52,8 +44,8 @@
     display: flex;
     flex-direction: column;
 
-    @include v(color, box-footer-color, $titlebar-color);
-    @include v(background-color, box-footer-background, $titlebar-background);
+    @include clr(color, boxFooterColor);
+    @include clr(background-color, boxFooterBackground);
 
     &::before {
         content: "";
@@ -66,36 +58,20 @@
     color-scheme: dark;
 
     .#{$namespace}-body-wrap {
-        @include v(color, box-color-dark, $box-color-dark);
+        @include clr-dark(color, boxColor);
     }
 
     .#{$namespace}-content {
-        @include v(
-            background-color,
-            manager-container-background-dark,
-            $manager-container-background-dark
-        );
+        @include clr-dark(background-color, boxContainerBackground);
     }
 
     .#{$namespace}-box-stage {
-        @include v(
-            background-color,
-            manager-stage-background-dark,
-            $manager-stage-background-dark
-        );
-        @include v(
-            box-shadow,
-            manager-stage-shadow-dark,
-            $manager-stage-shadow-dark
-        );
+        @include clr-dark(background-color, boxStageBackground);
+        @include clr-dark(boxShadow, boxStageShadow);
     }
 
     .#{$namespace}-footer-wrap {
-        @include v(color, box-footer-color-dark, $titlebar-color-dark);
-        @include v(
-            background-color,
-            box-footer-background-dark,
-            $titlebar-background-dark
-        );
+        @include clr-dark(color, boxFooterColor);
+        @include clr-dark(background-color, boxFooterBackground);
     }
 }

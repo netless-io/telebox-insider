@@ -24,8 +24,8 @@
     background-position: center;
     -webkit-tap-highlight-color: transparent;
 
-    @include v(background-color, collector-background, $collector-background);
-    @include v(box-shadow, collector-shadow, $collector-shadow);
+    @include clr(background-color, collectorBackground);
+    @include clr(boxShadow, collectorShadow);
 }
 
 .#{$namespace}-collector-visible {
@@ -41,11 +41,7 @@
     color-scheme: dark;
 
     &.#{$namespace}-collector {
-        @include v(
-            background-color,
-            collector-background-dark,
-            $collector-background-dark
-        );
-        @include v(box-shadow, collector-shadow-dark, $collector-shadow-dark);
+        @include clr-dark(background-color, collectorBackground);
+        @include clr-dark(boxShadow, collectorShadow);
     }
 }
