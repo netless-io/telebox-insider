@@ -122,9 +122,9 @@ export class DefaultTitleBar implements TeleTitleBar {
 
             this.sideEffect.addEventListener(
                 $buttonsContainer,
-                "pointerup",
+                "click",
                 (ev) => {
-                    if (!ev.isPrimary || this.readonly$.value) {
+                    if (this.readonly$.value) {
                         return;
                     }
                     const target = ev.target as HTMLElement;
