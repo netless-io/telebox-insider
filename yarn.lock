@@ -2391,10 +2391,10 @@ side-channel@^1.0.4:
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
 
-side-effect-manager@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-1.1.0.tgz#9bbb3d6fb7254c2c47ffe1f941f1bb931946a588"
-  integrity sha512-Gqy1tsBBYcKclLPIGDxMQiZJLM8CGdGg/DM3a5/8ic2x2A19rVUhVk/+Mt5RwNbpaNKmBPO/wxxzAnY2myQVTg==
+side-effect-manager@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/side-effect-manager/-/side-effect-manager-1.1.1.tgz#77e01bdba9c7ffa0d9f85b8189f7f4f9e7e9eae1"
+  integrity sha512-ppUBbzOXLydre40Yz553eIIlTdf2WCJcqMI4n06sTRCA2o5AwG5WQ2qq6fHp5C8RK3TAfgtZKrhllNG2F1jzCA==
 
 signal-exit@^3.0.2:
   version "3.0.3"
