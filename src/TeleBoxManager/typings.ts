@@ -7,6 +7,8 @@ import type { TELE_BOX_MANAGER_EVENT } from "./constants";
 export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     /** Element to mount boxes. */
     readonly root?: HTMLElement | null;
+    /** Fullscreen mode. Default false. */
+    readonly fullscreen?: TeleBoxFullscreen;
     /** Stage area height/with ratio. No ratio if <= 0. Default -1. */
     readonly stageRatio?: number;
     /** Where the minimized boxes go. */
@@ -103,6 +105,15 @@ export type TeleBoxManagerEventConfig = CheckTeleBoxManagerConfig<{
 }>;
 
 export type TeleBoxManagerEvent = keyof TeleBoxManagerEventConfig;
+
+/**
+ * Fullscreen mode.
+ * - `true`: fullscreen mode. hide titlebar for single tab.
+ * - `false`: normal mode.
+ * - `"no-titlebar"`: always hide titlebar
+ * - `"always-titlebar"`: always show titlebar
+ */
+export type TeleBoxFullscreen = boolean | "no-titlebar" | "always-titlebar";
 
 export type TeleBoxManagerThemeConfig = {
     managerContainerBackground?: string | null;

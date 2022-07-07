@@ -20,9 +20,10 @@ export interface TeleBoxCollectorConfig {
     namespace?: string;
     styles?: TeleStyles;
     root: HTMLElement;
-    minimized$: Val<boolean>;
+    minimized$: ReadonlyVal<boolean>;
     readonly$: ReadonlyVal<boolean>;
     darkMode$: ReadonlyVal<boolean>;
+    onClick?: () => void;
 }
 
 type ValConfig = {
@@ -48,6 +49,7 @@ export class TeleBoxCollector {
         namespace = "telebox",
         styles = {},
         root,
+        onClick,
     }: TeleBoxCollectorConfig) {
         this.namespace = namespace;
 
@@ -85,10 +87,10 @@ export class TeleBoxCollector {
 
                 this._sideEffect.addEventListener(
                     $collector,
-                    "pointerup",
-                    (ev) => {
-                        if (ev.isPrimary && !readonly$.value) {
-                            minimized$.setValue(false);
+                    "click",
+                    () => {
+                        if (!readonly$.value) {
+                            onClick?.();
                         }
                     },
                     {},

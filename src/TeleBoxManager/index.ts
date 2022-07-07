@@ -36,6 +36,7 @@ import type {
     TeleBoxManagerConfig,
     TeleBoxManagerCreateConfig,
     TeleBoxManagerEventConfig,
+    TeleBoxFullscreen,
     TeleBoxManagerQueryConfig,
     TeleBoxManagerThemeConfig,
     TeleBoxManagerUpdateConfig,
@@ -54,13 +55,14 @@ type ReadonlyValConfig = {
     root: Val<HTMLElement | null>;
     rootRect: Val<TeleBoxRect>;
     stageRect: ReadonlyVal<TeleBoxRect>;
+    minimized: ReadonlyVal<boolean, boolean>;
+    maximized: ReadonlyVal<boolean, boolean>;
 };
 
 type ValConfig = {
+    fullscreen: Val<TeleBoxFullscreen>;
     prefersColorScheme: Val<TeleBoxColorScheme, boolean>;
     readonly: Val<boolean, boolean>;
-    minimized: Val<boolean, boolean>;
-    maximized: Val<boolean, boolean>;
     fence: Val<boolean, boolean>;
     stageRatio: Val<number, boolean>;
     containerStyle: Val<string>;
@@ -77,6 +79,7 @@ export interface TeleBoxManager extends CombinedValEnhancedResult {}
 export class TeleBoxManager {
     public constructor({
         root = null,
+        fullscreen = false,
         prefersColorScheme = TELE_BOX_COLOR_SCHEME.Light,
         minimized = false,
         maximized = false,
@@ -100,14 +103,28 @@ export class TeleBoxManager {
 
         const root$ = new Val(root);
         const readonly$ = new Val(readonly);
-        const minimized$ = new Val(minimized);
-        const maximized$ = new Val(maximized);
         const fence$ = new Val(fence);
         const containerStyle$ = new Val(containerStyle);
         const stageStyle$ = new Val(stageStyle);
         const stageRatio$ = new Val(stageRatio);
         const defaultBoxBodyStyle$ = new Val(defaultBoxBodyStyle);
         const defaultBoxStageStyle$ = new Val(defaultBoxStageStyle);
+        const fullscreen$ = new Val(fullscreen);
+
+        const input_minimized$ = new Val(minimized);
+        const input_maximized$ = new Val(maximized);
+        const maximized$ = combine(
+            [input_maximized$, fullscreen$],
+            ([maximized, fullscreen]) => (fullscreen ? true : maximized)
+        );
+        const minimized$ = combine(
+            [input_minimized$, fullscreen$],
+            ([minimized, fullscreen]) => (fullscreen ? false : minimized)
+        );
+        this.setMaximized = (maximized, skipUpdate) =>
+            input_maximized$.setValue(maximized, skipUpdate);
+        this.setMinimized = (minimized, skipUpdate) =>
+            input_minimized$.setValue(minimized, skipUpdate);
 
         const rootRect$ = new Val<TeleBoxRect>(
             {
@@ -210,16 +227,17 @@ export class TeleBoxManager {
             root: root$,
             rootRect: rootRect$,
             stageRect: stageRect$,
+            minimized: minimized$,
+            maximized: maximized$,
         };
 
         withReadonlyValueEnhancer(this, readonlyValConfig, valManager);
 
         const valConfig: ValConfig = {
+            fullscreen: fullscreen$,
             prefersColorScheme: prefersColorScheme$,
             readonly: readonly$,
             fence: fence$,
-            minimized: minimized$,
-            maximized: maximized$,
             stageRatio: stageRatio$,
             containerStyle: containerStyle$,
             stageStyle: stageStyle$,
@@ -287,11 +305,34 @@ export class TeleBoxManager {
                     !darkMode
                 );
             }),
+            fullscreen$.subscribe((fullscreen) => {
+                this.$container.classList.toggle(
+                    this.wrapClassName("is-fullscreen"),
+                    Boolean(fullscreen)
+                );
+            }),
+            combine(
+                [this.boxes$, fullscreen$],
+                ([boxes, fullscreen]) =>
+                    fullscreen === "no-titlebar" ||
+                    (fullscreen === true && boxes.length <= 1)
+            ).subscribe((hideSingleTabTitlebar) => {
+                this.$container.classList.toggle(
+                    this.wrapClassName("hide-fullscreen-titlebar"),
+                    hideSingleTabTitlebar
+                );
+            }),
             maximized$.subscribe((maximized) => {
-                this.$container.classList.toggle("is-maximized", maximized);
+                this.$container.classList.toggle(
+                    this.wrapClassName("is-maximized"),
+                    maximized
+                );
             }),
             minimized$.subscribe((minimized) => {
-                this.$container.classList.toggle("is-minimized", minimized);
+                this.$container.classList.toggle(
+                    this.wrapClassName("is-minimized"),
+                    minimized
+                );
             }),
             containerStyle$.subscribe((containerStyle) => {
                 this.$container.style.cssText = containerStyle;
@@ -322,6 +363,7 @@ export class TeleBoxManager {
                 darkMode$: darkMode$,
                 namespace,
                 root: this.$container,
+                onClick: () => input_minimized$.setValue(false),
             });
 
         this.titleBar = new MaxTitleBar({
@@ -336,11 +378,11 @@ export class TeleBoxManager {
             onEvent: (event): void => {
                 switch (event.type) {
                     case TELE_BOX_DELEGATE_EVENT.Maximize: {
-                        maximized$.setValue(!maximized$.value);
+                        this.setMaximized(!maximized$.value);
                         break;
                     }
                     case TELE_BOX_DELEGATE_EVENT.Minimize: {
-                        minimized$.setValue(true);
+                        this.setMinimized(true);
                         break;
                     }
                     case TELE_BOX_EVENT.Close: {
@@ -405,6 +447,9 @@ export class TeleBoxManager {
     protected _sideEffect: SideEffectManager;
 
     public readonly namespace: string;
+
+    public setMinimized: (minimized: boolean, skipUpdate?: boolean) => void;
+    public setMaximized: (maximized: boolean, skipUpdate?: boolean) => void;
 
     /** @deprecated use setMaximized and setMinimized instead */
     public setState(state: TeleBoxState, skipUpdate = false): this {

@@ -12,10 +12,23 @@
     @include clr-root();
     @include clr(background, managerContainerBackground);
 
-    &.is-maximized,
-    &.is-minimized {
+    &.#{$namespace}-is-maximized,
+    &.#{$namespace}-is-minimized {
         & > .#{$namespace}-manager-stage {
             overflow: visible;
+        }
+    }
+
+    &.#{$namespace}-is-fullscreen {
+        .#{$namespace}-titlebar-icon-maximize,
+        .#{$namespace}-titlebar-icon-minimize {
+            display: none !important;
+        }
+    }
+
+    &.#{$namespace}-hide-fullscreen-titlebar {
+        .#{$namespace}-titlebar {
+            display: none !important;
         }
     }
 }

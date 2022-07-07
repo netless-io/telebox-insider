@@ -4,15 +4,22 @@ import contentStyle from "./content.scss?inline";
 import faker from "faker";
 import type { TeleBoxColorScheme } from "../src";
 import { TeleBoxManager } from "../src";
+import type { ReadonlyVal } from "value-enhancer";
+import { Val } from "value-enhancer";
+import { derive } from "value-enhancer";
 
 const btns = document.querySelector(".btns") as HTMLDivElement;
 const board = document.querySelector(".board") as HTMLDivElement;
 
-let enableShadowDOM = true;
+const enableShadowDOM$ = new Val(false);
 
-const createBtn = (title: string): HTMLButtonElement => {
+const createBtn = (title: string | ReadonlyVal<string>): HTMLButtonElement => {
     const btn = document.createElement("button");
-    btn.textContent = title;
+    if (typeof title == "string") {
+        btn.textContent = title;
+    } else {
+        title.subscribe((text) => (btn.textContent = text));
+    }
     btns.appendChild(btn);
     return btn;
 };
@@ -56,7 +63,7 @@ createBtn("Create").addEventListener("click", () => {
         minWidth: 0.1,
         title: title.slice(0, 50),
         focus: true,
-        enableShadowDOM,
+        enableShadowDOM: enableShadowDOM$.value,
     });
 
     const content = document.createElement("div");
@@ -78,15 +85,11 @@ createBtn("Remove").addEventListener("click", () => {
     }
 });
 
-createBtn(manager.readonly ? "Readonly" : "Writable").addEventListener(
-    "click",
-    (evt) => {
-        manager.setReadonly(!manager.readonly);
-        (evt.currentTarget as HTMLButtonElement).textContent = manager.readonly
-            ? "Readonly"
-            : "Writable";
-    }
-);
+createBtn(
+    derive(manager._readonly$, (readonly) =>
+        readonly ? "Readonly" : "Writable"
+    )
+).addEventListener("click", () => manager.setReadonly(!manager.readonly));
 
 createSelector("light", [
     { key: "light", title: "light" },
@@ -98,14 +101,18 @@ createSelector("light", [
     );
 });
 
-createBtn(enableShadowDOM ? "ShadowDOM" : "DOM").addEventListener(
-    "click",
-    (evt) => {
-        enableShadowDOM = !enableShadowDOM;
-        (evt.currentTarget as HTMLButtonElement).textContent = enableShadowDOM
-            ? "ShadowDOM"
-            : "DOM";
-    }
+createBtn(
+    derive(enableShadowDOM$, (enable) => (enable ? "ShadowDOM" : "DOM"))
+).addEventListener("click", () =>
+    enableShadowDOM$.setValue(!enableShadowDOM$.value)
 );
+
+createBtn(
+    derive(manager._fullscreen$, (fullscreen) =>
+        fullscreen ? "Fullscreen" : "Windows"
+    )
+).addEventListener("click", () => {
+    manager.setFullscreen(!manager.fullscreen);
+});
 
 manager.events.on("state", (state) => console.log("state", state));
