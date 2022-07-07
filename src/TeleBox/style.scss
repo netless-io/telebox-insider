@@ -15,7 +15,7 @@
 
 .#{$namespace}-box-main {
     @include clr(border, boxBorder);
-    @include clr(boxShadow, boxShadow);
+    @include clr(box-shadow, boxShadow);
 
     position: relative;
     width: 100%;
@@ -201,6 +201,6 @@
 
     .#{$namespace}-box-main {
         @include clr-dark(border, boxBorder);
-        @include clr-dark(boxShadow, boxShadow);
+        @include clr-dark(box-shadow, boxShadow);
     }
 }

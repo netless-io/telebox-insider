@@ -25,7 +25,7 @@
     -webkit-tap-highlight-color: transparent;
 
     @include clr(background-color, collectorBackground);
-    @include clr(boxShadow, collectorShadow);
+    @include clr(box-shadow, collectorShadow);
 }
 
 .#{$namespace}-collector-visible {
@@ -42,6 +42,6 @@
 
     &.#{$namespace}-collector {
         @include clr-dark(background-color, collectorBackground);
-        @include clr-dark(boxShadow, collectorShadow);
+        @include clr-dark(box-shadow, collectorShadow);
     }
 }

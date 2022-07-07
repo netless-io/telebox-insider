@@ -37,7 +37,7 @@
     position: relative;
     overflow: hidden;
     @include clr(background, managerStageBackground);
-    @include clr(boxShadow, managerStageShadow);
+    @include clr(box-shadow, managerStageShadow);
 }
 
 .#{$namespace}-color-scheme-dark {
@@ -49,7 +49,7 @@
 
         & > .#{$namespace}-manager-stage {
             @include clr-dark(background, managerStageBackground);
-            @include clr-dark(boxShadow, managerStageShadow);
+            @include clr-dark(box-shadow, managerStageShadow);
         }
     }
 }
