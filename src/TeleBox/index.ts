@@ -321,16 +321,18 @@ export class TeleBox {
             });
 
         this._sideEffect.addDisposer(
-            boxRatio$.subscribe((boxRatio) => {
-                if (boxRatio > 0) {
-                    this.transform(
-                        pxIntrinsicCoord$.value.x,
-                        pxIntrinsicCoord$.value.y,
-                        pxIntrinsicSize$.value.width,
-                        pxIntrinsicSize$.value.height
-                    );
+            combine([boxRatio$, minimized$]).subscribe(
+                ([boxRatio, minimized]) => {
+                    if (!minimized && boxRatio > 0) {
+                        this.transform(
+                            pxIntrinsicCoord$.value.x,
+                            pxIntrinsicCoord$.value.y,
+                            pxIntrinsicSize$.value.width,
+                            pxIntrinsicSize$.value.height
+                        );
+                    }
                 }
-            })
+            )
         );
 
         this._sideEffect.addDisposer(
