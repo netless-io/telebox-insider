@@ -52,6 +52,9 @@ type ValConfig = {
     resizable: Val<RequiredTeleBoxConfig["resizable"], boolean>;
     draggable: Val<RequiredTeleBoxConfig["draggable"], boolean>;
     boxRatio: Val<RequiredTeleBoxConfig["boxRatio"], boolean>;
+    boxMinimized: Val<boolean | null, boolean>;
+    boxMaximized: Val<boolean | null, boolean>;
+    boxReadonly: Val<boolean | null, boolean>;
     stageRatio: Val<RequiredTeleBoxConfig["stageRatio"], boolean>;
     stageStyle: Val<RequiredTeleBoxConfig["stageStyle"], boolean>;
     bodyStyle: Val<RequiredTeleBoxConfig["bodyStyle"], boolean>;
@@ -60,10 +63,10 @@ type ValConfig = {
 type PropsValConfig = {
     darkMode: RequiredTeleBoxConfig["darkMode$"];
     fence: RequiredTeleBoxConfig["fence$"];
-    minimized: RequiredTeleBoxConfig["minimized$"];
-    maximized: RequiredTeleBoxConfig["maximized$"];
-    readonly: RequiredTeleBoxConfig["readonly$"];
     rootRect: RequiredTeleBoxConfig["rootRect$"];
+    managerMinimized: RequiredTeleBoxConfig["managerMinimized$"];
+    managerMaximized: RequiredTeleBoxConfig["managerMaximized$"];
+    managerReadonly: RequiredTeleBoxConfig["managerReadonly$"];
     managerStageRect: RequiredTeleBoxConfig["managerStageRect$"];
     managerStageRatio: RequiredTeleBoxConfig["managerStageRatio$"];
     defaultBoxStageStyle: RequiredTeleBoxConfig["defaultBoxStageStyle$"];
@@ -74,7 +77,9 @@ type PropsValConfig = {
 type MyReadonlyValConfig = {
     zIndex: Val<RequiredTeleBoxConfig["zIndex"], boolean>;
     focus: Val<RequiredTeleBoxConfig["focus"], boolean>;
-
+    minimized: ReadonlyVal<boolean, boolean>;
+    maximized: ReadonlyVal<boolean, boolean>;
+    readonly: ReadonlyVal<boolean, boolean>;
     minSize: Val<TeleBoxSize, boolean>;
     intrinsicSize: Val<TeleBoxSize, boolean>;
     intrinsicCoord: Val<TeleBoxCoord, boolean>;
@@ -122,11 +127,11 @@ export class TeleBox {
         stageStyle = null,
         darkMode$,
         fence$,
-        minimized$,
-        maximized$,
-        readonly$,
         root,
         rootRect$,
+        managerMinimized$,
+        managerMaximized$,
+        managerReadonly$,
         managerStageRect$,
         managerStageRatio$,
         defaultBoxBodyStyle$,
@@ -149,6 +154,25 @@ export class TeleBox {
         const boxRatio$ = new Val(boxRatio);
         const zIndex$ = new Val(zIndex);
         const focus$ = new Val(focus);
+
+        const boxMaximized$ = new Val<boolean | null>(null);
+        const boxMinimized$ = new Val<boolean | null>(null);
+        const boxReadonly$ = new Val<boolean | null>(null);
+
+        const maximized$ = combine(
+            [boxMaximized$, managerMaximized$],
+            ([boxMaximized, managerMaximized]) =>
+                boxMaximized ?? managerMaximized
+        );
+        const minimized$ = combine(
+            [boxMinimized$, managerMinimized$],
+            ([boxMinimized, managerMinimized]) =>
+                boxMinimized ?? managerMinimized
+        );
+        const readonly$ = combine(
+            [boxReadonly$, managerReadonly$],
+            ([boxReadonly, managerReadonly]) => boxReadonly ?? managerReadonly
+        );
 
         const state$ = combine(
             [minimized$, maximized$],
@@ -236,10 +260,10 @@ export class TeleBox {
         const propsValConfig: PropsValConfig = {
             darkMode: darkMode$,
             fence: fence$,
-            minimized: minimized$,
-            maximized: maximized$,
-            readonly: readonly$,
             rootRect: rootRect$,
+            managerMinimized: managerMinimized$,
+            managerMaximized: managerMaximized$,
+            managerReadonly: managerReadonly$,
             managerStageRect: managerStageRect$,
             managerStageRatio: managerStageRatio$,
             defaultBoxBodyStyle: defaultBoxBodyStyle$,
@@ -262,6 +286,9 @@ export class TeleBox {
             pxIntrinsicCoord: pxIntrinsicCoord$,
             bodyRect: bodyRect$,
             stageRect: stageRect$,
+            minimized: minimized$,
+            maximized: maximized$,
+            readonly: readonly$,
         };
 
         withReadonlyValueEnhancer(this, myReadonlyValConfig, valManager);
@@ -272,6 +299,9 @@ export class TeleBox {
             resizable: resizable$,
             draggable: draggable$,
             boxRatio: boxRatio$,
+            boxMinimized: boxMinimized$,
+            boxMaximized: boxMaximized$,
+            boxReadonly: boxReadonly$,
             stageRatio: stageRatio$,
             bodyStyle: bodyStyle$,
             stageStyle: stageStyle$,

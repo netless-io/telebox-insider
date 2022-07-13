@@ -82,16 +82,16 @@ export interface TeleBoxConfig {
     readonly darkMode$: ReadonlyVal<boolean, boolean>;
     /** Restrict box to always be within the stage area. Default false. */
     readonly fence$: ReadonlyVal<boolean, boolean>;
-    /** Maximize box. Default false. */
-    readonly maximized$: ReadonlyVal<boolean, boolean>;
-    /** Minimize box. Overwrites maximized state. Default false. */
-    readonly minimized$: ReadonlyVal<boolean, boolean>;
-    /** Is box readonly */
-    readonly readonly$: ReadonlyVal<boolean, boolean>;
     /** Root element to mount boxes */
     readonly root: HTMLElement;
     /** Position and dimension of root element */
     readonly rootRect$: ReadonlyVal<TeleBoxRect>;
+    /** Maximize state from manager. Default false. */
+    readonly managerMaximized$: ReadonlyVal<boolean, boolean>;
+    /** Minimize state from manager. Overwrites maximized state. Default false. */
+    readonly managerMinimized$: ReadonlyVal<boolean, boolean>;
+    /** Manager readonly state. */
+    readonly managerReadonly$: ReadonlyVal<boolean, boolean>;
     /** Position and dimension of stage area */
     readonly managerStageRect$: ReadonlyVal<TeleBoxRect>;
     /** Stage area height/with ratio. No ratio if <= 0. */
