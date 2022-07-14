@@ -67,12 +67,15 @@ export class MaxTitleBar extends DefaultTitleBar {
 
         this.sideEffect.addDisposer(
             [
-                this.state$.subscribe((state) => {
-                    $titleBar.classList.toggle(
-                        this.wrapClassName("max-titlebar-maximized"),
-                        state === TELE_BOX_STATE.Maximized
-                    );
-                }),
+                combine([this.boxes$, this.state$]).subscribe(
+                    ([boxes, state]) => {
+                        $titleBar.classList.toggle(
+                            this.wrapClassName("max-titlebar-active"),
+                            state === TELE_BOX_STATE.Maximized &&
+                                boxes.length > 0
+                        );
+                    }
+                ),
                 this.readonly$.subscribe((readonly) => {
                     $titleBar.classList.toggle(
                         this.wrapClassName("readonly"),
