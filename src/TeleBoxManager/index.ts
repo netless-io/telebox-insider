@@ -69,6 +69,7 @@ type ValConfig = {
     stageStyle: Val<string>;
     defaultBoxBodyStyle: Val<string | null>;
     defaultBoxStageStyle: Val<string | null>;
+    theme: Val<TeleBoxManagerThemeConfig | null>;
 };
 
 type CombinedValEnhancedResult = ValEnhancedResult<ValConfig> &
@@ -92,7 +93,7 @@ export class TeleBoxManager {
         stageStyle = "",
         defaultBoxBodyStyle = null,
         defaultBoxStageStyle = null,
-        theme = {},
+        theme = null,
     }: TeleBoxManagerConfig = {}) {
         this._sideEffect = new SideEffectManager();
 
@@ -221,6 +222,10 @@ export class TeleBoxManager {
                     : TELE_BOX_STATE.Normal
         );
 
+        const theme$ = new Val<TeleBoxManagerThemeConfig | null>(theme, {
+            compare: shallowequal,
+        });
+
         const readonlyValConfig: ReadonlyValConfig = {
             darkMode: darkMode$,
             state: state$,
@@ -243,6 +248,7 @@ export class TeleBoxManager {
             stageStyle: stageStyle$,
             defaultBoxBodyStyle: defaultBoxBodyStyle$,
             defaultBoxStageStyle: defaultBoxStageStyle$,
+            theme: theme$,
         };
 
         withValueEnhancer(this, valConfig, valManager);
@@ -334,9 +340,20 @@ export class TeleBoxManager {
                     minimized
                 );
             }),
-            containerStyle$.subscribe((containerStyle) => {
-                this.$container.style.cssText = containerStyle;
-            }),
+            combine([containerStyle$, theme$]).subscribe(
+                ([containerStyle, theme]) => {
+                    this.$container.style.cssText = containerStyle;
+                    if (theme) {
+                        Object.keys(theme).forEach((key) => {
+                            this.$container.style.setProperty(
+                                `--tele-${key}`,
+                                theme[key as keyof TeleBoxManagerThemeConfig] ??
+                                    null
+                            );
+                        });
+                    }
+                }
+            ),
             stageStyle$.subscribe((stageStyle) => {
                 this.$stage.style.cssText = stageStyle;
                 this.$stage.style.width = stageRect$.value.width + "px";
@@ -622,15 +639,6 @@ export class TeleBoxManager {
             this.events.emit(TELE_BOX_MANAGER_EVENT.Removed, deletedBoxes);
         }
         return deletedBoxes;
-    }
-
-    public setTheme(theme: TeleBoxManagerThemeConfig): void {
-        Object.keys(theme).forEach((key) => {
-            this.$container.style.setProperty(
-                `--tele-${key}`,
-                theme[key as keyof TeleBoxManagerThemeConfig] ?? null
-            );
-        });
     }
 
     /**

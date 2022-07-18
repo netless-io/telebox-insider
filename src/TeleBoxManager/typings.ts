@@ -32,7 +32,7 @@ export interface TeleBoxManagerConfig extends Pick<TeleBoxConfig, "namespace"> {
     /** Custom `style` attribute value for stage area of all boxes. Can be overwritten by box. */
     readonly defaultBoxStageStyle?: string | null;
     /** Theme variable */
-    readonly theme?: TeleBoxManagerThemeConfig;
+    readonly theme?: TeleBoxManagerThemeConfig | null;
 }
 
 type TeleBoxManagerBoxConfigBaseProps =
