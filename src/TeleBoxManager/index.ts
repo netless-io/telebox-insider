@@ -186,9 +186,15 @@ export class TeleBoxManager {
                 const handler = (evt: MediaQueryListEvent): void => {
                     prefersDark$.setValue(evt.matches);
                 };
-                prefersDarkMatch.addEventListener("change", handler);
-                return () =>
-                    prefersDarkMatch.removeEventListener("change", handler);
+                if (prefersDarkMatch.addEventListener) {
+                    prefersDarkMatch.addEventListener("change", handler);
+                    return () =>
+                        prefersDarkMatch.removeEventListener("change", handler);
+                } else {
+                    // Old Safari
+                    prefersDarkMatch.addListener(handler);
+                    return () => prefersDarkMatch.removeListener(handler);
+                }
             });
         }
 
