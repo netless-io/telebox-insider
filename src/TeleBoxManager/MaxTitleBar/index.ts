@@ -123,10 +123,12 @@ export class MaxTitleBar extends DefaultTitleBar {
             this.$titles,
             "wheel",
             (ev) => {
-                (ev.currentTarget as HTMLElement).scrollBy({
-                    left: ev.deltaY > 0 ? 250 : -250,
-                    behavior: "smooth",
-                });
+                if (!ev.deltaX) {
+                    (ev.currentTarget as HTMLElement).scrollBy({
+                        left: ev.deltaY > 0 ? 250 : -250,
+                        behavior: "smooth",
+                    });
+                }
             },
             { passive: false },
             "max-render-wheel-titles"
