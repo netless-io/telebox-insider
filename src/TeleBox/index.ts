@@ -888,8 +888,12 @@ export class TeleBox {
                     const absoluteWidth = size.width * containerRect.width;
                     const absoluteHeight = size.height * containerRect.height;
                     return {
-                        width: absoluteWidth,
-                        height: absoluteHeight,
+                        width:
+                            absoluteWidth +
+                            (minimized && collectorRect ? 1 : 0),
+                        height:
+                            absoluteHeight +
+                            (minimized && collectorRect ? 1 : 0),
                         x: coord.x * containerRect.width,
                         y: coord.y * containerRect.height,
                         scaleX:

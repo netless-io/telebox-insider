@@ -15,7 +15,7 @@ export default ({ command, mode }) => {
             rollupOptions: {
                 external: ["react"],
             },
-            minify: isProd,
+            minify: false,
         },
     };
 };
