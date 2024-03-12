@@ -50,11 +50,13 @@
 }
 
 .#{$namespace}-titlebar-btns {
-    padding-right: 16px;
+    position: absolute;
+    right: 16px;
     white-space: nowrap;
     word-break: keep-all;
     margin-left: auto;
     font-size: 0;
+    z-index: 10;
 }
 
 .#{$namespace}-titlebar-btn {
