@@ -87,6 +87,12 @@ export interface TeleBoxConfig {
     readonly boxStatus?: TeleBoxState;
     /** Last not minimized box status. */
     readonly lastNotMinimizedBoxStatus?: NotMinimizedBoxState;
+    /** Force top. */
+    readonly forceTop?: boolean;
+    /** Force normal. */
+    readonly forceNormal?: boolean;
+    /** Is drag content. */
+    readonly isDragContent?: boolean;
 }
 
 type CheckTeleBoxConfig<T extends Record<`${TELE_BOX_EVENT}`, any>> = T;
@@ -110,6 +116,8 @@ export type TeleBoxEventConfig = CheckTeleBoxConfig<{
     destroyed: void;
     box_status: { id: string; boxStatus: TeleBoxState };
     last_not_minimized_box_status: { id: string; lastNotMinimizedBoxStatus?: NotMinimizedBoxState };
+    force_normal: boolean;
+    force_top: boolean;
 }>;
 
 export type TeleBoxEvent = keyof TeleBoxEventConfig;

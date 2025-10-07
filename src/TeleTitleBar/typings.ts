@@ -12,11 +12,14 @@ export interface TeleTitleBarConfig {
     title?: string;
     state?: TeleBoxState;
     namespace?: string;
+    forceTop?: boolean;
+    forceNormal?: boolean;
     onEvent?: (event: TeleTitleBarEvent) => void;
     onDragStart?: (event: MouseEvent | TouchEvent) => void;
 }
 
 export interface TeleTitleBar {
+    readonly $dragArea: HTMLElement;
     setTitle(title: string): void;
 
     setState(state: TeleBoxState): void;

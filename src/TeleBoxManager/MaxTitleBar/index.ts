@@ -5,7 +5,7 @@ import { DefaultTitleBar, DefaultTitleBarConfig } from "../../TeleTitleBar";
 import { TELE_BOX_STATE } from "../../TeleBox/constants";
 import { TeleBoxRect, TeleBoxState } from "../../TeleBox/typings";
 
-export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title" | "readonly" | "zIndex" | "$box">;
+export type MaxTitleBarTeleBox = Pick<TeleBox, "id" | "title" | "readonly" | "zIndex" | "$box" | "forceTop" | "forceNormal">;
 
 export interface MaxTitleBarConfig extends DefaultTitleBarConfig {
     darkMode: boolean;
@@ -45,7 +45,7 @@ export class MaxTitleBar extends DefaultTitleBar {
         if (this.getBoxesStatus) {
             const boxesStatus = this.getBoxesStatus();
             if (boxesStatus) {
-                return this.boxes.filter((box) => boxesStatus && boxesStatus.get(box.id) === TELE_BOX_STATE.Maximized);
+                return this.boxes.filter((box) => boxesStatus && boxesStatus.get(box.id) === TELE_BOX_STATE.Maximized && !box.forceTop);
             }
         }
         return [];

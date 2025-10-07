@@ -27,6 +27,8 @@ export interface DefaultTitleBarConfig extends TeleTitleBarConfig {
 
 export class DefaultTitleBar implements TeleTitleBar {
     protected boxStatus?: TeleBoxState;
+    protected forceTop?: boolean;
+    protected forceNormal?: boolean;
     public constructor({
         readonly = false,
         title,
@@ -36,7 +38,9 @@ export class DefaultTitleBar implements TeleTitleBar {
         namespace = "telebox",
         state = TELE_BOX_STATE.Normal,
         boxStatus,
-    }: DefaultTitleBarConfig = {}) {
+        forceTop = false,
+        forceNormal = false,
+    }: DefaultTitleBarConfig = {}) {    
         this.readonly = readonly;
         this.onEvent = onEvent;
         this.onDragStart = onDragStart;
@@ -44,23 +48,29 @@ export class DefaultTitleBar implements TeleTitleBar {
         this.title = title;
         this.state = state;
         this.boxStatus = boxStatus;
+        this.forceTop = forceTop;
+        this.forceNormal = forceNormal;
 
-        this.buttons = buttons || [
-            {
-                type: TELE_BOX_DELEGATE_EVENT.Minimize,
-                iconClassName: this.wrapClassName("titlebar-icon-minimize"),
-            },
-            {
-                type: TELE_BOX_DELEGATE_EVENT.Maximize,
-                iconClassName: this.wrapClassName("titlebar-icon-maximize"),
-                isActive: (state) => state === TELE_BOX_STATE.Maximized,
-            },
-            {
+        this.buttons = buttons || (
+            forceNormal ? [
+                {
                 type: TELE_BOX_DELEGATE_EVENT.Close,
                 iconClassName: this.wrapClassName("titlebar-icon-close"),
-            },
-        ];
-
+            }] : [
+                {
+                    type: TELE_BOX_DELEGATE_EVENT.Minimize,
+                    iconClassName: this.wrapClassName("titlebar-icon-minimize"),
+                }, 
+                {
+                    type: TELE_BOX_DELEGATE_EVENT.Maximize,
+                    iconClassName: this.wrapClassName("titlebar-icon-maximize"),
+                    isActive: (state) => state === TELE_BOX_STATE.Maximized,
+                },
+                {
+                    type: TELE_BOX_DELEGATE_EVENT.Close,
+                    iconClassName: this.wrapClassName("titlebar-icon-close"),
+                },
+            ]);
         this.$dragArea = this.renderDragArea();
     }
 
@@ -70,7 +80,7 @@ export class DefaultTitleBar implements TeleTitleBar {
 
     public $title: HTMLElement | undefined;
 
-    public $dragArea: HTMLElement;
+    public readonly $dragArea: HTMLElement;
 
     public setTitle(title: string): void {
         this.title = title;
@@ -137,7 +147,6 @@ export class DefaultTitleBar implements TeleTitleBar {
 
             $titleArea.appendChild(this.$title);
             $titleArea.appendChild(this.$dragArea);
-
             const $buttonsContainer = document.createElement("div");
             $buttonsContainer.className = this.wrapClassName("titlebar-btns");
 

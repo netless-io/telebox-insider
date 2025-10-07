@@ -85,6 +85,7 @@ createBtn("Create").addEventListener("click", () => {
     const content = document.createElement("div");
     content.className = "content";
     content.textContent = `Content ${title}`;
+    const isForceTop = Math.random() > 0.5;
     const box = manager.create({
         minHeight: 0.1,
         minWidth: 0.1,
@@ -92,6 +93,9 @@ createBtn("Create").addEventListener("click", () => {
         // focus: true,
         content,
         boxStatus: TELE_BOX_STATE.Normal,
+        forceTop: isForceTop,
+        forceNormal: isForceTop,
+        isDragContent: isForceTop,
     });
     if (manager.minimized) {
         manager.setMinimized(false);

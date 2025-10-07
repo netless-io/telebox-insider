@@ -72,6 +72,12 @@ type ValConfig = {
     $userContent: Val<HTMLElement | undefined>;
     $userFooter: Val<HTMLElement | undefined>;
     $userStyles: Val<HTMLStyleElement | undefined>;
+    /** Force top. */
+    forceTop: Val<boolean, boolean>;
+    /** Force normal. */
+    forceNormal: Val<boolean, boolean>;
+    /** Drag content. */
+    isDragContent: Val<boolean, boolean>;
 };
 export interface TeleBox extends ValEnhancedResult<ValConfig> {}
 
@@ -110,7 +116,10 @@ export class TeleBox {
         },
         collectorRect,
         boxStatus,
-        lastNotMinimizedBoxStatus
+        lastNotMinimizedBoxStatus,
+        forceTop = false,
+        forceNormal = false,
+        isDragContent = false,
     }: TeleBoxConfig = {}) {
         this._sideEffect = new SideEffectManager();
         this._valSideEffectBinder = createSideEffectBinder(this._sideEffect);
@@ -181,6 +190,21 @@ export class TeleBox {
 
         const containerRect$ = createVal(containerRect, shallowequal);
         const collectorRect$ = createVal(collectorRect, shallowequal);
+
+        const forceTop$ = createVal(forceTop);
+        forceTop$.reaction((forceTop, _, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.ForceTop, forceTop || false);
+            }
+        });
+
+        const forceNormal$ = createVal(forceNormal);
+        forceNormal$.reaction((forceNormal, _, skipUpdate) => {
+            if (!skipUpdate) {
+                this.events.emit(TELE_BOX_EVENT.ForceNormal, forceNormal || false);
+            }
+        });
+        const isDragContent$ = createVal(isDragContent);
 
         const title$ = createVal(title);
         title$.reaction((title, _, skipUpdate) => {
@@ -400,6 +424,8 @@ export class TeleBox {
                 title: title$.value,
                 namespace: this.namespace,
                 boxStatus: boxStatus$.value,
+                forceTop: forceTop$.value,
+                forceNormal: forceNormal$.value,
                 onDragStart: (event) => this._handleTrackStart?.(event),
                 onEvent: (event): void => {
                     if (this._delegateEvents.listeners.length > 0) {
@@ -463,6 +489,9 @@ export class TeleBox {
             $userContent: $userContent$,
             $userFooter: $userFooter$,
             $userStyles: $userStyles$,
+            forceTop: forceTop$,
+            forceNormal: forceNormal$,
+            isDragContent: isDragContent$,
         };
 
         withValueEnhancer(this, valConfig);
@@ -989,6 +1018,7 @@ export class TeleBox {
         $titleBar.appendChild(this.titleBar.render());
         this.$titleBar = $titleBar;
 
+
         const $contentWrap = document.createElement("div");
         $contentWrap.className = this.wrapClassName("content-wrap");
 
@@ -996,6 +1026,9 @@ export class TeleBox {
         $content.className =
             this.wrapClassName("content") + " tele-fancy-scrollbar";
         this.$content = $content;
+        if (this.isDragContent) {
+            this.$content.appendChild(this.titleBar.$dragArea);
+        }
 
         this._renderSideEffect.add(() => {
             let last$userStyles: HTMLStyleElement | undefined;

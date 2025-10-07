@@ -38,7 +38,10 @@ type TeleBoxManagerBoxConfigBaseProps =
     | "fixRatio"
     | "zIndex"
     | "boxStatus"
-    | "lastNotMinimizedBoxStatus";
+    | "lastNotMinimizedBoxStatus"
+    | "forceTop"
+    | "forceNormal"
+    | "isDragContent";
 
 export type TeleBoxManagerCreateConfig = Pick<
     TeleBoxConfig,

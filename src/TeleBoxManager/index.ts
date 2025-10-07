@@ -48,16 +48,16 @@ type ValConfig = {
 export interface TeleBoxManager extends ValEnhancedResult<ValConfig> {}
 
 export class TeleBoxManager {
-    private boxesStatus$: Map<string, TeleBoxState>;
-    private lastNotMinimizedBoxesStatus$: Map<string, NotMinimizedBoxState>;
-    private appMenu: AppMenu | undefined;
-    private useBoxesStatus: boolean;
-    private effectBoxesStatusTimer?: {
+    protected boxesStatus$: Map<string, TeleBoxState>;
+    protected lastNotMinimizedBoxesStatus$: Map<string, NotMinimizedBoxState>;
+    protected appMenu: AppMenu | undefined;
+    protected useBoxesStatus: boolean;
+    protected effectBoxesStatusTimer?: {
         skipUpdate: boolean;
         timer: number | undefined;
         resolve?: (skipUpdate: boolean) => void;
     }
-    private effectLastNotMinimizedBoxStatusTimer?: {
+    protected effectLastNotMinimizedBoxStatusTimer?: {
         skipUpdate: boolean;
         timer: number | undefined;
         resolve?: (skipUpdate: boolean) => void;
@@ -92,6 +92,9 @@ export class TeleBoxManager {
             if (boxes.length > 0) {
                 let currentTopBox: TeleBox | undefined = undefined;
                 const topBox = boxes.reduce((topBox, box) => {
+                    if (box.forceTop) {
+                        return topBox;
+                    }
                     if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Minimized) {
                         return topBox;
                     }
@@ -487,6 +490,23 @@ export class TeleBoxManager {
         return this.topBox$.value;
     }
 
+    public get forceTopBoxes(): TeleBox | undefined {
+        return this.boxes.find((box) => box.forceTop);
+    }
+
+    public get maxForceTopBox(): TeleBox | undefined {
+        return this.boxes.reduce<TeleBox | undefined>((maxTopBox, box) => {
+            if (box.forceTop && box.zIndex > (maxTopBox?.zIndex ?? 0)) {
+                return box;
+            }
+            return maxTopBox;
+        }, undefined);
+    }
+
+    public get forceNormalBoxes(): TeleBox | undefined {
+        return this.boxes.find((box) => box.forceNormal);
+    }
+
     public readonly events = new EventEmitter() as TeleBoxManagerEvents;
 
     protected _sideEffect: SideEffectManager;
@@ -572,7 +592,7 @@ export class TeleBoxManager {
         return this.boxesStatus$;
     }
 
-    private effectBoxStatusChange(){
+    protected effectBoxStatusChange(){
         if (!this.useBoxesStatus) {
             return;
         }
@@ -590,7 +610,7 @@ export class TeleBoxManager {
         }
     }
 
-    private effectBoxesStatusTimerFunc(skipUpdate: boolean){
+    protected effectBoxesStatusTimerFunc(skipUpdate: boolean){
         if (!this.useBoxesStatus) {
             return;
         }
@@ -599,7 +619,7 @@ export class TeleBoxManager {
         this.boxes.forEach((box) => {
             const boxStatus = this.boxesStatus$.get(box.id);
             if (boxStatus) {
-                if (boxStatus !== TELE_BOX_STATE.Minimized && box.zIndex > (newTopBox?.zIndex ?? 0)) {
+                if (boxStatus !== TELE_BOX_STATE.Minimized && !this.isForceTop(box) && box.zIndex > (newTopBox?.zIndex ?? 0)) {
                     newTopBox = box;
                 }
                 box.setBoxStatus(boxStatus, skipUpdate);
@@ -734,7 +754,7 @@ export class TeleBoxManager {
         this.effectLastNotMinimizedBoxStatusChange(skipUpdate);
     }
 
-    private async effectLastNotMinimizedBoxStatusChange(skipUpdate = false): Promise<void> {
+    protected async effectLastNotMinimizedBoxStatusChange(skipUpdate = false): Promise<void> {
         if (!this.useBoxesStatus) {
             if (this.effectLastNotMinimizedBoxStatusTimer && this.effectLastNotMinimizedBoxStatusTimer.timer) {
                 clearTimeout(this.effectLastNotMinimizedBoxStatusTimer.timer);
@@ -781,7 +801,7 @@ export class TeleBoxManager {
         }
     }
 
-    private effectLastNotMinimizedBoxStatusFunc(skipUpdate = false){
+    protected effectLastNotMinimizedBoxStatusFunc(skipUpdate = false){
         if (!this.useBoxesStatus) {
             return;
         }
@@ -793,18 +813,9 @@ export class TeleBoxManager {
         });
     }
 
-    private getUnabledBoxesStatusZIndex(): number {
+    protected getUnabledBoxesStatusZIndex(): number {
         return this.topBox ? this.topBox.zIndex : 99;
     }
-
-    // private getTopBoxZIndex(): number {
-    //     if (!this.useBoxesStatus) {
-    //         return this.getUnabledBoxesStatusZIndex();
-    //     }
-    //     return [...this.boxes].filter((box) => box.boxStatus !== TELE_BOX_STATE.Minimized).reduce((maxZIndex, box) => {
-    //         return Math.max(maxZIndex, box.zIndex);
-    //     }, 100);
-    // }
 
     /** Maximized box zIndex range: 100-299 */
     public getMaxMaximizedBoxZIndex(): number {
@@ -812,7 +823,7 @@ export class TeleBoxManager {
             return this.getUnabledBoxesStatusZIndex();
         }
         return this.boxes.reduce((maxZIndex, box) => {
-            if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Maximized) {
+            if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Maximized && !this.isForceTop(box)) {
                 return Math.max(maxZIndex, box.zIndex);
             }
             return maxZIndex;
@@ -825,11 +836,31 @@ export class TeleBoxManager {
             return this.getUnabledBoxesStatusZIndex();
         }
         return this.boxes.reduce((maxZIndex, box) => {
-            if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Normal) {
+            if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Normal && !this.isForceTop(box)) {
                 return Math.max(maxZIndex, box.zIndex);
             }
             return maxZIndex;
         }, 299);
+    }
+
+    public getMaxForceTopBoxZIndex(): number {
+        if (!this.useBoxesStatus) {
+            return this.getUnabledBoxesStatusZIndex();
+        }
+        return this.boxes.reduce((maxZIndex, box) => {
+            if (box.boxStatus && this.isForceTop(box)) {
+                return Math.max(maxZIndex, box.zIndex);
+            }
+            return maxZIndex;
+        }, 699);
+    }
+
+    public isForceNormal(box: TeleBox): boolean {
+        return box._forceNormal$.value;
+    }
+
+    public isForceTop(box: TeleBox): boolean {
+        return box._forceTop$.value;
     }
 
     public create(
@@ -837,7 +868,7 @@ export class TeleBoxManager {
         smartPosition = true
     ): ReadonlyTeleBox {
         const box = new TeleBox({
-            zIndex: this.getMaxNormalBoxZIndex() + 1,
+            zIndex: config.forceTop ? this.getMaxForceTopBoxZIndex() + 1 : this.getMaxNormalBoxZIndex() + 1,
             ...(smartPosition ? this.smartPosition(config) : config),
             darkMode: this.darkMode,
             prefersColorScheme: this.prefersColorScheme,
@@ -870,6 +901,9 @@ export class TeleBoxManager {
 
         box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Maximize, () => {
             if (this.useBoxesStatus && box.boxStatus) {
+                if (box._forceNormal$.value) {
+                    return;
+                }
                 if (box.boxStatus === TELE_BOX_STATE.Maximized) {
                     this.setBox(box.id, {
                         status: TELE_BOX_STATE.Normal,
@@ -877,7 +911,7 @@ export class TeleBoxManager {
                     }, false);
                 } else {
                     // 所有normal box都最大化
-                    [...this.boxes].filter((box) => box.boxStatus === TELE_BOX_STATE.Normal).sort((a, b) => a.zIndex - b.zIndex).forEach((box) => {
+                    [...this.boxes].filter((box) => box.boxStatus === TELE_BOX_STATE.Normal && !this.isForceNormal(box)).sort((a, b) => a.zIndex - b.zIndex).forEach((box) => {
                         if (box.boxStatus === TELE_BOX_STATE.Normal) {
                             this.setBox(box.id, {
                                 status: TELE_BOX_STATE.Maximized,
@@ -894,6 +928,9 @@ export class TeleBoxManager {
         });
         box._delegateEvents.on(TELE_BOX_DELEGATE_EVENT.Minimize, () => {
             if (box.boxStatus && this.useBoxesStatus) {
+                if (box._forceNormal$.value) {
+                    return;
+                }
                 if(box.focus) {
                     this.blurBox(box);
                 }
@@ -944,6 +981,9 @@ export class TeleBoxManager {
             if (this.boxes.length > 0) {
                 let currentTopBox: TeleBox | undefined = undefined;
                 const topBox = this.boxes.reduce((topBox, box) => {
+                    if (this.isForceTop(box)) {
+                        return topBox;
+                    }
                     if (box.boxStatus && box.boxStatus === TELE_BOX_STATE.Minimized) {
                         return topBox;
                     }
@@ -1227,6 +1267,12 @@ export class TeleBoxManager {
                 lastNotMinimizedBoxStatus: config.lastNotMinimizedBoxStatus
             }, skipUpdate);
         }
+        if (config.forceTop != null) {
+            box.setForceTop(config.forceTop, skipUpdate);
+        }
+        if (config.forceNormal != null) {
+            box.setForceNormal(config.forceNormal, skipUpdate);
+        }
     }
 
     protected smartPosition(config: TeleBoxConfig = {}): TeleBoxConfig {
@@ -1235,7 +1281,18 @@ export class TeleBoxManager {
 
         if (x == null) {
             let vx = 20;
-            if (this.topBox) {
+            if (config.forceTop) {
+                const forceTopBox = this.maxForceTopBox || this.topBox;
+                if (forceTopBox) {
+                    vx = forceTopBox.intrinsicX * this.containerRect.width + 20;
+                    if (
+                        vx >
+                        this.containerRect.width - width * this.containerRect.width
+                    ) {
+                        vx = 20;
+                    }
+                }
+            } else if (this.topBox) {
                 vx = this.topBox.intrinsicX * this.containerRect.width + 20;
                 if (
                     vx >
@@ -1254,8 +1311,20 @@ export class TeleBoxManager {
 
         if (y == null) {
             let vy = 20;
+            if (config.forceTop) {
+                const forceTopBox = this.maxForceTopBox || this.topBox;
+                if (forceTopBox) {
+                    vy = forceTopBox.intrinsicY * this.containerRect.height + 20;
 
-            if (this.topBox) {
+                    if (
+                        vy >
+                        this.containerRect.height -
+                            height * this.containerRect.height
+                    ) {
+                        vy = 20;
+                    }
+                }
+            } else if (this.topBox) {
                 vy = this.topBox.intrinsicY * this.containerRect.height + 20;
 
                 if (
@@ -1288,7 +1357,7 @@ export class TeleBoxManager {
         }
     }
 
-    private getMaximizedTopBox(): MaxTitleBarTeleBox | undefined {
+    protected getMaximizedTopBox(): MaxTitleBarTeleBox | undefined {
         if (!this.useBoxesStatus) {
             return undefined;
         }

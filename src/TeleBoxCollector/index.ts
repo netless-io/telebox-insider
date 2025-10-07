@@ -79,7 +79,7 @@ export class TeleBoxCollector {
         return this;
     }
 
-    private hasMinimizedBox(): boolean {
+    protected hasMinimizedBox(): boolean {
         const boxesStatus = this.boxesStatus;
         if (boxesStatus) {
            for (const status of boxesStatus.values()) {
