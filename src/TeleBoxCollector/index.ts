@@ -15,6 +15,7 @@ export interface TeleBoxCollectorConfig {
 }
 
 export class TeleBoxCollector {
+    static readonly kind = "TeleBoxCollector";
     public getBoxesStatus?: () => Map<string, TeleBoxState>;
     public constructor({
         visible = true,

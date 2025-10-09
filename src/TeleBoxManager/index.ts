@@ -48,6 +48,7 @@ type ValConfig = {
 export interface TeleBoxManager extends ValEnhancedResult<ValConfig> {}
 
 export class TeleBoxManager {
+    static readonly kind = "TeleBoxManager";
     protected boxesStatus$: Map<string, TeleBoxState>;
     protected lastNotMinimizedBoxesStatus$: Map<string, NotMinimizedBoxState>;
     protected appMenu: AppMenu | undefined;
